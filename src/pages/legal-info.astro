@@ -1,0 +1,141 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const companyRows = [
+	{ label: "Trading / brand", value: "Shimano Fishing United Kingdom (demo name)" },
+	{ label: "Registered office", value: "Replace with full postal address" },
+	{ label: "Company number", value: "Replace with Companies House number" },
+	{ label: "VAT number", value: "Replace with GB VAT ID if applicable" },
+	{ label: "Parent undertaking", value: "Shimano Inc. — see shimano.com for group information" },
+];
+
+const notices = [
+	{
+		id: "trademarks",
+		title: "Trademarks",
+		body: "Shimano and other marks shown on this site are trademarks of Shimano Inc. or its affiliates. List or link to a full trademark notice if required. Unauthorised use may infringe applicable law.",
+	},
+	{
+		id: "regulatory",
+		title: "Regulatory statements",
+		body: "Add any sector-specific disclosures (product compliance, environmental claims, financial promotions) that apply to your UK entity. This demo block is intentionally generic.",
+	},
+	{
+		id: "complaints",
+		title: "Complaints and enquiries",
+		body: "Provide contact channels for general legal correspondence, regulatory complaints, or accessibility issues. Do not use a personal email address in production without governance approval.",
+	},
+];
+---
+
+<SiteLayout
+	title="Legal information — Shimano Fishing United Kingdom"
+	description="Corporate and legal notices for Shimano Fishing UK: company details, trademarks, and regulatory information. Demo layout only."
+>
+	<div slot="pre-main" class="mb-20 w-full">
+		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
+			<div class="absolute inset-0">
+				<img
+					src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=2000&q=80"
+					alt=""
+					width="2000"
+					height="800"
+					loading="eager"
+					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
+				/>
+			</div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.15)_100%)]"
+				aria-hidden="true"
+			>
+			</div>
+			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Legal</p>
+				<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+					Legal information
+				</h1>
+				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
+					Impressum-style details and notices for visitors. Replace all fields with verified corporate registry data before
+					publication.
+				</p>
+				<a
+					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+					href="#company-details"
+				>
+					Company details
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<section class="text-center" id="company-details" aria-labelledby="company-heading">
+		<h2 id="company-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Company details
+		</h2>
+	</section>
+
+	<div class="w-full max-w-none text-left">
+		<p class="m-0 text-base leading-relaxed text-zinc-600">
+			<strong class="font-semibold text-brand-black">Demo data only.</strong> The table below must match your Companies House
+			filing, VAT registration, and any statutory naming requirements for the entity operating this site.
+		</p>
+	</div>
+
+	<dl class="m-0 w-full border border-zinc-200 bg-zinc-50 p-0">
+		{
+			companyRows.map((row, i) => (
+				<div class:list={["grid gap-1 px-[1.1rem] py-4 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-6", { "border-t border-zinc-200": i > 0 }]}>
+					<dt class="m-0 font-display text-[11px] font-medium uppercase tracking-wide text-zinc-500">{row.label}</dt>
+					<dd class="m-0 text-sm leading-relaxed text-zinc-800">{row.value}</dd>
+				</div>
+			))
+		}
+	</dl>
+
+	{
+		notices.map((n) => (
+			<>
+				<section class="text-center" id={n.id} aria-labelledby={`${n.id}-heading`}>
+					<h2 id={`${n.id}-heading`} class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+						{n.title}
+					</h2>
+				</section>
+				<div class="w-full max-w-none text-left">
+					<p class="m-0 text-base leading-relaxed text-zinc-600">{n.body}</p>
+				</div>
+			</>
+		))
+	}
+
+	<section class="text-center" aria-labelledby="related-legal-heading">
+		<h2 id="related-legal-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Related legal pages
+		</h2>
+	</section>
+
+	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/privacy-policy"
+		>
+			Privacy policy
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/terms-and-conditions"
+		>
+			Terms and conditions
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+			href="/"
+		>
+			Back to home
+		</a>
+	</div>
+
+	<script>
+		import { initHome } from "../scripts/home.ts";
+		initHome();
+	</script>
+</SiteLayout>

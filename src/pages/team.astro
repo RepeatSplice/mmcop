@@ -1,0 +1,211 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const leadership = [
+	{
+		name: "James Holloway",
+		role: "Managing Director, UK & Ireland",
+		bio: "Commercial strategy, retail partnerships, and regional P&L for Shimano Fishing.",
+		src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80",
+	},
+	{
+		name: "Elena Varga",
+		role: "Head of Product & Marketing",
+		bio: "Range planning, campaigns, and digital experience across freshwater and saltwater categories.",
+		src: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+	},
+	{
+		name: "Marcus Webb",
+		role: "Technical Service Lead",
+		bio: "Warranty, reel servicing standards, and training for dealers and field staff.",
+		src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80",
+	},
+	{
+		name: "Priya Shah",
+		role: "Operations & Logistics",
+		bio: "Inventory, fulfilment, and sustainability initiatives for UK distribution.",
+		src: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80",
+	},
+];
+
+const teamMembers = [
+	{ dept: "Commercial", name: "Tom Aldridge", location: "Telford" },
+	{ dept: "Commercial", name: "Sophie Brennan", location: "Remote — Scotland" },
+	{ dept: "Marketing", name: "Chris Okonkwo", location: "Manchester" },
+	{ dept: "Marketing", name: "Hannah Lee", location: "Manchester" },
+	{ dept: "Technical", name: "Dan Morris", location: "Telford" },
+	{ dept: "Technical", name: "Amy Foster", location: "Telford" },
+	{ dept: "Customer service", name: "Jordan Ellis", location: "Telford" },
+	{ dept: "Finance", name: "Nina Patel", location: "Remote — UK" },
+];
+---
+
+<SiteLayout
+	title="Team — Shimano Fishing United Kingdom"
+	description="Leadership and UK team behind Shimano Fishing: commercial, marketing, technical service, and operations."
+>
+	<div slot="pre-main" class="mb-20 w-full">
+		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
+			<div class="absolute inset-0">
+				<img
+					src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2000&q=80"
+					alt=""
+					width="2000"
+					height="800"
+					loading="eager"
+					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
+				/>
+			</div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.28)_55%,rgba(0,0,0,0.12)_100%)]"
+				aria-hidden="true"
+			>
+			</div>
+			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Team</p>
+				<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+					Leadership &amp; UK team
+				</h1>
+				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
+					The people behind product launches, dealer support, and the day-to-day work that keeps anglers supplied and
+					informed.
+				</p>
+				<a
+					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+					href="#team"
+				>
+					Meet the team
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<section class="text-center" id="team" aria-labelledby="team-intro-heading">
+		<h2 id="team-intro-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Team overview
+		</h2>
+	</section>
+
+	<div class="w-full max-w-none text-left">
+		<p class="m-0 text-base leading-relaxed text-zinc-600">
+			This is demo content for a corporate-style team page: leadership portraits and a full UK roster, using the same
+			max-width column, typography, and spacing as the home and about pages. Replace names, roles, and photography with
+			your official HR content when publishing.
+		</p>
+	</div>
+
+	<section class="text-center" id="leadership" aria-labelledby="leadership-heading">
+		<h2 id="leadership-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Leadership
+		</h2>
+	</section>
+
+	<div class="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		{
+			leadership.map((person) => (
+				<article class="overflow-hidden border border-zinc-200 bg-white">
+					<div class="aspect-[4/5] overflow-hidden bg-zinc-100">
+						<img src={person.src} alt="" width="600" height="750" loading="lazy" class="h-full w-full object-cover" />
+					</div>
+					<div class="p-4 text-left">
+						<h3 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{person.name}</h3>
+						<p class="mt-1 font-sans text-xs leading-snug text-zinc-500">{person.role}</p>
+						<p class="mt-3 text-sm leading-relaxed text-zinc-600">{person.bio}</p>
+					</div>
+				</article>
+			))
+		}
+	</div>
+
+	<section class="text-center" id="full-team" aria-labelledby="full-team-heading">
+		<h2 id="full-team-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Full UK team
+		</h2>
+	</section>
+
+	<p class="m-0 w-full text-center text-sm text-zinc-600">Representative roles — not an exhaustive directory.</p>
+
+	<ul class="m-0 w-full list-none border border-zinc-200 bg-white p-0">
+		<li class="hidden border-b border-zinc-200 bg-zinc-50 px-[1.1rem] py-3 font-display text-[11px] uppercase tracking-wide text-zinc-600 sm:grid sm:grid-cols-[minmax(0,10rem)_1fr_minmax(0,9rem)] sm:gap-4">
+			<span>Function</span>
+			<span>Name</span>
+			<span class="text-right sm:text-left">Base</span>
+		</li>
+		{
+			teamMembers.map((m) => (
+				<li class="grid grid-cols-1 gap-1 border-b border-zinc-200 px-[1.1rem] py-4 last:border-b-0 sm:grid-cols-[minmax(0,10rem)_1fr_minmax(0,9rem)] sm:items-baseline sm:gap-4">
+					<span class="font-display text-[11px] uppercase tracking-wide text-zinc-600">{m.dept}</span>
+					<span class="text-[15px] font-semibold leading-snug text-brand-black">{m.name}</span>
+					<span class="text-sm text-zinc-600">{m.location}</span>
+				</li>
+			))
+		}
+	</ul>
+
+	<section class="text-center">
+		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Where to next</h2>
+	</section>
+
+	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/"
+		>
+			Back to home
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/about"
+		>
+			About us
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/careers"
+		>
+			Careers
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+			href="/#news"
+		>
+			Latest news
+		</a>
+	</div>
+
+	<section class="-mx-6 w-[calc(100%+3rem)] border-t border-zinc-200 bg-zinc-100" id="contact">
+		<div class="grid w-full grid-cols-1 md:grid-cols-2">
+			<div class="flex flex-col items-center border-b border-zinc-200 px-4 py-10 md:border-b-0 md:border-r md:border-zinc-200">
+				<div class="w-full max-w-[36ch] text-left">
+					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Members</h2>
+					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Shimano members</span>
+					<p class="mb-5 text-sm leading-normal text-zinc-600">Catalogue requests, event news, and email updates in one place.</p>
+					<a
+						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+						href="#"
+					>
+						Become a member
+					</a>
+				</div>
+			</div>
+			<div class="flex flex-col items-center px-4 py-10">
+				<div class="w-full max-w-[36ch] text-left">
+					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Dealer</h2>
+					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Store information</span>
+					<p class="mb-5 text-sm leading-normal text-zinc-600">Find authorised retailers and service centres near you.</p>
+					<a
+						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+						href="#"
+					>
+						Search for dealers
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		import { initHome } from "../scripts/home.ts";
+		initHome();
+	</script>
+</SiteLayout>

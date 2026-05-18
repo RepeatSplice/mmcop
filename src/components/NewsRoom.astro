@@ -1,0 +1,202 @@
+---
+export type NewsCategory = "press" | "product" | "people" | "sustainability";
+
+export interface FeaturedStory {
+	category: NewsCategory;
+	categoryLabel: string;
+	dateIso: string;
+	date: string;
+	title: string;
+	excerpt: string;
+	readMins: number;
+	href: string;
+	image: { src: string; alt: string };
+}
+
+export interface SecondaryStory {
+	category: NewsCategory;
+	categoryLabel: string;
+	dateIso: string;
+	date: string;
+	title: string;
+	href: string;
+	image: { src: string; alt: string };
+}
+
+export interface ArchiveRow {
+	category: NewsCategory;
+	categoryLabel: string;
+	dateIso: string;
+	date: string;
+	title: string;
+	href: string;
+}
+
+export interface Props {
+	featured: FeaturedStory;
+	secondary: SecondaryStory[];
+	archive: ArchiveRow[];
+}
+
+const { featured, secondary, archive } = Astro.props;
+
+const filters: { id: "all" | NewsCategory; label: string }[] = [
+	{ id: "all", label: "All" },
+	{ id: "press", label: "Press releases" },
+	{ id: "product", label: "Product & innovation" },
+	{ id: "people", label: "People & culture" },
+	{ id: "sustainability", label: "Sustainability" },
+];
+---
+
+<section class="corp-news-wrap" id="news" aria-labelledby="corp-news-heading">
+	<div class="corp-news-hub l-content">
+		<header class="corp-section-head corp-section-head--split">
+			<div>
+				<p class="corp-eyebrow uppercase">Media</p>
+				<h2 id="corp-news-heading" class="corp-section-title">Newsroom</h2>
+				<p class="corp-section-deck">
+					Statements, filings context, product milestones, and field stories — curated for investors, partners, and
+					journalists.
+				</p>
+			</div>
+			<div class="corp-section-head__links">
+				<a class="corp-text-link" href="#">Media kit</a>
+				<a class="corp-text-link" href="#">RSS</a>
+				<a class="btn btn--ghost btn--sm uppercase" href="#">View all news</a>
+			</div>
+		</header>
+
+		<div class="corp-news-layout">
+			<div class="corp-news-main">
+				<article class="corp-news-featured">
+					<a class="corp-news-featured__link" href={featured.href}>
+						<div class="corp-news-featured__media">
+							<img src={featured.image.src} alt={featured.image.alt} width="1200" height="675" loading="lazy" />
+						</div>
+						<div class="corp-news-featured__body">
+							<div class="corp-news-meta">
+								<span class={`corp-pill corp-pill--${featured.category}`}>{featured.categoryLabel}</span>
+								<time datetime={featured.dateIso}>{featured.date}</time>
+								<span class="corp-news-meta__dot" aria-hidden="true">·</span>
+								<span>{featured.readMins} min read</span>
+							</div>
+							<h3 class="corp-news-featured__title">{featured.title}</h3>
+							<p class="corp-news-featured__excerpt">{featured.excerpt}</p>
+							<span class="corp-news-readmore">Read story</span>
+						</div>
+					</a>
+				</article>
+
+				<div class="corp-news-subgrid">
+					{
+						secondary.map((s) => (
+							<article class="corp-news-card">
+								<a class="corp-news-card__link" href={s.href}>
+									<div class="corp-news-card__media">
+										<img src={s.image.src} alt={s.image.alt} width="640" height="400" loading="lazy" />
+									</div>
+									<div class="corp-news-card__body">
+										<div class="corp-news-meta corp-news-meta--compact">
+											<span class={`corp-pill corp-pill--${s.category}`}>{s.categoryLabel}</span>
+											<time datetime={s.dateIso}>{s.date}</time>
+										</div>
+										<h3 class="corp-news-card__title">{s.title}</h3>
+									</div>
+								</a>
+							</article>
+						))
+					}
+				</div>
+
+				<div class="corp-news-archive">
+					<div class="corp-news-toolbar">
+						<div class="corp-news-filters" role="tablist" aria-label="Filter news archive">
+							{
+								filters.map((f, i) => (
+									<button
+										type="button"
+										class:list={["corp-filter-btn", "uppercase", { "is-active": i === 0 }]}
+										data-news-filter={f.id}
+										role="tab"
+										aria-selected={i === 0 ? "true" : "false"}
+									>
+										{f.label}
+									</button>
+								))
+							}
+						</div>
+						<p class="corp-news-count" aria-live="polite">
+							Showing <strong data-news-count>{archive.length}</strong> of {archive.length} in archive
+						</p>
+					</div>
+
+					<div class="corp-news-table-shell">
+						<table class="corp-news-table">
+							<thead>
+								<tr>
+									<th scope="col">Date</th>
+									<th scope="col">Type</th>
+									<th scope="col">Headline</th>
+								</tr>
+							</thead>
+							<tbody>
+								{
+									archive.map((row) => (
+										<tr data-news-row data-news-category={row.category}>
+											<td>
+												<time datetime={row.dateIso}>{row.date}</time>
+											</td>
+											<td>
+												<span class={`corp-pill corp-pill--${row.category} corp-pill--table`}>{row.categoryLabel}</span>
+											</td>
+											<td>
+												<a class="corp-news-table__title" href={row.href}>
+													{row.title}
+												</a>
+											</td>
+										</tr>
+									))
+								}
+							</tbody>
+						</table>
+						<p class="corp-news-empty is-hidden" data-news-empty>No items match this filter.</p>
+					</div>
+
+					<nav class="corp-news-pagination" aria-label="News archive pages">
+						<span class="corp-news-pagination__hint">Demo pagination</span>
+						<div class="pagination">
+							<button type="button" class="is-active" aria-current="page">
+								1
+							</button>
+							<button type="button">2</button>
+							<button type="button">3</button>
+						</div>
+					</nav>
+				</div>
+			</div>
+
+			<aside class="corp-news-aside" aria-label="Subscribe and quick links">
+				<div class="corp-aside-card">
+					<h3 class="corp-aside-card__title uppercase">Subscribe</h3>
+					<p class="corp-aside-card__text">Press distribution list for earnings, safety notices, and major launches.</p>
+					<form class="corp-aside-form" action="#" method="get">
+						<label class="sr-only" for="news-email">Work email</label>
+						<input id="news-email" class="corp-input" type="email" name="email" placeholder="Work email" autocomplete="email" />
+						<button type="submit" class="btn btn--primary btn--block uppercase">Request access</button>
+					</form>
+					<p class="corp-aside-footnote">By subscribing you agree to our privacy terms.</p>
+				</div>
+				<div class="corp-aside-links">
+					<h3 class="corp-aside-card__title uppercase">Quick links</h3>
+					<ul>
+						<li><a href="#">Annual integrated report</a></li>
+						<li><a href="#">Product safety notices</a></li>
+						<li><a href="#">Brand partnership enquiries</a></li>
+						<li><a href="#">Image &amp; logo library</a></li>
+					</ul>
+				</div>
+			</aside>
+		</div>
+	</div>
+</section>

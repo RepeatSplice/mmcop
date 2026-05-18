@@ -1,0 +1,268 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const themes = [
+	{
+		title: "Reels & lines",
+		body: "Next-generation drag systems, lighter rotors where appropriate, and clearer line compatibility guidance for UK species (demo).",
+	},
+	{
+		title: "Rods & blanks",
+		body: "Blank tuning for predator, carp, and match disciplines sold in the UK; field validation with trusted testers (demo).",
+	},
+	{
+		title: "Digital & data",
+		body: "Owner manuals, warranty flows, and dealer assets in formats anglers actually use on the bank (demo).",
+	},
+	{
+		title: "Service & sustainability",
+		body: "Spare parts availability, repair-first messaging, and packaging pilots aligned with group targets (demo).",
+	},
+];
+
+const phases = [
+	{
+		label: "Phase 1 — Foundation",
+		window: "2025–2026",
+		summary:
+			"Baseline measurements for UK operations, dealer training refresh, and consolidation of product feedback loops into a single regional rhythm (placeholder).",
+	},
+	{
+		label: "Phase 2 — Scale",
+		window: "2027–2028",
+		summary:
+			"Broader rollout of validated programmes: sustainability reporting pack for retailers, expanded technical roadshows, and category-specific launch cadence (placeholder).",
+	},
+	{
+		label: "Phase 3 — Optimise",
+		window: "2029–2030",
+		summary:
+			"Refine portfolio mix, retire legacy complexity where safe, and publish a UK contribution story aligned with Shimano group 2030 disclosures (placeholder).",
+	},
+];
+
+const milestones = [
+	{ when: "H2 2025", track: "Product", detail: "Major freshwater reel platform refresh — UK sell-in and technical bulletins (demo)." },
+	{ when: "2026", track: "Service", detail: "National service partner map reviewed; spare-parts lead times benchmarked (demo)." },
+	{ when: "2026", track: "Sustainability", detail: "Pilot reduced-plastic packaging on selected rod ranges sold in EU/UK (demo)." },
+	{ when: "2027", track: "Digital", detail: "Unified warranty registration path for UK consumers; dealer SSO exploration (demo)." },
+	{ when: "2028", track: "Market", detail: "Regional angler insight panel — quarterly readouts to product planning (demo)." },
+	{ when: "2029–2030", track: "Reporting", detail: "2030 scorecard draft; executive review with European regional leadership (demo)." },
+];
+
+const downloads = [
+	{ title: "Innovation roadmap summary — PDF (placeholder)", href: "#" },
+	{ title: "UK product calendar — confidential draft (placeholder)", href: "#" },
+];
+---
+
+<SiteLayout
+	title="Innovation roadmap — Shimano Fishing United Kingdom"
+	description="UK innovation roadmap: phases, themes, and milestones connecting product, service, and sustainability. Demo corporate page."
+>
+	<div slot="pre-main" class="mb-20 w-full">
+		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
+			<div class="absolute inset-0">
+				<img
+					src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2000&q=80"
+					alt=""
+					width="2000"
+					height="800"
+					loading="eager"
+					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
+				/>
+			</div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.32)_55%,rgba(0,0,0,0.18)_100%)]"
+				aria-hidden="true"
+			>
+			</div>
+			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Goals</p>
+				<h1 class="m-0 max-w-[24ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+					Innovation roadmap
+				</h1>
+				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
+					How UK fishing translates global R&amp;D into launches, dealer readiness, and measurable progress towards 2030.
+				</p>
+				<a
+					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+					href="#overview"
+				>
+					How to read this page
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<section class="text-center" id="overview" aria-labelledby="overview-heading">
+		<h2 id="overview-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Overview
+		</h2>
+	</section>
+
+	<div class="w-full max-w-none text-left">
+		<p class="m-0 text-base leading-relaxed text-zinc-600">
+			The roadmap is not a public commitment document. It is a <strong class="font-semibold text-brand-black">planning and communication scaffold</strong> for
+			internal and partner-facing discussions — replace every date, programme name, and track with content approved by product
+			management, regional leadership, and legal.
+		</p>
+		<p class="mt-5 text-base leading-relaxed text-zinc-600">
+			For headline 2030 priorities, see the <a class="text-shimano-500 underline decoration-shimano-500/30 underline-offset-2 hover:text-shimano-600" href="/goals#priorities">Goals — 2030 priorities</a> page.
+		</p>
+	</div>
+
+	<section class="text-center" id="themes" aria-labelledby="themes-heading">
+		<h2 id="themes-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Innovation themes
+		</h2>
+	</section>
+
+	<div class="grid w-full gap-4 sm:grid-cols-2">
+		{
+			themes.map((t) => (
+				<div class="border border-zinc-200 bg-white p-6 text-left shadow-sm">
+					<h3 class="m-0 mb-3 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{t.title}</h3>
+					<p class="m-0 text-sm leading-relaxed text-zinc-600">{t.body}</p>
+				</div>
+			))
+		}
+	</div>
+
+	<section class="text-center" id="phases" aria-labelledby="phases-heading">
+		<h2 id="phases-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Phased delivery
+		</h2>
+	</section>
+
+	<div class="flex w-full flex-col">
+		{
+			phases.map((phase, i) => (
+				<div class="flex gap-5">
+					<div class="flex w-4 shrink-0 flex-col items-center pt-1">
+						<span class="size-3 shrink-0 border-2 border-white bg-shimano-500 shadow-sm ring-1 ring-zinc-200" aria-hidden="true" />
+						{i < phases.length - 1 ? <div class="mt-2 min-h-[2.5rem] w-px flex-1 bg-zinc-200" aria-hidden="true" /> : null}
+					</div>
+					<div class:list={["min-w-0 flex-1", { "pb-10": i < phases.length - 1 }]}>
+						<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-zinc-500">{phase.window}</p>
+						<h3 class="mt-1 font-display text-base font-medium uppercase tracking-wide text-brand-black">{phase.label}</h3>
+						<p class="mt-2 text-sm leading-relaxed text-zinc-600">{phase.summary}</p>
+					</div>
+				</div>
+			))
+		}
+	</div>
+
+	<section class="-mx-6 w-[calc(100%+3rem)] border-y border-zinc-200 bg-zinc-100 px-6 py-14" id="milestones" aria-labelledby="milestones-heading">
+		<h2 id="milestones-heading" class="m-0 text-center font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Milestone register
+		</h2>
+		<p class="mx-auto mt-4 w-full max-w-none text-center text-sm text-zinc-600">Illustrative rows — use your programme RAID log in production.</p>
+
+		<ul class="mx-auto mt-8 w-full max-w-none border border-zinc-200 bg-white p-0">
+			<li class="hidden border-b border-zinc-200 bg-zinc-50 px-[1.1rem] py-3 font-display text-[11px] uppercase tracking-wide text-zinc-600 md:grid md:grid-cols-[minmax(0,9rem)_minmax(0,8rem)_1fr] md:gap-4 md:text-left">
+				<span>When</span>
+				<span>Track</span>
+				<span>Detail</span>
+			</li>
+			{
+				milestones.map((row) => (
+					<li class="grid grid-cols-1 gap-1 border-b border-zinc-200 px-[1.1rem] py-4 last:border-b-0 md:grid-cols-[minmax(0,9rem)_minmax(0,8rem)_1fr] md:items-baseline md:gap-4">
+						<span class="font-display text-[11px] uppercase tracking-wide text-zinc-600">{row.when}</span>
+						<span class="text-xs font-semibold uppercase tracking-wide text-brand-black">{row.track}</span>
+						<p class="m-0 text-sm leading-relaxed text-zinc-700">{row.detail}</p>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<section class="text-center" id="downloads" aria-labelledby="downloads-heading">
+		<h2 id="downloads-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Downloads
+		</h2>
+	</section>
+
+	<ul class="m-0 w-full max-w-none border border-zinc-200 bg-white p-0">
+		{
+			downloads.map((d) => (
+				<li class="border-b border-zinc-200 last:border-b-0">
+					<a
+						class="flex items-center justify-between gap-4 px-[1.1rem] py-4 text-left text-[15px] font-semibold text-brand-black transition-colors hover:bg-zinc-50 hover:text-shimano-500"
+						href={d.href}
+					>
+						<span>{d.title}</span>
+						<span class="font-display shrink-0 text-[11px] font-medium uppercase tracking-wide text-zinc-500">PDF</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+
+	<section class="text-center">
+		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Where to next</h2>
+	</section>
+
+	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/goals"
+		>
+			2030 goals
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/"
+		>
+			Back to home
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/partners"
+		>
+			Partners
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+			href="/#news"
+		>
+			Latest news
+		</a>
+	</div>
+
+	<section class="-mx-6 w-[calc(100%+3rem)] border-t border-zinc-200 bg-zinc-100" id="contact">
+		<div class="grid w-full grid-cols-1 md:grid-cols-2">
+			<div class="flex flex-col items-center border-b border-zinc-200 px-4 py-10 md:border-b-0 md:border-r md:border-zinc-200">
+				<div class="w-full max-w-[36ch] text-left">
+					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Members</h2>
+					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Shimano members</span>
+					<p class="mb-5 text-sm leading-normal text-zinc-600">Catalogue requests, event news, and email updates in one place.</p>
+					<a
+						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+						href="#"
+					>
+						Become a member
+					</a>
+				</div>
+			</div>
+			<div class="flex flex-col items-center px-4 py-10">
+				<div class="w-full max-w-[36ch] text-left">
+					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Dealer</h2>
+					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Store information</span>
+					<p class="mb-5 text-sm leading-normal text-zinc-600">Find authorised retailers and service centres near you.</p>
+					<a
+						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+						href="#"
+					>
+						Search for dealers
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		import { initHome } from "../scripts/home.ts";
+		initHome();
+	</script>
+</SiteLayout>

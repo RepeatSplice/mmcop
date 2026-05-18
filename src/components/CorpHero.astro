@@ -1,0 +1,45 @@
+---
+export interface Props {
+	eyebrow: string;
+	title: string;
+	lead: string;
+	primaryCta: { label: string; href: string };
+	secondaryCta: { label: string; href: string };
+	image: { src: string; alt: string };
+	kpis: { label: string; value: string }[];
+}
+
+const { eyebrow, title, lead, primaryCta, secondaryCta, image, kpis } = Astro.props;
+---
+
+<section class="corp-hero" aria-labelledby="corp-hero-heading">
+	<div class="corp-hero__inner l-content">
+		<div class="corp-hero__grid">
+			<div class="corp-hero__copy">
+				<p class="corp-eyebrow uppercase">{eyebrow}</p>
+				<h1 id="corp-hero-heading" class="corp-hero__title">{title}</h1>
+				<p class="corp-hero__lead">{lead}</p>
+				<div class="corp-hero__actions">
+					<a class="btn btn--primary uppercase" href={primaryCta.href}>{primaryCta.label}</a>
+					<a class="btn btn--ghost uppercase" href={secondaryCta.href}>{secondaryCta.label}</a>
+				</div>
+				<dl class="corp-kpis">
+					{
+						kpis.map((k) => (
+							<div class="corp-kpis__item">
+								<dt>{k.label}</dt>
+								<dd>{k.value}</dd>
+							</div>
+						))
+					}
+				</dl>
+			</div>
+			<figure class="corp-hero__figure">
+				<div class="corp-hero__frame">
+					<img src={image.src} alt={image.alt} width="900" height="1100" loading="eager" />
+				</div>
+				<figcaption class="corp-hero__caption">Operations &amp; product engineering — EU hub</figcaption>
+			</figure>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,141 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const sections = [
+	{
+		id: "controller",
+		title: "Who is responsible",
+		body: "This demo text describes the data controller for this regional site (for example, the UK sales entity). Replace with the legal entity name, registered address, and company registration details approved by your privacy counsel.",
+	},
+	{
+		id: "data-we-collect",
+		title: "Information we may collect",
+		body: "Illustrative categories include: contact details you submit on forms, account or membership identifiers, order and warranty records, device and log data from this website, and marketing preferences. Final definitions must match your actual processing activities and record of processing.",
+	},
+	{
+		id: "use",
+		title: "How we use information",
+		body: "Typical purposes are: fulfilling orders and service requests, operating this website, security and fraud prevention, analytics to improve products and content, and — where permitted — marketing. Each purpose needs a stated lawful basis under UK GDPR / EU GDPR as applicable.",
+	},
+	{
+		id: "rights",
+		title: "Your rights",
+		body: "Depending on jurisdiction, individuals may have rights to access, rectify, erase, restrict, or object to certain processing, and to data portability or to withdraw consent. Describe how requests are submitted, response timelines, and appeal routes. Do not copy this paragraph verbatim for a live policy.",
+	},
+	{
+		id: "retention",
+		title: "Retention and security",
+		body: "Explain how long categories of data are kept and the technical and organisational measures used to protect personal data. Link to any separate cookie policy if cookies are used.",
+	},
+	{
+		id: "contact-privacy",
+		title: "Contact",
+		body: "Provide a monitored privacy inbox or postal address (and, where required, the details of your Data Protection Officer or EU/UK representative). Replace this placeholder before publication.",
+	},
+];
+---
+
+<SiteLayout
+	title="Privacy policy — Shimano Fishing United Kingdom"
+	description="How we handle personal information for visitors and customers of Shimano Fishing UK. Demo legal layout — replace with counsel-approved wording."
+>
+	<div slot="pre-main" class="mb-20 w-full">
+		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
+			<div class="absolute inset-0">
+				<img
+					src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=2000&q=80"
+					alt=""
+					width="2000"
+					height="800"
+					loading="eager"
+					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
+				/>
+			</div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.15)_100%)]"
+				aria-hidden="true"
+			>
+			</div>
+			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Legal</p>
+				<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+					Privacy policy
+				</h1>
+				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
+					How we respect personal data when you use this website, contact us, or interact with Shimano Fishing in the United
+					Kingdom. This page is a structure template only.
+				</p>
+				<a
+					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+					href="#notice"
+				>
+					Read the overview
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<section class="text-center" id="notice" aria-labelledby="notice-heading">
+		<h2 id="notice-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Draft notice
+		</h2>
+	</section>
+
+	<div class="w-full max-w-none text-left">
+		<p class="m-0 text-base leading-relaxed text-zinc-600">
+			<strong class="font-semibold text-brand-black">This is not a binding privacy notice.</strong> Replace every section with
+			text reviewed and approved by your data protection and legal teams. Map each processing activity to a lawful basis,
+			update retention schedules, and align with your cookie banner and vendor list before go-live.
+		</p>
+		<p class="mt-5 text-base leading-relaxed text-zinc-600">
+			Last updated (demo): <time datetime="2026-05-18">18 May 2026</time>
+		</p>
+	</div>
+
+	{
+		sections.map((s) => (
+			<>
+				<section class="text-center" id={s.id} aria-labelledby={`${s.id}-heading`}>
+					<h2 id={`${s.id}-heading`} class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+						{s.title}
+					</h2>
+				</section>
+				<div class="w-full max-w-none text-left">
+					<p class="m-0 text-base leading-relaxed text-zinc-600">{s.body}</p>
+				</div>
+			</>
+		))
+	}
+
+	<section class="text-center" aria-labelledby="related-heading">
+		<h2 id="related-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Related legal pages
+		</h2>
+	</section>
+
+	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/terms-and-conditions"
+		>
+			Terms and conditions
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/legal-info"
+		>
+			Legal info
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+			href="/"
+		>
+			Back to home
+		</a>
+	</div>
+
+	<script>
+		import { initHome } from "../scripts/home.ts";
+		initHome();
+	</script>
+</SiteLayout>

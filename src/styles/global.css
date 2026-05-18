@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+	--font-display: "Oswald", ui-sans-serif, system-ui, sans-serif;
+	--font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+
+	--color-shimano-500: #00a0e9;
+	--color-shimano-600: #0088c6;
+	--color-brand-black: #0a0a0a;
+	--color-footer: #1c1c1c;
+}
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		@apply m-0 overflow-x-hidden bg-white font-sans text-[15px] leading-[1.55] text-brand-black antialiased;
+	}
+
+	a {
+		@apply text-inherit no-underline;
+	}
+
+	img {
+		@apply block h-auto max-w-full;
+	}
+}
+
+/* body.nav-open toggled by src/scripts/home.ts */
+@layer components {
+	body.nav-open {
+		@apply overflow-hidden lg:overflow-auto;
+	}
+
+	body.nav-open #drawerBtn span:nth-child(1) {
+		transform: translateY(7px) rotate(45deg);
+	}
+
+	body.nav-open #drawerBtn span:nth-child(2) {
+		opacity: 0;
+	}
+
+	body.nav-open #drawerBtn span:nth-child(3) {
+		transform: translateY(-7px) rotate(-45deg);
+	}
+
+	#mobileDrawer {
+		transform: translateX(100%);
+	}
+
+	body.nav-open #mobileDrawer {
+		transform: translateX(0);
+	}
+
+	#drawerBackdrop {
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 0.2s ease,
+			visibility 0.2s ease;
+	}
+
+	body.nav-open #drawerBackdrop {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	/* news tab panels — toggled with .is-active via home.ts */
+	[data-news-panel] {
+		display: none;
+	}
+
+	[data-news-panel].is-active {
+		display: block;
+	}
+}
+
+@layer utilities {
+	.is-hidden {
+		display: none !important;
+	}
+}

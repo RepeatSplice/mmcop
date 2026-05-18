@@ -1,0 +1,72 @@
+---
+import { Icon } from 'astro-icon/components';
+
+export interface Slide {
+	href: string;
+	src: string;
+	alt: string;
+}
+
+export interface Props {
+	slides: Slide[];
+	delayMs?: number;
+}
+
+const { slides, delayMs = 5000 } = Astro.props;
+---
+
+<section class="relative bg-[#0d0d0d] text-white" aria-roledescription="carousel" aria-label="Featured" data-hero-carousel data-delay={delayMs}>
+	<div class="relative aspect-[21/7] max-h-[70vh] min-h-[220px] overflow-hidden max-md:aspect-video max-md:min-h-[200px]">
+		{
+			slides.map((slide, i) => (
+				<div
+					class:list={[
+						"absolute inset-0 z-0 opacity-0 transition-opacity duration-[600ms] ease-in-out pointer-events-none [.is-active]:z-[1] [.is-active]:opacity-100 [.is-active]:pointer-events-auto",
+						{ "is-active": i === 0 },
+					]}
+					data-hero-slide
+					role="group"
+					aria-label={`Slide ${i + 1} of ${slides.length}`}
+				>
+					<a class="block h-full" href={slide.href}>
+						<img class="h-full w-full object-cover" src={slide.src} alt={slide.alt} width="1920" height="640" loading={i === 0 ? "eager" : "lazy"} />
+					</a>
+				</div>
+			))
+		}
+		<button
+			type="button"
+			class="absolute left-3 top-1/2 z-[5] flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/35 bg-black/35 text-white transition-colors hover:bg-black/55"
+			data-hero-prev
+			aria-label="Previous slide"
+		>
+			<Icon name="lucide:chevron-left" class="size-5 shrink-0" is:inline aria-hidden="true" />
+		</button>
+		<button
+			type="button"
+			class="absolute right-3 top-1/2 z-[5] flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/35 bg-black/35 text-white transition-colors hover:bg-black/55"
+			data-hero-next
+			aria-label="Next slide"
+		>
+			<Icon name="lucide:chevron-right" class="size-5 shrink-0" is:inline aria-hidden="true" />
+		</button>
+		<div class="absolute bottom-4 left-0 right-0 z-[5] flex justify-center gap-2" role="tablist" aria-label="Slides">
+			{
+				slides.map((_, i) => (
+					<button
+						type="button"
+						class:list={[
+							"h-2 w-2 cursor-pointer border border-white/60 bg-transparent p-0 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-white [.is-active]:bg-white",
+							{ "is-active": i === 0 },
+						]}
+						data-hero-dot
+						role="tab"
+						aria-selected={i === 0 ? "true" : "false"}
+						aria-label={`Go to slide ${i + 1}`}
+					>
+					</button>
+				))
+			}
+		</div>
+	</div>
+</section>

@@ -1,0 +1,207 @@
+---
+import { Icon } from "astro-icon/components";
+import { europeanLocales } from "../data/euLanguages";
+
+type Variant = "subheader" | "drawer";
+
+interface Props {
+	variant?: Variant;
+}
+
+const { variant = "subheader" } = Astro.props;
+
+const isDrawer = variant === "drawer";
+const panelId = isDrawer ? "langMenuPanelDrawer" : "langMenuPanel";
+const btnId = isDrawer ? "langMenuBtnDrawer" : "langMenuBtn";
+
+/** Public origin for Google Translate `u=` — localhost is often blocked. */
+let translateOrigin = "";
+const publicSite = import.meta.env.PUBLIC_SITE_URL as string | undefined;
+if (publicSite?.trim()) {
+	try {
+		translateOrigin = new URL(publicSite.trim()).origin;
+	} catch {
+		/* ignore invalid */
+	}
+}
+if (!translateOrigin && Astro.site) {
+	translateOrigin = Astro.site.origin;
+}
+
+const showLocalhostTranslateHint = import.meta.env.DEV && !translateOrigin;
+---
+
+<div class:list={["relative flex", { "w-full": isDrawer }]} data-translate-origin={translateOrigin}>
+	<button
+		type="button"
+		id={btnId}
+		class:list={[
+			"lang-switcher-trigger flex items-center gap-1.5 border-0 bg-transparent font-semibold tracking-wide text-brand-black transition-colors hover:text-shimano-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500",
+			{ "uppercase text-[11px]": !isDrawer, "w-full justify-between rounded-none border border-zinc-200 px-3 py-2.5 text-left text-sm normal-case": isDrawer },
+		]}
+		aria-expanded="false"
+		aria-haspopup="listbox"
+		aria-controls={panelId}
+	>
+		<Icon name="lucide:languages" class="size-3.5 shrink-0 text-zinc-600" is:inline aria-hidden="true" />
+		<Icon name="circle-flags:gb" class="size-4 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" aria-hidden="true" />
+		<span class:list={[{ "hidden sm:inline": !isDrawer }]}>English</span>
+		<span class:list={[{ "sm:hidden": !isDrawer }]}>EN</span>
+		<Icon name="lucide:chevron-down" class="lang-chevron size-3.5 shrink-0 text-zinc-500 transition-transform" is:inline aria-hidden="true" />
+	</button>
+
+	<div
+		id={panelId}
+		class:list={[
+			"lang-menu-panel invisible absolute z-[100] max-h-[min(22rem,70vh)] -translate-y-1 overflow-y-auto border border-zinc-200 bg-white py-1 opacity-0 shadow-[0_12px_40px_rgba(0,0,0,0.12)] transition-all duration-150 ease-out",
+			isDrawer ? "right-0 top-full mt-1 w-full" : "right-0 top-full mt-1 w-[min(20rem,calc(100vw-2rem))]",
+		]}
+		role="listbox"
+		aria-labelledby={btnId}
+		hidden
+	>
+		<p class="border-b border-zinc-100 px-3 py-2 font-sans text-[10px] font-normal uppercase leading-snug tracking-wide text-zinc-500">
+			View via Google Translate (machine translation)
+		</p>
+		{
+			showLocalhostTranslateHint && (
+				<p class="border-b border-amber-100 bg-amber-50 px-3 py-2 font-sans text-[10px] font-normal normal-case leading-snug tracking-normal text-amber-950">
+					Google usually cannot translate <code class="rounded bg-amber-100/80 px-0.5 font-mono text-[10px]">localhost</code>. Add{" "}
+					<code class="rounded bg-amber-100/80 px-0.5 font-mono text-[10px]">PUBLIC_SITE_URL</code> to <code class="rounded bg-amber-100/80 px-0.5 font-mono text-[10px]">.env</code> (your live site URL), restart dev, then try again.
+				</p>
+			)
+		}
+		{
+			europeanLocales.map((loc) => (
+				<button
+					type="button"
+					role="option"
+					class="flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-[13px] font-normal normal-case tracking-normal text-brand-black transition-colors hover:bg-zinc-50"
+					data-lang-tl={loc.googleTl === null ? "" : loc.googleTl}
+				>
+					<Icon
+						name={`circle-flags:${loc.flagCode}`}
+						class="size-5 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+						aria-hidden="true"
+					/>
+					<span class="min-w-0 flex-1 leading-snug">{loc.label}</span>
+				</button>
+			))
+		}
+	</div>
+</div>
+
+<script is:inline>
+	(function () {
+		if (document.documentElement.dataset.langSwitcherInit === "1") return;
+		document.documentElement.dataset.langSwitcherInit = "1";
+
+		function closeAll() {
+			document.querySelectorAll(".lang-menu-panel").forEach(function (panel) {
+				panel.classList.add("invisible", "opacity-0", "-translate-y-1");
+				panel.classList.remove("visible", "opacity-100", "translate-y-0");
+				panel.hidden = true;
+				var labelledby = panel.getAttribute("aria-labelledby");
+				var btn = labelledby ? document.getElementById(labelledby) : null;
+				if (btn) {
+					btn.setAttribute("aria-expanded", "false");
+					var ch = btn.querySelector(".lang-chevron");
+					if (ch) ch.classList.remove("rotate-180");
+				}
+			});
+		}
+
+		function openPanel(panel, btn) {
+			closeAll();
+			panel.hidden = false;
+			panel.classList.remove("invisible", "opacity-0", "-translate-y-1");
+			panel.classList.add("visible", "opacity-100", "translate-y-0");
+			btn.setAttribute("aria-expanded", "true");
+			var ch = btn.querySelector(".lang-chevron");
+			if (ch) ch.classList.add("rotate-180");
+		}
+
+		function getTranslatePageUrl() {
+			var el = document.querySelector("[data-translate-origin]");
+			var origin = el && el.getAttribute("data-translate-origin");
+			if (origin) {
+				try {
+					return new URL(
+						window.location.pathname + window.location.search + window.location.hash,
+						origin
+					).href;
+				} catch (e) {
+					/* fall through */
+				}
+			}
+			return window.location.href;
+		}
+
+		function googleTranslateUrl(tl) {
+			var u = encodeURIComponent(getTranslatePageUrl());
+			return "https://translate.google.com/translate?hl=en&sl=en&tl=" + encodeURIComponent(tl) + "&u=" + u;
+		}
+
+		function stripGoogleTranslateIfPresent() {
+			try {
+				var url = new URL(window.location.href);
+				if (url.hostname.indexOf("translate.google") !== -1) {
+					var inner = url.searchParams.get("u");
+					if (inner) {
+						window.location.href = decodeURIComponent(inner);
+						return;
+					}
+				}
+			} catch (e) {
+				/* ignore */
+			}
+			window.location.href =
+				window.location.origin + window.location.pathname + window.location.search + window.location.hash;
+		}
+
+		document.querySelectorAll(".lang-switcher-trigger").forEach(function (el) {
+			el.addEventListener("click", function (e) {
+				e.stopPropagation();
+				var controls = el.getAttribute("aria-controls");
+				if (!controls) return;
+				var panel = document.getElementById(controls);
+				if (!panel) return;
+				var expanded = el.getAttribute("aria-expanded") === "true";
+				if (expanded) closeAll();
+				else openPanel(panel, el);
+			});
+		});
+
+		document.querySelectorAll(".lang-menu-panel").forEach(function (panel) {
+			panel.addEventListener("click", function (e) {
+				e.stopPropagation();
+			});
+		});
+
+		document.querySelectorAll(".lang-menu-panel [data-lang-tl]").forEach(function (opt) {
+			opt.addEventListener("click", function (e) {
+				e.stopPropagation();
+				var tl = opt.getAttribute("data-lang-tl") || "";
+				closeAll();
+				if (!tl) stripGoogleTranslateIfPresent();
+				else window.location.href = googleTranslateUrl(tl);
+			});
+		});
+
+		document.addEventListener("click", function () {
+			closeAll();
+		});
+		document.addEventListener("keydown", function (e) {
+			if (e.key === "Escape") closeAll();
+		});
+	})();
+</script>
+
+<style>
+	.lang-menu-panel {
+		pointer-events: none;
+	}
+	.lang-menu-panel.visible {
+		pointer-events: auto;
+	}
+</style>

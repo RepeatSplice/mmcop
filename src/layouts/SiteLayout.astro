@@ -1,0 +1,43 @@
+---
+import "../styles/global.css";
+import ShimanoHeader from "../components/ShimanoHeader.astro";
+import ShimanoFooter from "../components/ShimanoFooter.astro";
+
+interface Props {
+	title: string;
+	description?: string;
+	mainClass?: string;
+}
+
+const {
+	title,
+	description = "Reels, rods, lures and fishing inspiration — Shimano Fishing United Kingdom.",
+	mainClass = "mx-auto flex max-w-7xl flex-col gap-20 px-6",
+} = Astro.props;
+---
+
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Oswald:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<ShimanoHeader />
+		<slot name="pre-main" />
+		<main class={mainClass}>
+			<slot />
+		</main>
+		<ShimanoFooter />
+		<slot name="scripts" />
+	</body>
+</html>

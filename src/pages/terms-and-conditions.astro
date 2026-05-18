@@ -1,0 +1,146 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const sections = [
+	{
+		id: "agreement",
+		title: "Agreement",
+		body: "By accessing this website you agree to these terms. If you do not agree, you should not use the site. Replace with jurisdiction-specific wording and any age restrictions required for your market.",
+	},
+	{
+		id: "use-of-site",
+		title: "Use of the website",
+		body: "Set out permitted uses, prohibited conduct (e.g. scraping, malware, impersonation), account rules if applicable, and consequences of breach. Reference acceptable use policies from your IT and legal teams.",
+	},
+	{
+		id: "ip",
+		title: "Intellectual property",
+		body: "Trademarks, logos, images, videos, and text are protected. Clarify what users may not copy or modify, and any limited licence for personal, non-commercial viewing. Align with group brand guidelines.",
+	},
+	{
+		id: "products-orders",
+		title: "Products, pricing, and orders",
+		body: "If this site is informational only, state that purchases are made through authorised dealers or separate e-commerce platforms and that prices on this site are indicative. If you sell online, add contract formation, delivery, returns, and consumer rights (UK/EU).",
+	},
+	{
+		id: "liability",
+		title: "Disclaimer and limitation of liability",
+		body: "Describe exclusions and limits permitted under applicable law — for example, liability for indirect loss, and accuracy of site content. This must be drafted by qualified lawyers; demo text has no legal effect.",
+	},
+	{
+		id: "law",
+		title: "Governing law and disputes",
+		body: "Specify governing law (e.g. England and Wales) and courts or alternative dispute resolution. Cross-border sales may need additional consumer provisions.",
+	},
+	{
+		id: "changes-terms",
+		title: "Changes to these terms",
+		body: "Explain how and when terms may be updated, how users will be notified, and that continued use may constitute acceptance where law allows.",
+	},
+];
+---
+
+<SiteLayout
+	title="Terms and conditions — Shimano Fishing United Kingdom"
+	description="Terms of use for this Shimano Fishing UK website. Demo legal layout — replace with counsel-approved terms."
+>
+	<div slot="pre-main" class="mb-20 w-full">
+		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
+			<div class="absolute inset-0">
+				<img
+					src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=2000&q=80"
+					alt=""
+					width="2000"
+					height="800"
+					loading="eager"
+					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
+				/>
+			</div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.15)_100%)]"
+				aria-hidden="true"
+			>
+			</div>
+			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Legal</p>
+				<h1 class="m-0 max-w-[22ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+					Terms and conditions
+				</h1>
+				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
+					Rules for using this website and our digital services in the UK. Demo copy for layout — not for publication without
+					legal sign-off.
+				</p>
+				<a
+					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+					href="#agreement"
+				>
+					Read the terms
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<section class="text-center" aria-labelledby="draft-terms-heading">
+		<h2 id="draft-terms-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Draft terms
+		</h2>
+	</section>
+
+	<div class="w-full max-w-none text-left">
+		<p class="m-0 text-base leading-relaxed text-zinc-600">
+			<strong class="font-semibold text-brand-black">These terms are placeholders only.</strong> They do not create a contract
+			with visitors and must not be relied upon. Insert definitive language from your legal department, including any
+			mandatory consumer information and links to policies that form part of the contract.
+		</p>
+		<p class="mt-5 text-base leading-relaxed text-zinc-600">
+			Last updated (demo): <time datetime="2026-05-18">18 May 2026</time>
+		</p>
+	</div>
+
+	{
+		sections.map((s) => (
+			<>
+				<section class="text-center" id={s.id} aria-labelledby={`${s.id}-heading`}>
+					<h2 id={`${s.id}-heading`} class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+						{s.title}
+					</h2>
+				</section>
+				<div class="w-full max-w-none text-left">
+					<p class="m-0 text-base leading-relaxed text-zinc-600">{s.body}</p>
+				</div>
+			</>
+		))
+	}
+
+	<section class="text-center" aria-labelledby="related-terms-heading">
+		<h2 id="related-terms-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
+			Related legal pages
+		</h2>
+	</section>
+
+	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/privacy-policy"
+		>
+			Privacy policy
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+			href="/legal-info"
+		>
+			Legal info
+		</a>
+		<a
+			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+			href="/"
+		>
+			Back to home
+		</a>
+	</div>
+
+	<script>
+		import { initHome } from "../scripts/home.ts";
+		initHome();
+	</script>
+</SiteLayout>
