@@ -11,12 +11,13 @@ export function requireEnv(name: string): string {
 }
 
 export function getSiteUrl(): string {
-	return import.meta.env.SITE_URL || "https://monarch-dayz.com";
+	return process.env.SITE_URL || import.meta.env.SITE_URL || "https://monarch-dayz.com";
 }
 
 /** Hostname (no protocol/path) for the admin subdomain, e.g. "admin.monarch-dayz.com". */
 export function getAdminHost(): string {
-	return import.meta.env.ADMIN_HOST || "";
+	// process.env is read at runtime; import.meta.env is baked at build time
+	return process.env.ADMIN_HOST || import.meta.env.ADMIN_HOST || "";
 }
 
 export function hasAdminHost(): boolean {
