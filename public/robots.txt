@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /manage/
+Disallow: /account/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://monarch-dayz.com/sitemap.xml
