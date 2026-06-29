@@ -1,0 +1,966 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/portal-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// Auth.js (Prisma Adapter) models
+// ─────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────
+// Core users + RBAC
+// ─────────────────────────────────────────
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum StaffRole {
+  STAFF
+  OPS_ADMIN
+  FINANCE
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String?  @unique
+  emailVerified DateTime?
+  image         String?
+  discordUserId String?  @unique
+  // Notification prefs — kept as small string enums to avoid an extra table.
+  // notifyChatMode: "MENTIONS" (default) or "ALL".
+  notifyChatMode String  @default("MENTIONS")
+  // notifyTicketMode: "WATCHED" (default — assignee/creator/mention) or "ALL_IN_WORKSPACE".
+  notifyTicketMode String @default("WATCHED")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  staffProfile StaffProfile?
+  memberships  WorkspaceMember[]
+  applications Application[]
+  createdInvites WorkspaceInvite[] @relation("InvitesCreatedBy")
+
+  createdTasks Task[]  @relation("TaskCreatedBy")
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdJobs  Job[]   @relation("JobCreatedBy")
+  createdQuotes Quote[] @relation("QuoteCreatedBy")
+
+  createdTickets Ticket[] @relation("TicketCreatedBy")
+  assignedTickets Ticket[] @relation("TicketAssignee")
+
+  taskComments TaskComment[]
+  jobComments  JobComment[]
+  ticketComments TicketComment[]
+  uploadedTicketAttachments TicketAttachment[]
+
+  timeEntries  TimeEntry[] @relation("TimeEntryStaff")
+  activityEvents ActivityEvent[] @relation("ActivityActor")
+  notifications Notification[]
+  chatMessages WorkspaceChatMessage[]
+}
+
+model StaffProfile {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  role      StaffRole @default(STAFF)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([role])
+  @@index([active])
+}
+
+// ─────────────────────────────────────────
+// Workspace + onboarding
+// ─────────────────────────────────────────
+
+enum ApplicationServiceType {
+  RETAINER
+  PAYG
+  UNSURE
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model Application {
+  id          String                 @id @default(cuid())
+  userId      String
+  serverName  String
+  discord     String?
+  desired     ApplicationServiceType @default(UNSURE)
+  description String                 @db.Text
+  status      ApplicationStatus      @default(SUBMITTED)
+  reviewedAt  DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+
+  // Per-workspace human ID counters.
+  // Used to generate Jira-style keys like "KAN-12".
+  nextTaskNumber Int @default(1)
+  nextJobNumber  Int @default(1)
+  nextTicketNumber Int @default(1)
+
+  // Stripe linkage
+  stripeCustomerId        String? @unique
+  stripeSubscriptionId    String? @unique
+  stripeSubscriptionStatus String?
+  // Optional plan/tier label captured from Stripe checkout/subscription metadata.
+  stripeTier              String?
+  // Renewal moment (subscription `current_period_end`) for human-readable copy.
+  stripeRenewalAt         DateTime?
+
+  // Medusa shop customer (read-only billing link)
+  medusaCustomerId String?
+
+  // Cal.com or external booking URL for sprint reviews
+  calBookingUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members WorkspaceMember[]
+  server    WorkspaceServer?
+  pinnedUpdates WorkspacePinnedUpdate[]
+  chatReads WorkspaceChatRead[]
+  invites WorkspaceInvite[]
+  tasks   Task[]
+  tickets Ticket[]
+  sprints Sprint[]
+  jobs    Job[]
+  events  ActivityEvent[]
+  connections IntegrationConnection[]
+  timeEntries TimeEntry[]
+  notifications Notification[]
+  discord     WorkspaceDiscord?
+  chatMessages WorkspaceChatMessage[]
+  boardColumns WorkspaceBoardColumn[]
+
+  @@index([active])
+}
+
+/// Kanban columns for the sprint board (system + workspace-custom).
+model WorkspaceBoardColumn {
+  id          String       @id
+  workspaceId String
+  label       String
+  status      TicketStatus
+  position    Int          @default(0)
+  color       String       @default("slate")
+  isSystem    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
+
+  @@unique([workspaceId, id])
+  @@index([workspaceId, position])
+}
+
+model WorkspaceInvite {
+  id              String        @id @default(cuid())
+  workspaceId     String
+  emailLower      String
+  role            WorkspaceRole @default(MEMBER)
+  tokenHash       String        @unique
+  createdByUserId String
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("InvitesCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, emailLower])
+  @@index([workspaceId, createdAt])
+  @@index([expiresAt])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  type        String
+  title       String
+  body        String?  @db.Text
+  url         String?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([workspaceId, createdAt])
+  @@index([createdAt])
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  // Set when the user finishes (or explicitly skips) the /onboard wizard.
+  onboardedAt DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+// ─────────────────────────────────────────
+// Retainer: sprints + tasks
+// ─────────────────────────────────────────
+
+enum SprintStatus {
+  PLANNING
+  ACTIVE
+  COMPLETE
+  CANCELLED
+}
+
+enum TaskStatus {
+  BACKLOG
+  PLANNED
+  IN_PROGRESS
+  REVIEW
+  DONE
+  CANCELLED
+}
+
+enum TaskDiscipline {
+  Scripts
+  GFX
+  Imports
+  Weapons
+  Branding
+  VFX
+  Hosting
+  Other
+}
+
+enum TicketType {
+  EPIC
+  TICKET
+}
+
+// Superset status: supports both retainer-style board flow and PayG request/quote states.
+enum TicketStatus {
+  BACKLOG
+  PLANNED
+  IN_PROGRESS
+  REVIEW
+  DONE
+  CANCELLED
+
+  REQUESTED
+  QUOTED
+  AWAITING_PAYMENT
+  ACTIVE
+  AWAITING_CLIENT
+}
+
+model Sprint {
+  id          String       @id @default(cuid())
+  workspaceId String
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  hoursMax    Int
+  hoursUsed   Float        @default(0)
+  status      SprintStatus @default(PLANNING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  tickets   Ticket[]
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model Ticket {
+  id          String        @id @default(cuid())
+  workspaceId String
+  sprintId    String?
+  createdById String
+  assigneeId  String?
+  parentId    String?
+  subtaskOfId String?
+
+  // Workspace-scoped display id: ABC-1, ABC-2, ...
+  number      Int
+  key         String        @unique
+
+  type        TicketType    @default(TICKET)
+  title       String
+  description String?       @db.Text
+  discipline  TaskDiscipline @default(Other)
+  status      TicketStatus  @default(BACKLOG)
+  boardColumnId String?
+
+  // Ordering within a container (board column/backlog)
+  position    Int           @default(1000)
+
+  hoursEst    Float?
+  hoursActual Float?
+  dueDate     DateTime?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  boardColumn WorkspaceBoardColumn? @relation(fields: [workspaceId, boardColumnId], references: [workspaceId, id], onDelete: SetNull)
+  sprint      Sprint?   @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  createdBy User     @relation("TicketCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  assignee  User?    @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  parent   Ticket?  @relation("TicketHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Ticket[] @relation("TicketHierarchy")
+
+  subtaskOf Ticket?  @relation("TicketSubtasks", fields: [subtaskOfId], references: [id], onDelete: SetNull)
+  subtasks  Ticket[] @relation("TicketSubtasks")
+
+  comments    TicketComment[]
+  attachments TicketAttachment[]
+  quotes      Quote[]
+  events      ActivityEvent[]
+  timeEntries TimeEntry[]
+
+  @@index([workspaceId])
+  @@index([sprintId])
+  @@index([status])
+  @@index([type])
+  @@index([assigneeId])
+  @@index([parentId])
+  @@index([subtaskOfId])
+  @@index([position])
+  @@index([boardColumnId])
+}
+
+model TicketComment {
+  id         String   @id @default(cuid())
+  ticketId   String
+  authorId   String?
+  authorName String
+  body       String   @db.Text
+  createdAt  DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+}
+
+model TicketAttachment {
+  id         String   @id @default(cuid())
+  ticketId   String
+  uploaderId String?
+  fileName   String
+  mimeType   String
+  byteSize   Int
+  storagePath String
+  createdAt  DateTime @default(now())
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploader User?  @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([uploaderId])
+}
+
+model Task {
+  id          String         @id @default(cuid())
+  workspaceId String
+  sprintId    String?
+  createdById String
+  assigneeId  String?
+
+  // Workspace-scoped display id: TASK-001, TASK-002, ...
+  number      Int
+  key         String         @unique
+
+  title       String
+  description String?        @db.Text
+  discipline  TaskDiscipline @default(Other)
+  status      TaskStatus     @default(BACKLOG)
+  priority    Int            @default(1000)
+  hoursEst    Float?
+  hoursActual Float?
+  dueDate     DateTime?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sprint    Sprint?   @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  createdBy User     @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  assignee  User?    @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  comments   TaskComment[]
+  attachments TaskAttachment[]
+  events     ActivityEvent[]
+  timeEntries TimeEntry[]
+
+  @@index([workspaceId])
+  @@index([sprintId])
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String?
+  authorName String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  task   Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([taskId])
+}
+
+model TaskAttachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  kind      String
+  url       String
+  label     String?
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+// ─────────────────────────────────────────
+// PAYG: jobs + quotes
+// ─────────────────────────────────────────
+
+enum JobStatus {
+  REQUESTED
+  QUOTED
+  AWAITING_PAYMENT
+  ACTIVE
+  REVIEW
+  DONE
+  CANCELLED
+}
+
+enum QuoteType {
+  FIXED
+  HOURLY_ESTIMATE
+}
+
+model Job {
+  id          String         @id @default(cuid())
+  workspaceId String
+  createdById String
+
+  number      Int
+  key         String         @unique
+
+  title       String
+  description String         @db.Text
+  discipline  TaskDiscipline @default(Other)
+  status      JobStatus      @default(REQUESTED)
+  priority    Int            @default(1000)
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  quotes Quote[]
+  comments JobComment[]
+  attachments JobAttachment[]
+  events ActivityEvent[]
+  timeEntries TimeEntry[]
+  connections IntegrationConnection[]
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model Quote {
+  id        String    @id @default(cuid())
+  jobId     String
+  ticketId  String?
+  createdById String
+  type      QuoteType @default(FIXED)
+  amountCents Int
+  currency  String    @default("usd")
+  scope     String    @db.Text
+  timeline  String?   @db.Text
+  approvedAt DateTime?
+
+  stripeCheckoutSessionId String?
+  stripeCheckoutUrl       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  ticket    Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  createdBy User @relation("QuoteCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([ticketId])
+}
+
+model JobComment {
+  id        String   @id @default(cuid())
+  jobId     String
+  authorId  String?
+  authorName String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  job    Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([jobId])
+}
+
+model JobAttachment {
+  id        String   @id @default(cuid())
+  jobId     String
+  kind      String
+  url       String
+  label     String?
+  createdAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
+
+// ─────────────────────────────────────────
+// Activity + time tracking + integrations
+// ─────────────────────────────────────────
+
+enum ActivitySource {
+  PORTAL
+  DISCORD
+  GITHUB
+  SYSTEM
+}
+
+model ActivityEvent {
+  id          String         @id @default(cuid())
+  workspaceId String
+  taskId      String?
+  jobId       String?
+  ticketId    String?
+  source      ActivitySource @default(PORTAL)
+  type        String
+  body        String         @db.Text
+  actorUserId String?
+  createdAt   DateTime       @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  job       Job?      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  ticket    Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([taskId, createdAt])
+  @@index([jobId, createdAt])
+  @@index([ticketId, createdAt])
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  workspaceId String
+  taskId      String?
+  jobId       String?
+  ticketId    String?
+  staffUserId String
+  minutes     Int
+  note        String?
+  billable    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  job       Job?      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  ticket    Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  staff     User      @relation("TimeEntryStaff", fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([taskId, createdAt])
+  @@index([jobId, createdAt])
+  @@index([ticketId, createdAt])
+  @@index([staffUserId, createdAt])
+}
+
+enum IntegrationType {
+  GITHUB_REPO
+  DISCORD_CHANNEL
+}
+
+model IntegrationConnection {
+  id          String          @id @default(cuid())
+  workspaceId String
+  type        IntegrationType
+  externalId  String
+  jobId       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  job       Job?      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([type, externalId], name: "type_externalId")
+  @@index([workspaceId])
+  @@index([jobId])
+}
+
+// ─────────────────────────────────────────
+// Discord workspace integration + chat
+// ─────────────────────────────────────────
+
+enum ChatChannel {
+  CHAT
+}
+
+enum ChatMessageSource {
+  PORTAL
+  DISCORD
+}
+
+model WorkspaceDiscord {
+  id                    String    @id @default(cuid())
+  workspaceId           String    @unique
+  guildId               String
+  categoryId            String
+  chatChannelId         String
+  announcementsChannelId String
+  logsChannelId         String
+  infoChannelId         String
+  provisionedAt         DateTime?
+  lastError             String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([chatChannelId])
+}
+
+model WorkspaceChatMessage {
+  id               String            @id @default(cuid())
+  workspaceId      String
+  channel          ChatChannel       @default(CHAT)
+  body             String            @default("") @db.Text
+  authorUserId     String?
+  authorDiscordId  String?
+  authorDisplayName String
+  source           ChatMessageSource
+  discordMessageId String?           @unique
+  createdAt        DateTime          @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author      User?     @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
+  attachments WorkspaceChatAttachment[]
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, channel, createdAt])
+}
+
+model WorkspaceChatAttachment {
+  id                  String   @id @default(cuid())
+  messageId           String
+  fileName            String
+  mimeType            String
+  byteSize            Int
+  storagePath         String
+  discordAttachmentId String?  @unique
+  createdAt           DateTime @default(now())
+
+  message WorkspaceChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// Per-user last read timestamp for chat unread counts
+model WorkspaceChatRead {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  lastReadAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+enum ServerMonitorProvider {
+  MANUAL
+  BATTLEMETRICS
+  CFTOOLS
+  CUSTOM_WEBHOOK
+}
+
+model WorkspaceServer {
+  id           String                @id @default(cuid())
+  workspaceId  String                @unique
+  provider     ServerMonitorProvider @default(MANUAL)
+  externalId   String?
+  displayName  String?
+  online       Boolean               @default(false)
+  playerCount  Int                   @default(0)
+  maxPlayers   Int                   @default(0)
+  mapName      String?
+  version      String?
+  lastSeenAt   DateTime?
+  lastRestartAt DateTime?
+  lastError    String?               @db.Text
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([provider])
+}
+
+model WorkspacePinnedUpdate {
+  id          String   @id @default(cuid())
+  workspaceId String
+  body        String   @db.Text
+  pinnedById  String?
+  pinnedAt    DateTime @default(now())
+  active      Boolean  @default(true)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, active, pinnedAt])
+}
+
+// ─────────────────────────────────────────
+// Discord bot — guild automation & UI sessions
+// ─────────────────────────────────────────
+
+model DiscordGuildSettings {
+  guildId      String   @id
+  tagRoleId    String?
+  uiRoleId     String?
+  uiCategoryId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  joinRoles      DiscordJoinRole[]
+  ageRoleRules   DiscordAgeRoleRule[]
+  timedRoleRules DiscordTimedRoleRule[]
+  connectedRules DiscordConnectedRoleRule[]
+}
+
+model DiscordJoinRole {
+  id      String @id @default(cuid())
+  guildId String
+  roleId  String
+
+  guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, roleId])
+}
+
+model DiscordAgeRoleRule {
+  id      String @id @default(cuid())
+  guildId String
+  roleId  String
+  days    Int
+
+  guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, roleId])
+}
+
+model DiscordTimedRoleRule {
+  id              String @id @default(cuid())
+  guildId         String
+  roleId          String
+  durationMinutes Int
+
+  guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, roleId])
+}
+
+enum DiscordConnectedRoleAction {
+  ADD_ON_GAIN
+  REMOVE_ON_LOSS
+}
+
+model DiscordConnectedRoleRule {
+  id            String                     @id @default(cuid())
+  guildId       String
+  triggerRoleId String
+  targetRoleId  String
+  action        DiscordConnectedRoleAction @default(ADD_ON_GAIN)
+
+  guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, triggerRoleId, targetRoleId, action])
+}
+
+model DiscordTimedRoleGrant {
+  id          String   @id @default(cuid())
+  guildId     String
+  memberId    String
+  roleId      String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([guildId, memberId])
+}
+
+model DiscordUiSession {
+  id           String    @id @default(cuid())
+  guildId      String
+  memberId     String
+  channelId    String
+  reason       String    @db.Text
+  savedRoleIds String[]
+  openedById   String
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([guildId, memberId, closedAt])
+  @@index([channelId])
+}
+
+model DiscordCaptchaConfig {
+  guildId          String   @id
+  channelId        String
+  panelMessageId   String?
+  unverifiedRoleId String
+  verifiedRoleId   String
+  enabled          Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum DiscordTicketType {
+  GENERAL_INQUIRY
+  CUSTOMER_SUPPORT
+  ORDER
+}
+
+model DiscordTicketPanel {
+  guildId    String
+  type       DiscordTicketType
+  channelId  String
+  messageId  String?
+  categoryId String?
+  enabled    Boolean           @default(true)
+  updatedAt  DateTime          @updatedAt
+
+  @@id([guildId, type])
+}
+
+model DiscordTicket {
+  id             String            @id @default(cuid())
+  guildId        String
+  memberId       String
+  channelId      String
+  type           DiscordTicketType
+  reason         String
+  subject        String
+  details        String            @db.Text
+  extra          String?           @db.Text
+  closedAt       DateTime?
+  closedById     String?
+  createdAt      DateTime          @default(now())
+  portalTicketId String?
+
+  @@index([guildId, memberId, closedAt])
+  @@index([channelId])
+}
+

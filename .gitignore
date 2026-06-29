@@ -5,6 +5,19 @@ dist/
 
 # dependencies
 node_modules/
+apps/*/node_modules/
+
+# apps/portal
+apps/portal/.next/
+apps/portal/.env
+apps/portal/.env.*
+!apps/portal/.env.example
+
+# apps/discord-bot
+apps/discord-bot/dist/
+apps/discord-bot/.env
+apps/discord-bot/.env.*
+!apps/discord-bot/.env.example
 
 # logs
 npm-debug.log*
@@ -16,6 +29,12 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+
+# database uploads (CVs)
+data/
+
+# prisma
+prisma/*.db
 
 # macOS-specific files
 .DS_Store

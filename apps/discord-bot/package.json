@@ -1,0 +1,24 @@
+{
+  "name": "@mmbiz/discord-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node --env-file=.env dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/portal"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^20",
+    "tsx": "^4.20.5",
+    "typescript": "^5"
+  }
+}
