@@ -23,7 +23,7 @@
     "dev:portal": "npm run dev --workspace=apps/portal",
     "dev:bot": "npm run dev --workspace=apps/discord-bot",
     "build:portal": "npm run prisma:generate --workspace=apps/portal && npm run build --workspace=apps/portal",
-    "build:bot": "npm run build --workspace=apps/discord-bot",
+    "build:bot": "npm run prisma:generate --workspace=apps/portal && npm run build --workspace=apps/discord-bot",
     "prisma:generate:portal": "npm run prisma:generate --workspace=apps/portal"
   },
   "dependencies": {
