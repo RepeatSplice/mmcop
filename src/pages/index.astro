@@ -1,114 +1,117 @@
 ---
 import "../styles/global.css";
-import ShimanoHeader from "../components/ShimanoHeader.astro";
-import ShimanoFooter from "../components/ShimanoFooter.astro";
+import MonarchHeader from "../components/MonarchHeader.astro";
+import MonarchFooter from "../components/MonarchFooter.astro";
 import HeroCarousel from "../components/HeroCarousel.astro";
+import ShopByScenario from "../components/ShopByScenario.astro";
+import AboutMonarch from "../components/AboutMonarch.astro";
+import HowWeWork from "../components/HowWeWork.astro";
+import NewsUpdates from "../components/NewsUpdates.astro";
+import ContactSection from "../components/ContactSection.astro";
+import PartnersBrandTiles from "../components/PartnersBrandTiles.astro";
+import ShopPreview from "../components/ShopPreview.astro";
+import StoreReviews from "../components/StoreReviews.astro";
+import { featuredPartners } from "../lib/partners.ts";
+import { getChatwootBaseUrl, getChatwootWidgetToken } from "../lib/env";
+import { getCustomerFromSession } from "../lib/customer-auth/session";
+
+const chatwootBase = getChatwootBaseUrl();
+const chatwootToken = getChatwootWidgetToken();
+let customer = null;
+if (chatwootToken) {
+	try { customer = await getCustomerFromSession(Astro.cookies); } catch { customer = null; }
+}
 
 const heroSlides = [
 	{
-		href: "#",
-		alt: "Predator rod lineup",
-		src: "https://images.unsplash.com/photo-1595878715977-2ce7e9fb48c7?auto=format&fit=crop&w=2000&q=80",
+		src: "/Hero_Custom_Weapons.png",
+		alt: "Monarch custom DayZ weapons and gear in game",
+		title: "Custom weapons & packs",
+		lead: "Weapon lines, configs, and workshop releases built for your ruleset and wipe calendar.",
+		ctas: [
+			{ label: "Browse the shop", href: "/shop" },
+			{ label: "Work with us", href: "/work-with-us" },
+		],
 	},
 	{
-		href: "#",
-		alt: "Spinning reel on dark background",
-		src: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2000&q=80",
+		src: "/Hero_Custom_Mapping.png",
+		alt: "Monarch custom DayZ mapping and world building",
+		title: "Custom mapping",
+		lead: "Bases, arenas, and playable spaces shaped for your server identity and season plans.",
+		ctas: [
+			{ label: "How we work", href: "/how-we-work" },
+			{ label: "Contact", href: "/contact" },
+		],
 	},
 	{
-		href: "#",
-		alt: "Angler at sunrise",
-		src: "https://images.unsplash.com/photo-1518834349706-80221f295c7f?auto=format&fit=crop&w=2000&q=80",
-	},
-];
-
-const productTiles = [
-	{
-		href: "#",
-		title: "Reels",
-		src: "https://images.unsplash.com/photo-1595878715977-2ce7e9fb48c7?auto=format&fit=crop&w=800&q=80",
-		tag: "",
+		src: "/Hero_Software_Scripting.png",
+		alt: "Monarch Software DayZ scripting and tooling",
+		title: "Software & scripting",
+		lead: "Bots, API bridges, dedi utilities, and PBO workflows that connect your game stack to the web.",
+		ctas: [
+			{ label: "Monarch Software", href: "/monarch-software" },
+			{ label: "Work with us", href: "/work-with-us" },
+		],
 	},
 	{
-		href: "#",
-		title: "Rods",
-		src: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
-		tag: "",
+		src: "/Hero_GFX.png",
+		alt: "Monarch GFX and in game UI design",
+		title: "GFX & interfaces",
+		lead: "Panels, branding, and in game UI so your community looks cohesive from Discord to deploy.",
+		ctas: [
+			{ label: "Our services", href: "/#monarch-services" },
+			{ label: "About Monarch", href: "/about-monarch" },
+		],
 	},
 	{
-		href: "#",
-		title: "Lures",
-		src: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80",
-		tag: "",
-	},
-	{
-		href: "#",
-		title: "Accessories",
-		src: "https://images.unsplash.com/photo-1504280390367-361c6e9f6f4d?auto=format&fit=crop&w=800&q=80",
-		tag: "",
-	},
-];
-
-const styleTiles = [
-	{
-		href: "#",
-		title: "Predator",
-		tag: "Predator fishing",
-		src: "https://images.unsplash.com/photo-1518834349706-80221f295c7f?auto=format&fit=crop&w=800&q=80",
-	},
-	{
-		href: "#",
-		title: "Tribal",
-		tag: "Carp fishing",
-		src: "https://images.unsplash.com/photo-1505855775683-ac55e67b2a39?auto=format&fit=crop&w=800&q=80",
-	},
-	{
-		href: "#",
-		title: "Aero",
-		tag: "Match & coarse",
-		src: "https://images.unsplash.com/photo-1468581264429-2548efeaab31?auto=format&fit=crop&w=800&q=80",
-	},
-	{
-		href: "#",
-		title: "Saltwater",
-		tag: "Saltwater fishing",
-		src: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=800&q=80",
+		src: "/Hero_Hosting.png",
+		alt: "Monarch Hosting and DayZ server infrastructure",
+		title: "Server infrastructure",
+		lead: "Monarch Hosting launches in 2027. Until then, VYKIX covers performance focused DayZ hardware.",
+		ctas: [
+			{ label: "Monarch Hosting", href: "/monarch-hosting" },
+			{ label: "VYKIX", href: "https://www.vykix.com", external: true },
+		],
 	},
 ];
 
-const newsAll = [
-	{ date: "Sep 19", title: "New catalogue: autumn tackle highlights" },
-	{ date: "Aug 02", title: "Technology booklet updated for 2026 season" },
-	{ date: "Jul 14", title: "Member newsletter — events and workshops" },
-	{ date: "Jun 30", title: "Dealer network: expanded UK coverage" },
-];
-
-const newsProduct = [
-	{ date: "Sep 19", title: "New spinning reel platform announced" },
-	{ date: "Jul 08", title: "Rod range refresh: lightweight blanks" },
-];
-
-const newsOther = [{ date: "May 04", title: "Why we fish — short film release" }];
-
-/** Content row — copy aligned with fish.shimano.com/en-GB home */
-const contentBanners = [
+/** Monarch Services strip, left to right */
+const scenarios = [
 	{
-		href: "https://fish.shimano.com/en-GB/content/c/why-we-fish.html",
-		title: "Why we fish",
-		cta: "More information",
-		src: "https://images.unsplash.com/photo-1518834349706-80221f295c7f?auto=format&fit=crop&w=2000&q=80",
+		title: "Monarch Modding",
+		tagline: "Custom DayZ packs and workshop content",
+		detail: "Weapon lines, configs, and releases built for your ruleset and wipe calendar.",
+		href: "/monarch-modding",
+		image: "/MM_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
 	},
 	{
-		href: "https://fish.shimano.com/en-GB/content/c/baitcasting-reels.html",
-		title: "Discover baitcasting reels",
-		cta: "More information",
-		src: "https://images.unsplash.com/photo-1595878715977-2ce7e9fb48c7?auto=format&fit=crop&w=2000&q=80",
+		title: "Operation Monarch",
+		tagline: "Community servers and live events",
+		detail: "Curated worlds, seasonal play, and a player home tied to Monarch built ops.",
+		href: "/operation-monarch",
+		image: "/OPM_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
 	},
 	{
-		href: "https://fish.shimano.com/en-GB/content/c/Catalogues.html",
-		title: "Shimano fishing catalog",
-		cta: "More information",
-		src: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=2000&q=80",
+		title: "Monarch Software",
+		tagline: "Tools for creators and operators",
+		detail: "Bots, API bridges, dedi utilities, and PBO workflows linking game to web.",
+		href: "/monarch-software",
+		image: "/SOFT_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
+	},
+	{
+		title: "Monarch Hosting",
+		tagline: "Server infrastructure",
+		detail: "Monarch Hosting arrives in 2027. Until then, VYKIX covers performance DayZ hardware.",
+		href: "/monarch-hosting",
+		image: "/HOST_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
 	},
 ];
 ---
@@ -119,8 +122,11 @@ const contentBanners = [
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Shimano Fishing — United Kingdom</title>
-		<meta name="description" content="Reels, rods, lures and fishing inspiration — corporate-style demo layout." />
+		<title>Monarch | DayZ modding, servers, software &amp; hosting</title>
+		<meta
+			name="description"
+			content="Monarch is the parent company behind Monarch Modding, Operation Monarch, Monarch Software, and Monarch Hosting. Custom DayZ content, community servers, and creator tools."
+		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -129,270 +135,58 @@ const contentBanners = [
 		/>
 	</head>
 	<body>
-		<ShimanoHeader />
-		<div class="mb-20 w-full">
-			<HeroCarousel slides={heroSlides} delayMs={6000} />
+		<MonarchHeader />
+		<div class="mb-0 w-full">
+			<HeroCarousel slides={heroSlides} delayMs={15000} />
 		</div>
-		<main class="mx-auto flex max-w-7xl flex-col gap-20 px-6">
-			<section class="text-center" id="products">
-				<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Products</h2>
-			</section>
+		<main class="mx-auto mt-20 flex max-w-7xl flex-col gap-20 px-6">
+			<PartnersBrandTiles partners={featuredPartners} />
 
-			<a class="group/banner relative block min-h-[200px] overflow-hidden text-white" href="#">
-				<div class="absolute inset-0">
-					<img
-						src="https://images.unsplash.com/photo-1468581264429-2548efeaab31?auto=format&fit=crop&w=2000&q=80"
-						alt=""
-						width="2000"
-						height="700"
-						loading="lazy"
-						class="h-full w-full object-cover"
-					/>
-				</div>
-				<div
-					class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.2)_55%,transparent_100%)]"
-					aria-hidden="true"
-				>
-				</div>
-				<div class="relative z-10 flex min-h-[200px] flex-col items-start justify-center gap-4 py-10 pl-6">
-					<h3 class="m-0 max-w-none font-display text-[clamp(1.5rem,4vw,2.25rem)] font-medium uppercase tracking-wide">Fishing tackle catalog</h3>
-					<span
-						class="font-display inline-flex cursor-pointer items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors group-hover/banner:bg-zinc-100"
-					>
-						Discover products
-					</span>
-				</div>
-			</a>
+			<ShopByScenario scenarios={scenarios} />
 
-			<div class="grid w-full grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
-				{
-					productTiles.map((t) => (
-						<a class="group block" href={t.href}>
-							<div class="aspect-square overflow-hidden bg-zinc-100">
-								<img src={t.src} alt="" width="600" height="600" loading="lazy" class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]" />
-							</div>
-							<div class="mt-[0.65rem] text-center font-display text-[13px] uppercase tracking-[0.1em]">{t.title}</div>
-							{t.tag ? <div class="mt-0.5 text-center text-xs text-zinc-600">{t.tag}</div> : null}
-						</a>
-					))
-				}
-			</div>
+			<ShopPreview />
 
-			<a class="group/banner relative block min-h-[200px] overflow-hidden text-white" href="#">
-				<div class="absolute inset-0">
-					<img
-						src="https://images.unsplash.com/photo-1595878715977-2ce7e9fb48c7?auto=format&fit=crop&w=2000&q=80"
-						alt=""
-						width="2000"
-						height="700"
-						loading="lazy"
-						class="h-full w-full object-cover"
-					/>
-				</div>
-				<div
-					class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.2)_55%,transparent_100%)]"
-					aria-hidden="true"
-				>
-				</div>
-				<div class="relative z-10 flex min-h-[200px] flex-col items-start justify-center gap-4 py-10 pl-6">
-					<h3 class="m-0 max-w-none font-display text-[clamp(1.5rem,4vw,2.25rem)] font-medium uppercase tracking-wide">Shimano technology</h3>
-					<span
-						class="font-display inline-flex cursor-pointer items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors group-hover/banner:bg-zinc-100"
-					>
-						Learn more
-					</span>
-				</div>
-			</a>
+			<AboutMonarch />
 
-			<section class="text-center" id="styles">
-				<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Choose your style of fishing</h2>
-			</section>
+			<HowWeWork />
 
-			<div class="grid w-full grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
-				{
-					styleTiles.map((t) => (
-						<a class="group block" href={t.href}>
-							<div class="aspect-square overflow-hidden bg-zinc-100">
-								<img src={t.src} alt="" width="600" height="600" loading="lazy" class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]" />
-							</div>
-							<div class="mt-[0.65rem] text-center font-display text-[13px] uppercase tracking-[0.1em]">{t.title}</div>
-							<div class="mt-0.5 text-center text-xs text-zinc-600">{t.tag}</div>
-						</a>
-					))
-				}
-			</div>
+			<StoreReviews />
 
-			<section class="text-center" id="content">
-				<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Content</h2>
-			</section>
+			<NewsUpdates />
 
-			<div class="flex flex-col gap-4">
-				{
-					contentBanners.map((b) => (
-						<a class="group/banner relative block min-h-[200px] overflow-hidden text-white" href={b.href}>
-							<div class="absolute inset-0">
-								<img src={b.src} alt="" width="2000" height="700" loading="lazy" class="h-full w-full object-cover" />
-							</div>
-							<div
-								class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.2)_55%,transparent_100%)]"
-								aria-hidden="true"
-							>
-							</div>
-							<div class="relative z-10 flex min-h-[200px] flex-col items-start justify-center gap-4 py-10 pl-6">
-								<h3 class="m-0 max-w-none font-display text-[clamp(1.5rem,4vw,2.25rem)] font-medium uppercase tracking-wide">{b.title}</h3>
-								<span class="font-display inline-flex cursor-pointer items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors group-hover/banner:bg-zinc-100">
-									{b.cta}
-								</span>
-							</div>
-						</a>
-					))
-				}
-			</div>
-
-			<section class="-mx-6 w-[calc(100%+3rem)] bg-zinc-100 px-6 py-20" id="news">
-				<div class="mb-5 text-left">
-					<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">News</h2>
-				</div>
-				<div class="mb-4 flex flex-wrap justify-start gap-[0.35rem] border-b border-zinc-200 pb-4">
-					<button
-						type="button"
-						class="is-active cursor-pointer border border-zinc-200 bg-white px-[0.85rem] py-[0.45rem] font-display text-xs uppercase tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-						data-news-tab="all"
-					>
-						All
-					</button>
-					<button
-						type="button"
-						class="cursor-pointer border border-zinc-200 bg-white px-[0.85rem] py-[0.45rem] font-display text-xs uppercase tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-						data-news-tab="product"
-					>
-						Product information
-					</button>
-					<button
-						type="button"
-						class="cursor-pointer border border-zinc-200 bg-white px-[0.85rem] py-[0.45rem] font-display text-xs uppercase tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-						data-news-tab="other"
-					>
-						Others
-					</button>
-				</div>
-
-				<div class="is-active" data-news-panel="all">
-					<ul class="m-0 w-full list-none border border-zinc-200 bg-white p-0">
-						{
-							newsAll.map((n) => (
-								<li class="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-5 gap-y-0 border-b border-zinc-200 px-[1.1rem] py-4 last:border-b-0">
-									<div class="font-display text-[11px] uppercase leading-snug tracking-wide text-zinc-600">{n.date}</div>
-									<div>
-										<p class="m-0 text-[15px] font-semibold leading-snug">
-											<a class="text-brand-black transition-colors hover:text-shimano-500" href="#">
-												{n.title}
-											</a>
-										</p>
-									</div>
-								</li>
-							))
-						}
-					</ul>
-					<div class="flex flex-wrap justify-end gap-1 pt-5" role="navigation" aria-label="Pagination">
-						<button
-							type="button"
-							class="is-active min-h-[34px] min-w-[34px] cursor-pointer border border-zinc-200 bg-white font-display text-xs tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-							aria-current="page"
-						>
-							1
-						</button>
-						<button
-							type="button"
-							class="min-h-[34px] min-w-[34px] cursor-pointer border border-zinc-200 bg-white font-display text-xs tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-						>
-							2
-						</button>
-						<button
-							type="button"
-							class="min-h-[34px] min-w-[34px] cursor-pointer border border-zinc-200 bg-white font-display text-xs tracking-wide text-zinc-800 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-brand-black [.is-active]:bg-brand-black [.is-active]:text-white"
-						>
-							3
-						</button>
-					</div>
-				</div>
-
-				<div data-news-panel="product">
-					<ul class="m-0 w-full list-none border border-zinc-200 bg-white p-0">
-						{
-							newsProduct.map((n) => (
-								<li class="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-5 gap-y-0 border-b border-zinc-200 px-[1.1rem] py-4 last:border-b-0">
-									<div class="font-display text-[11px] uppercase leading-snug tracking-wide text-zinc-600">{n.date}</div>
-									<div>
-										<p class="m-0 text-[15px] font-semibold leading-snug">
-											<a class="text-brand-black transition-colors hover:text-shimano-500" href="#">
-												{n.title}
-											</a>
-										</p>
-									</div>
-								</li>
-							))
-						}
-					</ul>
-				</div>
-
-				<div data-news-panel="other">
-					<ul class="m-0 w-full list-none border border-zinc-200 bg-white p-0">
-						{
-							newsOther.map((n) => (
-								<li class="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-5 gap-y-0 border-b border-zinc-200 px-[1.1rem] py-4 last:border-b-0">
-									<div class="font-display text-[11px] uppercase leading-snug tracking-wide text-zinc-600">{n.date}</div>
-									<div>
-										<p class="m-0 text-[15px] font-semibold leading-snug">
-											<a class="text-brand-black transition-colors hover:text-shimano-500" href="#">
-												{n.title}
-											</a>
-										</p>
-									</div>
-								</li>
-							))
-						}
-					</ul>
-				</div>
-			</section>
-
-			<section class="-mx-6 w-[calc(100%+3rem)] border-t border-zinc-200 bg-zinc-100" id="contact">
-				<div class="grid w-full grid-cols-1 md:grid-cols-2">
-					<div class="flex flex-col items-center border-b border-zinc-200 px-4 py-10 md:border-b-0 md:border-r md:border-zinc-200">
-						<div class="w-full max-w-[36ch] text-left">
-							<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Members</h2>
-							<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Shimano members</span>
-							<p class="mb-5 text-sm leading-normal text-zinc-600">Catalogue requests, event news, and email updates in one place.</p>
-							<a
-								class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-								href="#"
-							>
-								Become a member
-							</a>
-						</div>
-					</div>
-					<div class="flex flex-col items-center px-4 py-10">
-						<div class="w-full max-w-[36ch] text-left">
-							<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Dealer</h2>
-							<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Store information</span>
-							<p class="mb-5 text-sm leading-normal text-zinc-600">Find authorised retailers and service centres near you.</p>
-							<a
-								class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-								href="#"
-							>
-								Search for dealers
-							</a>
-						</div>
-					</div>
-				</div>
-			</section>
+			<ContactSection />
 		</main>
 
-		<ShimanoFooter />
+		<MonarchFooter />
 
 		<script>
 			import { initHome } from "../scripts/home.ts";
 			initHome();
+			document.addEventListener("astro:page-load", initHome);
 		</script>
+
+		{chatwootToken && (
+			<script is:inline define:vars={{ chatwootBase, chatwootToken, customer }}>
+				window.chatwootSettings = { hideMessageBubble: false, position: "right", locale: "en", type: "standard", darkMode: "auto" };
+				(function (d, t) {
+					var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+					g.src = chatwootBase + "/packs/js/sdk.js";
+					g.defer = true; g.async = true;
+					s.parentNode.insertBefore(g, s);
+					g.onload = function () {
+						window.chatwootSDK.run({ websiteToken: chatwootToken, baseUrl: chatwootBase });
+						if (customer) {
+							window.addEventListener("chatwoot:ready", function () {
+								window.$chatwoot.setUser(customer.id, {
+									name: customer.displayName,
+									...(customer.email ? { email: customer.email } : {}),
+									...(customer.avatarUrl ? { avatar_url: customer.avatarUrl } : {}),
+								});
+							});
+						}
+					};
+				})(document, "script");
+			</script>
+		)}
 	</body>
 </html>

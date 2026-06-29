@@ -1,0 +1,234 @@
+---
+import "../styles/global.css";
+import { prisma } from "../lib/prisma";
+
+interface Props {
+	title: string;
+	active?: string;
+}
+
+const { title, active = "" } = Astro.props;
+const staff = Astro.locals.staff;
+
+const isShopManager = staff?.role === "ADMIN" || staff?.role === "SHOP_MANAGER";
+
+const pendingReviews = isShopManager
+	? await prisma.productReview.count({ where: { status: "PENDING" } })
+	: 0;
+
+const navIcons: Record<string, string> = {
+	dashboard: `<path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" fill="none"/>`,
+	applications: `<path d="M4 6h8M4 9h8M4 12h5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><rect x="2" y="2" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/>`,
+	enquiries: `<rect x="2" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M5 7l3 2.5L11 7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>`,
+	news: `<rect x="2" y="2" width="12" height="13" rx="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>`,
+	jobs: `<rect x="5" y="2" width="6" height="3" rx="1" stroke="currentColor" stroke-width="1.25" fill="none"/><rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/>`,
+	users: `<circle cx="8" cy="5" r="2.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" fill="none"/>`,
+	products: `<path d="M8 2l5 2.5v5L8 12 3 9.5v-5L8 2z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" fill="none"/><path d="M8 12v3M3 4.5l5 3 5-3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>`,
+	orders: `<rect x="2" y="2" width="12" height="13" rx="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M5 12l1.5 1.5L10 10" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>`,
+	customers: `<circle cx="6" cy="5" r="2" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M2 14c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" fill="none"/><circle cx="11" cy="5" r="1.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M13.5 13c0-1.7-1.1-3-2.5-3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" fill="none"/>`,
+	licenses: `<path d="M8 2l5 2v4c0 2.8-2 5.4-5 6.5C5 13.4 3 10.8 3 8V4l5-2z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" fill="none"/><path d="M6 8l1.5 1.5L10 6" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>`,
+	reviews: `<path d="M8 2l1.5 3.5 3.5.5-2.5 2.5.5 3.5L8 10.5l-3 1.5.5-3.5L3 6l3.5-.5z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" fill="none"/>`,
+	waitlist: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>`,
+	affiliates: `<circle cx="4" cy="8" r="2" stroke="currentColor" stroke-width="1.25" fill="none"/><circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.25" fill="none"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M6 7l4-2M6 9l4 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>`,
+	analytics: `<path d="M2 12l3-4 3 2 3-5 3 3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M2 14h12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>`,
+};
+
+const coreNav = [
+	{ href: "/manage", label: "Dashboard", id: "dashboard" },
+	{ href: "/manage/applications", label: "Applications", id: "applications" },
+	{ href: "/manage/enquiries", label: "Enquiries", id: "enquiries" },
+	{ href: "/manage/news", label: "News", id: "news" },
+	{ href: "/manage/jobs", label: "Jobs", id: "jobs" },
+	...(staff?.role === "ADMIN" ? [{ href: "/manage/users", label: "Staff", id: "users" }] : []),
+];
+
+const shopNav = isShopManager
+	? [
+			{ href: "/manage/products", label: "Products", id: "products" },
+			{ href: "/manage/orders", label: "Orders", id: "orders" },
+			{ href: "/manage/customers", label: "Customers", id: "customers" },
+			{ href: "/manage/licenses", label: "Licenses", id: "licenses" },
+			{ href: "/manage/reviews", label: "Reviews", id: "reviews", badge: pendingReviews > 0 ? pendingReviews : null },
+			{ href: "/manage/waitlist", label: "Waitlist", id: "waitlist" },
+			{ href: "/manage/affiliates", label: "Affiliates", id: "affiliates" },
+			{ href: "/manage/analytics", label: "Analytics", id: "analytics" },
+		]
+	: [];
+
+const initials = (staff?.name ?? "?").split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
+const roleLabel: Record<string, string> = { ADMIN: "Admin", EDITOR: "Editor", SHOP_MANAGER: "Shop Mgr" };
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>{title} | Monarch Admin</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Oswald:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body class="min-h-screen bg-zinc-100 text-brand-black antialiased">
+
+		<!-- Mobile top bar -->
+		<div class="flex items-center justify-between border-b border-zinc-200 bg-brand-black px-4 py-3 lg:hidden">
+			<p class="m-0 font-display text-sm uppercase tracking-[0.18em] text-white">Monarch Admin</p>
+			<button
+				id="sidebar-toggle"
+				type="button"
+				class="flex h-8 w-8 items-center justify-center rounded text-white/70 hover:bg-white/10 hover:text-white"
+				aria-label="Toggle navigation"
+			>
+				<svg viewBox="0 0 16 16" width="18" height="18" fill="none" aria-hidden="true">
+					<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+				</svg>
+			</button>
+		</div>
+
+		<div class="flex min-h-[calc(100vh-49px)] lg:min-h-screen">
+			<!-- Sidebar -->
+			<aside
+				id="sidebar"
+				class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-white/10 bg-brand-black text-white shadow-xl transition-transform duration-200 lg:static lg:w-56 lg:translate-x-0 lg:shadow-none"
+			>
+				<!-- Brand -->
+				<div class="hidden shrink-0 border-b border-white/10 px-5 py-5 lg:block">
+					<p class="m-0 font-display text-sm uppercase tracking-[0.18em]">Monarch</p>
+					<p class="m-0 mt-0.5 text-[11px] text-white/50 uppercase tracking-wider">Admin Panel</p>
+				</div>
+
+				<!-- Nav -->
+				<nav class="flex flex-1 flex-col gap-0 overflow-y-auto px-3 py-4">
+					<!-- Core section -->
+					<p class="mb-1.5 px-2 font-display text-[9px] uppercase tracking-[0.2em] text-white/35">
+						Core
+					</p>
+					<div class="flex flex-col gap-0.5">
+						{
+							coreNav.map((item) => (
+								<a
+									href={item.href}
+									class:list={[
+										"flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+										active === item.id
+											? "bg-white/15 text-white"
+											: "text-white/65 hover:bg-white/8 hover:text-white",
+									]}
+								>
+									<svg
+										viewBox="0 0 16 16"
+										width="15"
+										height="15"
+										class="shrink-0 opacity-80"
+										aria-hidden="true"
+										set:html={navIcons[item.id] ?? ""}
+									/>
+									<span>{item.label}</span>
+								</a>
+							))
+						}
+					</div>
+
+					{
+						shopNav.length > 0 && (
+							<div class="mt-5 flex flex-col gap-0.5">
+								<p class="mb-1.5 px-2 font-display text-[9px] uppercase tracking-[0.2em] text-white/35">
+									Shop
+								</p>
+								{shopNav.map((item) => (
+									<a
+										href={item.href}
+										class:list={[
+											"flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+											active === item.id
+												? "bg-white/15 text-white"
+												: "text-white/65 hover:bg-white/8 hover:text-white",
+										]}
+									>
+										<svg
+											viewBox="0 0 16 16"
+											width="15"
+											height="15"
+											class="shrink-0 opacity-80"
+											aria-hidden="true"
+											set:html={navIcons[item.id] ?? ""}
+										/>
+										<span class="flex-1">{item.label}</span>
+										{item.badge && (
+											<span class="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-monarch-500 px-1.5 font-display text-[10px] font-medium text-white">
+												{item.badge}
+											</span>
+										)}
+									</a>
+								))}
+							</div>
+						)
+					}
+				</nav>
+
+				<!-- Staff footer -->
+				<div class="shrink-0 border-t border-white/10 p-3">
+					<div class="flex items-center gap-2.5 rounded-lg px-2 py-2">
+						<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-monarch-500 font-display text-xs font-medium text-white">
+							{initials}
+						</div>
+						<div class="min-w-0 flex-1">
+							<p class="m-0 truncate text-sm font-medium text-white">{staff?.name}</p>
+							<p class="m-0 font-display text-[10px] uppercase tracking-wide text-white/50">
+								{roleLabel[staff?.role ?? ""] ?? staff?.role}
+							</p>
+						</div>
+					</div>
+					<form class="mt-2" method="post" action="/api/auth/logout">
+						<button
+							type="submit"
+							class="font-display w-full rounded-lg border border-white/15 bg-transparent px-2 py-1.5 text-[11px] uppercase tracking-wide text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+						>
+							Sign out
+						</button>
+					</form>
+				</div>
+			</aside>
+
+			<!-- Sidebar overlay (mobile) -->
+			<div
+				id="sidebar-overlay"
+				class="fixed inset-0 z-30 hidden bg-black/40 lg:hidden"
+			/>
+
+			<!-- Main content -->
+			<main class="min-w-0 flex-1 px-5 py-6 lg:px-8 lg:py-8">
+				<slot />
+			</main>
+		</div>
+
+		<script>
+			const toggle = document.getElementById("sidebar-toggle");
+			const sidebar = document.getElementById("sidebar");
+			const overlay = document.getElementById("sidebar-overlay");
+
+			function openSidebar() {
+				sidebar?.classList.remove("-translate-x-full");
+				overlay?.classList.remove("hidden");
+			}
+			function closeSidebar() {
+				sidebar?.classList.add("-translate-x-full");
+				overlay?.classList.add("hidden");
+			}
+
+			toggle?.addEventListener("click", () => {
+				if (sidebar?.classList.contains("-translate-x-full")) {
+					openSidebar();
+				} else {
+					closeSidebar();
+				}
+			});
+			overlay?.addEventListener("click", closeSidebar);
+		</script>
+	</body>
+</html>

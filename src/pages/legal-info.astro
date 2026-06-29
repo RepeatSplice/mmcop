@@ -1,141 +1,82 @@
 ---
-import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchBasicPage from "../components/MonarchBasicPage.astro";
+import LegalArticle from "../components/LegalArticle.astro";
 
-const companyRows = [
-	{ label: "Trading / brand", value: "Shimano Fishing United Kingdom (demo name)" },
-	{ label: "Registered office", value: "Replace with full postal address" },
-	{ label: "Company number", value: "Replace with Companies House number" },
-	{ label: "VAT number", value: "Replace with GB VAT ID if applicable" },
-	{ label: "Parent undertaking", value: "Shimano Inc. — see shimano.com for group information" },
-];
-
-const notices = [
-	{
-		id: "trademarks",
-		title: "Trademarks",
-		body: "Shimano and other marks shown on this site are trademarks of Shimano Inc. or its affiliates. List or link to a full trademark notice if required. Unauthorised use may infringe applicable law.",
-	},
-	{
-		id: "regulatory",
-		title: "Regulatory statements",
-		body: "Add any sector-specific disclosures (product compliance, environmental claims, financial promotions) that apply to your UK entity. This demo block is intentionally generic.",
-	},
-	{
-		id: "complaints",
-		title: "Complaints and enquiries",
-		body: "Provide contact channels for general legal correspondence, regulatory complaints, or accessibility issues. Do not use a personal email address in production without governance approval.",
-	},
-];
+const linkClass =
+	"font-semibold text-brand-black underline decoration-monarch-500/40 underline-offset-2 hover:text-monarch-500";
 ---
 
-<SiteLayout
-	title="Legal information — Shimano Fishing United Kingdom"
-	description="Corporate and legal notices for Shimano Fishing UK: company details, trademarks, and regulatory information. Demo layout only."
+<MonarchBasicPage
+	title="Legal info | Monarch"
+	description="Company and legal information for Monarch, the parent company behind Monarch Modding, Operation Monarch, Monarch Software, and Monarch Hosting."
+	eyebrow="Legal"
+	heading="Legal info"
+	lead="Who we are, where we operate, and how to reach us for legal or regulatory enquiries."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-10 px-6 pb-20"
 >
-	<div slot="pre-main" class="mb-20 w-full">
-		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
-			<div class="absolute inset-0">
-				<img
-					src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=2000&q=80"
-					alt=""
-					width="2000"
-					height="800"
-					loading="eager"
-					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
-				/>
-			</div>
-			<div
-				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.15)_100%)]"
-				aria-hidden="true"
-			>
-			</div>
-			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
-				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Legal</p>
-				<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
-					Legal information
-				</h1>
-				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
-					Impressum-style details and notices for visitors. Replace all fields with verified corporate registry data before
-					publication.
-				</p>
-				<a
-					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
-					href="#company-details"
-				>
-					Company details
-				</a>
-			</div>
-		</div>
-	</div>
-
-	<section class="text-center" id="company-details" aria-labelledby="company-heading">
-		<h2 id="company-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Company details
-		</h2>
-	</section>
-
-	<div class="w-full max-w-none text-left">
-		<p class="m-0 text-base leading-relaxed text-zinc-600">
-			<strong class="font-semibold text-brand-black">Demo data only.</strong> The table below must match your Companies House
-			filing, VAT registration, and any statutory naming requirements for the entity operating this site.
+	<LegalArticle>
+		<h2>Company overview</h2>
+		<p>
+			Monarch is the parent company behind the services and brands listed on this website. We build and support DayZ
+			communities through custom content, live servers, software, and related digital work.
 		</p>
-	</div>
+		<ul>
+			<li><strong>Trading name:</strong> Monarch</li>
+			<li><strong>Founded:</strong> 2021</li>
+			<li><strong>Active in DayZ since:</strong> 2019</li>
+			<li><strong>Base location:</strong> New Hampshire, United States</li>
+			<li><strong>Operating model:</strong> Remote first team with a United States base</li>
+			<li><strong>Primary website:</strong> monarch-dayz.com and related Monarch group domains</li>
+		</ul>
 
-	<dl class="m-0 w-full border border-zinc-200 bg-zinc-50 p-0">
-		{
-			companyRows.map((row, i) => (
-				<div class:list={["grid gap-1 px-[1.1rem] py-4 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-6", { "border-t border-zinc-200": i > 0 }]}>
-					<dt class="m-0 font-display text-[11px] font-medium uppercase tracking-wide text-zinc-500">{row.label}</dt>
-					<dd class="m-0 text-sm leading-relaxed text-zinc-800">{row.value}</dd>
-				</div>
-			))
-		}
-	</dl>
+		<h2>Brands and services</h2>
+		<p>Monarch operates or develops the following focused brands. Each has a defined remit. Delivery standards are shared across the group.</p>
+		<ul>
+			<li><strong>Monarch Modding</strong> custom weapons, gear, configs, imports, retextures, and workshop releases</li>
+			<li><strong>Operation Monarch</strong> community servers, events, and player facing live worlds</li>
+			<li><strong>Monarch Software</strong> panels, APIs, bots, dedi utilities, and tooling that connects game data to the web</li>
+			<li><strong>Monarch Hosting</strong> infrastructure aligned with Monarch stacks and operations where offered</li>
+		</ul>
+		<p>
+			Partner hosting or infrastructure may be provided through approved partners where stated on a specific service page.
+			That does not change Monarch responsibility for work we scope and deliver directly.
+		</p>
 
-	{
-		notices.map((n) => (
-			<>
-				<section class="text-center" id={n.id} aria-labelledby={`${n.id}-heading`}>
-					<h2 id={`${n.id}-heading`} class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-						{n.title}
-					</h2>
-				</section>
-				<div class="w-full max-w-none text-left">
-					<p class="m-0 text-base leading-relaxed text-zinc-600">{n.body}</p>
-				</div>
-			</>
-		))
-	}
+		<h2>What we do</h2>
+		<p>
+			Monarch provides commissioned work for server owners and communities, retainer partnerships on a sprint cadence, and
+			one off projects across game content, software, web development, design, media, and digital marketing. A full list of
+			typical deliverables is on our <a class={linkClass} href="/work-with-us">Work with us</a> page.
+		</p>
 
-	<section class="text-center" aria-labelledby="related-legal-heading">
-		<h2 id="related-legal-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Related legal pages
-		</h2>
-	</section>
+		<h2>Contact for legal enquiries</h2>
+		<p>
+			For privacy matters, see our <a class={linkClass} href="/privacy-policy">Privacy policy</a>. For website and service
+			use, see <a class={linkClass} href="/terms-and-conditions">Terms and conditions</a>.
+		</p>
+		<p>
+			For formal legal or regulatory correspondence, contact us through <a class={linkClass} href="/contact">Contact</a> with
+			the subject line <strong>Legal enquiry</strong> or email{" "}
+			<a class={linkClass} href="mailto:enquiries@monarch-dayz.com">enquiries@monarch-dayz.com</a>. We aim to acknowledge
+			serious legal correspondence within a reasonable time.
+		</p>
 
-	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/privacy-policy"
-		>
-			Privacy policy
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/terms-and-conditions"
-		>
-			Terms and conditions
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-			href="/"
-		>
-			Back to home
-		</a>
-	</div>
+		<h2>Intellectual property</h2>
+		<p>
+			Unless agreed otherwise in writing for a specific project, Monarch retains ownership of pre existing tools, pipelines,
+			and know how. Deliverables for clients are licensed or assigned as set out in the proposal or statement of work for
+			that engagement.
+		</p>
+		<p>
+			Third party game assets, engine constraints, and platform rules (including Bohemia and Steam Workshop policies) apply
+			to modding and server work. Clients are responsible for ensuring their server and community use complies with applicable
+			platform terms.
+		</p>
 
-	<script>
-		import { initHome } from "../scripts/home.ts";
-		initHome();
-	</script>
-</SiteLayout>
+		<h2>Disputes and payments</h2>
+		<p>
+			Commissioned work is governed by the terms agreed at scoping. Chargebacks are not permitted for completed work that was
+			delivered as scoped. If there is a problem with a delivery, contact us first so we can resolve it directly.
+		</p>
+	</LegalArticle>
+</MonarchBasicPage>

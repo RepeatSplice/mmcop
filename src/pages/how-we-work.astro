@@ -1,0 +1,312 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchPageHero from "../components/MonarchPageHero.astro";
+import HowWeWork, { type WorkStep } from "../components/HowWeWork.astro";
+import { Icon } from "astro-icon/components";
+
+const processSteps: WorkStep[] = [
+	{
+		step: "01",
+		title: "Brief & scope",
+		body: "We start with your ruleset, player count, wipe calendar, and what you need live by a fixed date or season. No guesswork on who owns what.",
+		points: [
+			"Discovery call or written brief: goals, references, and constraints",
+			"Clear scope: mods, configs, software, ops, or a mix",
+			"Timeline with milestones aligned to your wipe or launch",
+			"Written estimate and delivery plan before build starts",
+		],
+	},
+	{
+		step: "02",
+		title: "Design & prototype",
+		body: "We shape the work against your economy and server identity before full production. You see direction early, not only at the end.",
+		points: [
+			"Balance notes and config structure agreed with your admins",
+			"Early assets or UI mockups where it helps decision making",
+			"Internal test environment, not your live server",
+			"Checkpoints for feedback before we lock the full pack",
+		],
+	},
+	{
+		step: "03",
+		title: "Build, test & handoff",
+		body: "Mods, PBOs, panels, and tooling are built on Monarch pipelines with QA suited to DayZ updates and workshop constraints.",
+		points: [
+			"Packaged deliverables with install notes for your team",
+			"Workshop or private distribution as scoped",
+			"Regression pass after game patches when included in support",
+			"Documentation for admins and developers on your side",
+		],
+	},
+	{
+		step: "04",
+		title: "Deploy & iterate",
+		body: "We help you go live, watch real player usage, and patch what matters: events, economy drift, or performance, without restarting the project.",
+		points: [
+			"Deployment support for first wipe or launch window",
+			"Hotfixes for critical issues in an agreed response window",
+			"Seasonal updates and balance passes for retained clients",
+			"Optional ongoing ops via Monarch Software or hosting (when available)",
+		],
+	},
+];
+
+const engagementTypes = [
+	{
+		title: "Commissioned content",
+		subtitle: "One off or seasonal",
+		body: "Weapon lines, item packs, custom UI, or a full content drop for a specific wipe. Scoped, delivered, and handed off with clear docs.",
+		cta: "Work with us",
+		href: "/work-with-us",
+		icon: "lucide:package",
+	},
+	{
+		title: "Ongoing partnership",
+		subtitle: "Multi wipe retainer",
+		body: "A longer relationship across wipes: balance passes, new drops, software hooks, and someone who already knows your server.",
+		cta: "Start an enquiry",
+		href: "/contact",
+		icon: "lucide:refresh-cw",
+	},
+];
+
+const deliverables = [
+	{ label: "Monarch Modding", href: "/monarch-modding", text: "Custom packs, weapons, configs, workshop releases", icon: "lucide:sword" },
+	{ label: "Operation Monarch", href: "/operation-monarch", text: "Live servers, events, community facing worlds", icon: "lucide:globe" },
+	{ label: "Monarch Software", href: "/monarch-software", text: "Panels, APIs, bots, dedi utilities, PBO tooling", icon: "lucide:code-2" },
+	{ label: "Monarch Hosting", href: "/monarch-hosting", text: "Infrastructure aligned with Monarch stacks (coming)", icon: "lucide:server" },
+];
+
+const expectations = [
+	{
+		num: "01",
+		title: "Communication",
+		body: "A named point of contact on both sides. We use email and Discord for day to day work; larger projects get milestone check ins.",
+		icon: "lucide:message-square",
+	},
+	{
+		num: "02",
+		title: "Testing",
+		body: "We test on our side first. You still validate on a staging slot or test server before production; we document what we need from you.",
+		icon: "lucide:flask-conical",
+	},
+	{
+		num: "03",
+		title: "Timelines",
+		body: "Realistic dates based on scope. Rush work is possible but changes cost and queue position; we say that upfront in the brief.",
+		icon: "lucide:calendar-check",
+	},
+];
+---
+
+<SiteLayout
+	title="How we work | Monarch"
+	description="How Monarch delivers DayZ mods, servers, and software from brief to live support: scope, build, handoff, and ongoing iteration."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-24 px-6 pb-24"
+>
+	<slot slot="pre-main">
+		<MonarchPageHero
+			eyebrow="Company"
+			title="How we work"
+			lead="A clear path from first conversation to content on your server, whether you need a full pack or ongoing operations support."
+			image="/How_We_Work_Banner.png"
+			cta={{ label: "Work with us", href: "/work-with-us" }}
+		/>
+	</slot>
+
+	<!-- ── Intro ── -->
+	<section class="mx-auto max-w-3xl text-center" data-scroll-reveal>
+		<p class="st-reveal m-0 text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			Monarch is built for DayZ server owners and communities who want more than off the shelf assets. Whether you commission
+			a single weapon line or need software and ops across multiple wipes, we follow the same disciplined process: scope
+			first, build on our pipelines, then support what goes live.
+		</p>
+	</section>
+
+	<!-- ── Process steps (HowWeWork component) ── -->
+	<HowWeWork
+		kicker="Process"
+		heading="Our process"
+		lead="Four stages from brief to live support. Each step has defined outputs so you know what happens when."
+		steps={processSteps}
+		showIntro={true}
+		stacked={true}
+		centered={false}
+	/>
+
+	<!-- ── Who we work with ── -->
+	<section aria-labelledby="who-we-work-with" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Audience</p>
+			<h2
+				id="who-we-work-with"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Who we work with
+			</h2>
+		</header>
+		<div class="st-reveal mt-10 grid gap-5 md:grid-cols-2">
+			<div class="border border-zinc-200 bg-white p-6 sm:p-8">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">Server owners & creators</p>
+				<h3 class="m-0 mt-2 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+					Built around your ruleset
+				</h3>
+				<p class="m-0 mt-3 text-[15px] leading-relaxed text-zinc-600">
+					Communities with a defined ruleset, economy, and wipe rhythm. You need custom content or tooling that fits how
+					you actually run the server, not a generic pack dropped in blind.
+				</p>
+				<p class="mt-3 text-sm leading-relaxed text-zinc-500">
+					Typical needs: weapon platforms, item integration, admin panels, launch support for a new season.
+				</p>
+			</div>
+			<div class="border border-zinc-200 bg-zinc-50 p-6 sm:p-8">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">Players & communities</p>
+				<h3 class="m-0 mt-2 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+					Monarch in the wild
+				</h3>
+				<p class="m-0 mt-3 text-[15px] leading-relaxed text-zinc-600">
+					If you play on Operation Monarch or partner servers, you experience the output of this process: events, wipes,
+					and releases shaped by the same team.
+				</p>
+				<p class="mt-3 text-sm leading-relaxed text-zinc-500">
+					For playing and community news, see{" "}
+					<a class="font-semibold text-monarch-500 hover:text-brand-black" href="/join-operation-monarch">
+						Join Operation Monarch
+					</a>.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ── What we deliver ── -->
+	<section aria-labelledby="what-we-deliver" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Scope</p>
+			<h2
+				id="what-we-deliver"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				What we deliver
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				One parent company, focused brands. The process above applies across all of them.
+			</p>
+		</header>
+		<div class="st-reveal mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+			{deliverables.map((item) => (
+				<a
+					href={item.href}
+					class="group flex flex-col gap-3 border border-zinc-200 bg-white px-5 py-6 transition-all hover:border-zinc-400 hover:shadow-sm"
+				>
+					<div class="flex h-9 w-9 items-center justify-center border border-zinc-200 bg-zinc-50 transition-colors group-hover:border-monarch-500/30 group-hover:bg-monarch-500/5">
+						<Icon name={item.icon} class="size-4 text-monarch-500" is:inline aria-hidden="true" />
+					</div>
+					<div>
+						<h3 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black transition-colors group-hover:text-monarch-500">
+							{item.label}
+						</h3>
+						<p class="m-0 mt-1.5 text-sm leading-relaxed text-zinc-500">{item.text}</p>
+					</div>
+					<span class="mt-auto flex items-center gap-1.5 font-display text-[11px] uppercase tracking-wide text-zinc-400 transition-colors group-hover:text-monarch-500">
+						Learn more
+						<Icon name="lucide:arrow-right" class="size-3 shrink-0" is:inline aria-hidden="true" />
+					</span>
+				</a>
+			))}
+		</div>
+	</section>
+
+	<!-- ── How engagements run ── -->
+	<section aria-labelledby="engagement-types" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Engagements</p>
+			<h2
+				id="engagement-types"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				How engagements run
+			</h2>
+		</header>
+		<div class="st-reveal mt-10 grid gap-5 md:grid-cols-2">
+			{engagementTypes.map((item) => (
+				<article class="group flex flex-col border border-zinc-200 bg-white transition-all hover:border-zinc-400 hover:shadow-sm">
+					<div class="flex items-start gap-5 border-b border-zinc-100 px-7 py-6">
+						<div class="flex h-10 w-10 shrink-0 items-center justify-center border border-zinc-200 bg-zinc-50">
+							<Icon name={item.icon} class="size-4.5 text-monarch-500" is:inline aria-hidden="true" />
+						</div>
+						<div>
+							<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">{item.subtitle}</p>
+							<h3 class="m-0 mt-1 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+								{item.title}
+							</h3>
+						</div>
+					</div>
+					<div class="flex flex-1 flex-col px-7 py-6">
+						<p class="m-0 flex-1 text-[15px] leading-relaxed text-zinc-600">{item.body}</p>
+						<div class="mt-6">
+							<a class="monarch-pill-btn" href={item.href}>
+								{item.cta}
+								<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+							</a>
+						</div>
+					</div>
+				</article>
+			))}
+		</div>
+	</section>
+
+	<!-- ── What to expect ── -->
+	<section aria-labelledby="expectations" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Standards</p>
+			<h2
+				id="expectations"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				What to expect
+			</h2>
+		</header>
+		<div class="st-reveal mt-10 grid gap-5 sm:grid-cols-3">
+			{expectations.map((item) => (
+				<div class="group flex gap-5 border border-zinc-200 bg-white px-6 py-6 transition-colors hover:border-zinc-300 sm:flex-col sm:gap-4">
+					<div class="flex h-10 w-10 shrink-0 items-center justify-center border border-zinc-200 bg-zinc-50">
+						<Icon name={item.icon} class="size-4.5 text-monarch-500" is:inline aria-hidden="true" />
+					</div>
+					<div>
+						<h3 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{item.title}</h3>
+						<p class="m-0 mt-2 text-[15px] leading-relaxed text-zinc-600">{item.body}</p>
+					</div>
+				</div>
+			))}
+		</div>
+	</section>
+
+	<!-- ── CTA ── -->
+	<section
+		class="st-reveal relative overflow-hidden border border-zinc-200 bg-brand-black px-8 py-16 text-center text-white sm:px-12 sm:py-20"
+		data-scroll-reveal
+	>
+		<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/50">Monarch</p>
+		<h2 class="m-0 mt-3 font-display text-[clamp(1.5rem,4vw,2.5rem)] font-medium uppercase leading-tight tracking-wide">
+			Ready to scope a project?
+		</h2>
+		<p class="mx-auto m-0 mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 sm:text-base">
+			Tell us your ruleset, timeline, and goals. We will come back with a clear plan, or point you to the right Monarch
+			brand if another team fits better.
+		</p>
+		<div class="mt-8 flex flex-wrap justify-center gap-3">
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+				href="/work-with-us"
+			>
+				Work with us
+			</a>
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 border border-white/40 px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-white/10"
+				href="/contact"
+			>
+				Contact
+			</a>
+		</div>
+	</section>
+</SiteLayout>

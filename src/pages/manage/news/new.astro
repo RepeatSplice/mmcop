@@ -1,0 +1,40 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import NewsPostEditor from "../../../components/manage/NewsPostEditor.astro";
+import { prisma } from "../../../lib/prisma";
+import { parseNewsForm } from "../../../lib/news-admin";
+
+export const prerender = false;
+
+let error: string | undefined;
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const parsed = parseNewsForm(form);
+	if ("error" in parsed) {
+		error = parsed.error;
+	} else {
+		const exists = await prisma.newsPost.findUnique({ where: { slug: parsed.slug } });
+		if (exists) {
+			error = `Slug "${parsed.slug}" is already in use.`;
+		} else {
+			await prisma.newsPost.create({
+				data: {
+					...parsed,
+					ctaButtons: parsed.ctaButtons.length > 0 ? parsed.ctaButtons : undefined,
+				},
+			});
+			return Astro.redirect(`/manage/news/${parsed.slug}?saved=1`);
+		}
+	}
+}
+---
+
+<ManageLayout title="New news post" active="news">
+	<a href="/manage/news" class="text-sm text-monarch-500 hover:text-brand-black">← News</a>
+	<h1 class="mt-4 font-display text-2xl font-medium uppercase tracking-[0.12em]">New post</h1>
+	<p class="mt-1 text-sm text-zinc-600">Defaults to draft. Publish when ready.</p>
+	<div class="mt-6">
+		<NewsPostEditor mode="create" error={error} />
+	</div>
+</ManageLayout>

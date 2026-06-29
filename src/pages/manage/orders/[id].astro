@@ -1,0 +1,264 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+import Stripe from "stripe";
+import { getStripeSecretKey } from "../../../lib/env";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/manage/orders");
+
+let error = "";
+let successMsg = "";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+
+	if (action === "add-note") {
+		const body = String(form.get("body") ?? "").trim();
+		const staff = Astro.locals.staff;
+		if (body && staff) {
+			const order = await prisma.order.findUnique({ where: { id } });
+			if (order) {
+				const staffUser = await prisma.staffUser.findUnique({ where: { email: staff.email } });
+				if (staffUser) {
+					await prisma.supportNote.create({
+						data: {
+							orderId: id,
+							customerId: order.customerId,
+							body,
+							staffId: staffUser.id,
+						},
+					});
+					successMsg = "Note added.";
+				}
+			}
+		}
+	}
+
+	if (action === "refund") {
+		const order = await prisma.order.findUnique({ where: { id } });
+		if (order?.stripePaymentIntentId && order.status === "PAID") {
+			try {
+				const stripe = new Stripe(getStripeSecretKey());
+				await stripe.refunds.create({ payment_intent: order.stripePaymentIntentId });
+				await prisma.order.update({ where: { id }, data: { status: "REFUNDED" } });
+				await prisma.serverLicense.updateMany({
+					where: { orderItem: { orderId: id } },
+					data: { status: "REVOKED" },
+				});
+				successMsg = "Refund issued and licenses revoked.";
+			} catch (err) {
+				error = err instanceof Error ? err.message : "Refund failed";
+			}
+		} else {
+			error = "Cannot refund this order.";
+		}
+	}
+}
+
+const order = await prisma.order.findUnique({
+	where: { id },
+	include: {
+		customer: { include: { accounts: true } },
+		items: {
+			include: {
+				variant: { include: { product: true } },
+				license: { include: { servers: true } },
+			},
+		},
+		supportNotes: {
+			orderBy: { createdAt: "desc" },
+			include: { staff: true },
+		},
+		affiliateCode: true,
+	},
+});
+
+if (!order) return Astro.redirect("/manage/orders");
+
+const statusClass: Record<string, string> = {
+	PAID: "bg-green-100 text-green-800",
+	PENDING: "bg-yellow-100 text-yellow-800",
+	REFUNDED: "bg-zinc-100 text-zinc-700",
+	DISPUTED: "bg-red-100 text-red-700",
+};
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+---
+
+<ManageLayout title={`Order #${order.id.slice(-8).toUpperCase()}`} active="orders">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">
+				Order #{order.id.slice(-8).toUpperCase()}
+			</h1>
+			<p class="mt-1 text-sm text-zinc-500">
+				{order.createdAt.toLocaleDateString("en-GB", { dateStyle: "long" })}
+			</p>
+		</div>
+		<a
+			href="/manage/orders"
+			class="font-display border border-zinc-300 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-700 transition-colors hover:border-zinc-400"
+		>
+			Back
+		</a>
+	</div>
+
+	{error && <div class="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+	{successMsg && <div class="mt-4 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{successMsg}</div>}
+
+	<div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+		<!-- Order details -->
+		<div class="lg:col-span-2 space-y-6">
+			<div class="border border-zinc-200 bg-white">
+				<div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">
+						Order Details
+					</h2>
+					<span class:list={["rounded px-2 py-0.5 text-[10px] font-semibold uppercase", statusClass[order.status]]}>
+						{order.status}
+					</span>
+				</div>
+				<ul class="list-none divide-y divide-zinc-100 p-0">
+					{order.items.map((item) => (
+						<li class="px-5 py-4">
+							<div class="flex justify-between gap-4">
+								<div>
+									<p class="m-0 font-semibold text-brand-black">{item.variant.product.title}</p>
+									<p class="m-0 mt-0.5 text-sm text-zinc-500">{item.variant.name}</p>
+									{item.license && (
+										<p class="mt-1 text-xs text-zinc-400">
+											License:{" "}
+											<a href={`/manage/licenses/${item.license.id}`} class="text-monarch-500 hover:underline">
+												{item.license.id.slice(-8)}
+											</a>{" "}
+											<span class:list={["font-semibold", item.license.status === "ACTIVE" ? "text-green-700" : "text-red-700"]}>
+												{item.license.status}
+											</span>
+										</p>
+									)}
+								</div>
+								<span class="shrink-0 font-display text-sm font-medium text-brand-black">
+									{formatPrice(item.priceMinorUnits)}
+								</span>
+							</div>
+						</li>
+					))}
+				</ul>
+				<div class="flex justify-between border-t border-zinc-200 px-5 py-3">
+					<span class="font-display text-sm uppercase tracking-wide text-zinc-600">Total</span>
+					<span class="font-display text-base font-medium text-brand-black">
+						{formatPrice(order.totalMinorUnits)}
+					</span>
+				</div>
+			</div>
+
+			<!-- Stripe IDs -->
+			<div class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">
+					Payment Details
+				</h2>
+				<dl class="mt-3 grid grid-cols-1 gap-y-2 text-sm sm:grid-cols-2">
+					<dt class="text-zinc-500">Stripe Session</dt>
+					<dd class="font-mono text-xs text-zinc-700 break-all">{order.stripeSessionId}</dd>
+					{order.stripePaymentIntentId && (
+						<>
+							<dt class="text-zinc-500">Payment Intent</dt>
+							<dd class="font-mono text-xs text-zinc-700 break-all">{order.stripePaymentIntentId}</dd>
+						</>
+					)}
+					{order.affiliateCode && (
+						<>
+							<dt class="text-zinc-500">Affiliate Code</dt>
+							<dd class="font-mono text-brand-black">{order.affiliateCode.code}</dd>
+						</>
+					)}
+				</dl>
+				{order.status === "PAID" && order.stripePaymentIntentId && (
+					<form method="post" class="mt-4">
+						<input type="hidden" name="_action" value="refund" />
+						<ManageBtn
+							type="submit"
+							variant="danger"
+							confirm="Issue a full refund? This will revoke all licenses."
+						>
+							Issue Refund
+						</ManageBtn>
+					</form>
+				)}
+			</div>
+
+			<!-- Support notes -->
+			<div class="border border-zinc-200 bg-white">
+				<div class="border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">
+						Support Notes
+					</h2>
+				</div>
+				{order.supportNotes.length > 0 && (
+					<ul class="list-none divide-y divide-zinc-100 p-0">
+						{order.supportNotes.map((note) => (
+							<li class="px-5 py-4">
+								<p class="m-0 whitespace-pre-wrap text-sm text-brand-black">{note.body}</p>
+								<p class="m-0 mt-2 text-xs text-zinc-400">
+									{note.staff.name} &middot; {note.createdAt.toLocaleString("en-GB")}
+								</p>
+							</li>
+						))}
+					</ul>
+				)}
+				<form method="post" class="border-t border-zinc-100 px-5 py-4">
+					<input type="hidden" name="_action" value="add-note" />
+					<textarea
+						name="body"
+						rows="3"
+						placeholder="Add a support note..."
+						class="w-full border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-brand-black focus:outline-none"
+					/>
+					<div class="mt-2">
+						<ManageBtn type="submit" variant="primary">Add Note</ManageBtn>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Customer sidebar -->
+		<div>
+			<div class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">
+					Customer
+				</h2>
+				{order.customer.avatarUrl && (
+					<img
+						src={order.customer.avatarUrl}
+						alt=""
+						class="mt-3 h-12 w-12 rounded-full border border-zinc-200"
+					/>
+				)}
+				<p class="mt-2 font-semibold text-brand-black">{order.customer.displayName}</p>
+				{order.customer.email && (
+					<p class="mt-0.5 text-sm text-zinc-500">{order.customer.email}</p>
+				)}
+				<ul class="mt-3 list-none p-0">
+					{order.customer.accounts.map((acc) => (
+						<li class="text-xs text-zinc-500">
+							{acc.provider}: <span class="text-brand-black">{acc.username}</span>
+						</li>
+					))}
+				</ul>
+				<div class="mt-4">
+					<a
+						href={`/manage/customers/${order.customer.id}`}
+						class="font-display border border-zinc-300 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-700 transition-colors hover:border-zinc-400"
+					>
+						View Customer
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</ManageLayout>

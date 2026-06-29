@@ -1,200 +1,55 @@
 ---
-import SiteLayout from "../layouts/SiteLayout.astro";
-
-const alliances = [
-	{
-		title: "Authorised retail network",
-		body: "We support specialist tackle shops and chains with training, fixtures, and fair commercial terms so anglers get expert advice at the point of sale.",
-	},
-	{
-		title: "Clubs & federations",
-		body: "Cooperation with angling clubs, regional bodies, and competition organisers helps us tune products to real-world fishing in the UK and Ireland.",
-	},
-	{
-		title: "Media & ambassadors",
-		body: "Editorial partners and trusted voices help communicate responsible fishing and product stories without compromising independence where required.",
-	},
-	{
-		title: "Innovation & academia",
-		body: "Select collaborations on materials testing, ergonomics, and sustainability research — always with clear IP and disclosure rules (demo copy).",
-	},
-];
-
-const conservationItems = [
-	"Support for catch-and-release best practice and selective harvest messaging in partnership with clubs and events (placeholder).",
-	"Participation in clean-up and habitat awareness initiatives where aligned with regional priorities (placeholder).",
-	"Transparent sourcing expectations for suppliers, documented in group policies and rolled out through UK procurement (placeholder).",
-];
+import MonarchBasicPage from "../components/MonarchBasicPage.astro";
+import { partners } from "../lib/partners.ts";
 ---
 
-<SiteLayout
-	title="Partners — Shimano Fishing United Kingdom"
-	description="Strategic partners, retail and club relationships, and conservation alignment for Shimano Fishing in the UK. Demo corporate page."
+<MonarchBasicPage
+	title="Partners | Monarch"
+	description="Monarch partners and collaborators across DayZ modding, servers, hosting, and content."
+	eyebrow="Company"
+	heading="Partners"
+	lead="Brands and creators we work with across modding, live play, hosting, and community content."
+	image="/Partners_Banner.png"
 >
-	<div slot="pre-main" class="mb-20 w-full">
-		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
-			<div class="absolute inset-0">
-				<img
-					src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2000&q=80"
-					alt=""
-					width="2000"
-					height="800"
-					loading="eager"
-					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
-				/>
-			</div>
-			<div
-				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.28)_55%,rgba(0,0,0,0.12)_100%)]"
-				aria-hidden="true"
-			>
-			</div>
-			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
-				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Partners</p>
-				<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
-					Stronger on the water together
-				</h1>
-				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
-					Retailers, clubs, federations, and conservation-minded organisations help us serve anglers responsibly — from the
-					first cast to lifelong participation in the sport.
-				</p>
-				<a
-					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
-					href="#partners"
-				>
-					Partnership overview
-				</a>
-			</div>
-		</div>
-	</div>
-
-	<section class="text-center" id="partners" aria-labelledby="partners-heading">
-		<h2 id="partners-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			How we partner
-		</h2>
-	</section>
-
-	<div class="w-full max-w-none text-left">
-		<p class="m-0 text-base leading-relaxed text-zinc-600">
-			Shimano Fishing UK builds long-term relationships that respect competition law, brand guidelines, and the expectations
-			of anglers. Partnerships are structured around clear objectives — whether that is in-store education, event support,
-			or shared stewardship of fisheries.
-		</p>
-		<p class="mt-5 text-base leading-relaxed text-zinc-600">
-			All names, programmes, and commitments on this page are <strong class="font-semibold text-brand-black">illustrative</strong>. Replace with
-			approved partner lists, case studies, and legal disclaimers before publishing.
-		</p>
-	</div>
-
-	<section class="text-center" id="alliances" aria-labelledby="alliances-heading">
-		<h2 id="alliances-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Strategic alliances
-		</h2>
-	</section>
-
-	<div class="grid w-full gap-4 sm:grid-cols-2">
+	<div
+		class="partners-page-grid grid gap-[18px]"
+		style="grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));"
+		role="list"
+	>
 		{
-			alliances.map((a) => (
-				<div class="border border-zinc-200 bg-white p-6 text-left shadow-sm">
-					<h3 class="m-0 mb-3 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{a.title}</h3>
-					<p class="m-0 text-sm leading-relaxed text-zinc-600">{a.body}</p>
-				</div>
-			))
+			partners.map((p) => {
+				const scale = p.logoScale ?? 1;
+				const tileClass =
+					"group partners-page-tile flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-black/[0.08] bg-white no-underline transition-[transform,box-shadow] duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] sm:h-[6rem]";
+				const img = (
+					<img
+						src={p.logo}
+						alt={p.name}
+						width="260"
+						height="96"
+						loading="lazy"
+						decoding="async"
+						class="block h-[70%] w-[92%] max-h-none max-w-none object-contain opacity-[0.42] grayscale transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+						style={`transform: scale(${scale}); transform-origin: center;`}
+					/>
+				);
+
+				return p.href ? (
+					<a
+						class={tileClass}
+						href={p.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						role="listitem"
+					>
+						{img}
+					</a>
+				) : (
+					<div class={tileClass} role="listitem">
+						{img}
+					</div>
+				);
+			})
 		}
 	</div>
-
-	<ul class="m-0 w-full list-none border border-zinc-200 bg-zinc-50 p-0">
-		<li class="border-b border-zinc-200 px-[1.1rem] py-4 text-sm leading-relaxed text-zinc-700 last:border-b-0">
-			<span class="font-semibold text-brand-black">Selection:</span> partners are assessed for reputation, audience fit, and
-			operational ability to represent Shimano professionally (demo copy).
-		</li>
-		<li class="border-b border-zinc-200 px-[1.1rem] py-4 text-sm leading-relaxed text-zinc-700 last:border-b-0">
-			<span class="font-semibold text-brand-black">Agreements:</span> written scopes, brand use rules, and review dates for
-			material support and co-marketing (demo copy).
-		</li>
-		<li class="px-[1.1rem] py-4 text-sm leading-relaxed text-zinc-700">
-			<span class="font-semibold text-brand-black">Contact:</span> commercial partnership enquiries should route through your
-			official UK business development inbox once defined.
-		</li>
-	</ul>
-
-	<section class="-mx-6 w-[calc(100%+3rem)] border-y border-zinc-200 bg-zinc-100 px-6 py-14" id="conservation" aria-labelledby="conservation-heading">
-		<h2 id="conservation-heading" class="m-0 text-center font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Conservation &amp; fisheries
-		</h2>
-		<p class="mx-auto mt-6 w-full max-w-none text-left text-base leading-relaxed text-zinc-600">
-			Healthy stocks and habitats matter to every angler we serve. Regional initiatives should reflect local regulation,
-			science, and the priorities of national federations — this section is a template for how you might summarise that
-			commitment publicly.
-		</p>
-		<ul class="mx-auto mt-8 w-full max-w-none list-disc space-y-3 pl-5 text-left text-sm leading-relaxed text-zinc-700 marker:text-zinc-400">
-			{conservationItems.map((item) => <li>{item}</li>)}
-		</ul>
-	</section>
-
-	<section class="text-center">
-		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Where to next</h2>
-	</section>
-
-	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/"
-		>
-			Back to home
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/about"
-		>
-			About us
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/governance"
-		>
-			Governance
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-			href="/#news"
-		>
-			Latest news
-		</a>
-	</div>
-
-	<section class="-mx-6 w-[calc(100%+3rem)] border-t border-zinc-200 bg-zinc-100" id="contact">
-		<div class="grid w-full grid-cols-1 md:grid-cols-2">
-			<div class="flex flex-col items-center border-b border-zinc-200 px-4 py-10 md:border-b-0 md:border-r md:border-zinc-200">
-				<div class="w-full max-w-[36ch] text-left">
-					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Members</h2>
-					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Shimano members</span>
-					<p class="mb-5 text-sm leading-normal text-zinc-600">Catalogue requests, event news, and email updates in one place.</p>
-					<a
-						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-						href="#"
-					>
-						Become a member
-					</a>
-				</div>
-			</div>
-			<div class="flex flex-col items-center px-4 py-10">
-				<div class="w-full max-w-[36ch] text-left">
-					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Dealer</h2>
-					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Store information</span>
-					<p class="mb-5 text-sm leading-normal text-zinc-600">Find authorised retailers and service centres near you.</p>
-					<a
-						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-						href="#"
-					>
-						Search for dealers
-					</a>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<script>
-		import { initHome } from "../scripts/home.ts";
-		initHome();
-	</script>
-</SiteLayout>
+</MonarchBasicPage>

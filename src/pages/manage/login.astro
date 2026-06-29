@@ -1,0 +1,88 @@
+---
+import "../../styles/global.css";
+
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Sign in | Monarch Admin</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Oswald:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body class="flex min-h-screen items-center justify-center bg-zinc-100 px-4 font-sans text-brand-black">
+		<div class="w-full max-w-md border border-zinc-200 bg-white p-8 shadow-sm">
+			<p class="m-0 font-display text-sm uppercase tracking-[0.15em] text-zinc-500">Monarch Admin</p>
+			<h1 class="mt-2 font-display text-2xl font-medium uppercase tracking-wide">Sign in</h1>
+			<p class="mt-2 text-sm text-zinc-600">Staff access for monarch-dayz.com</p>
+
+			<form id="login-form" class="mt-8 flex flex-col gap-4">
+				<label class="flex flex-col gap-1.5 text-sm font-semibold">
+					Email
+					<input
+						type="email"
+						name="email"
+						required
+						autocomplete="username"
+						class="border border-zinc-200 px-3 py-2.5 font-normal focus:border-monarch-500 focus:outline-none focus:ring-2 focus:ring-monarch-500/25"
+					/>
+				</label>
+				<label class="flex flex-col gap-1.5 text-sm font-semibold">
+					Password
+					<input
+						type="password"
+						name="password"
+						required
+						autocomplete="current-password"
+						class="border border-zinc-200 px-3 py-2.5 font-normal focus:border-monarch-500 focus:outline-none focus:ring-2 focus:ring-monarch-500/25"
+					/>
+				</label>
+				<p id="login-error" class="hidden text-sm text-red-700" role="alert"></p>
+				<button
+					type="submit"
+					class="font-display mt-2 bg-brand-black px-4 py-3 text-sm uppercase tracking-wide text-white hover:bg-zinc-800"
+				>
+					Continue
+				</button>
+			</form>
+		</div>
+		<script>
+			const form = document.getElementById("login-form");
+			const err = document.getElementById("login-error");
+			form?.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				err?.classList.add("hidden");
+				const fd = new FormData(form);
+				const res = await fetch("/api/auth/login", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						email: fd.get("email"),
+						password: fd.get("password"),
+					}),
+				});
+				const data = await res.json();
+				if (!res.ok) {
+					if (err) {
+						err.textContent = data.error ?? "Sign in failed.";
+						err.classList.remove("hidden");
+					}
+					return;
+				}
+				if (data.setup2fa) {
+					window.location.href = "/manage/setup-2fa";
+				} else if (data.requires2fa) {
+					window.location.href = "/manage/verify-2fa";
+				} else {
+					window.location.href = "/manage";
+				}
+			});
+		</script>
+	</body>
+</html>

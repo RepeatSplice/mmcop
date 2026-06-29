@@ -14,7 +14,7 @@ const isDrawer = variant === "drawer";
 const panelId = isDrawer ? "langMenuPanelDrawer" : "langMenuPanel";
 const btnId = isDrawer ? "langMenuBtnDrawer" : "langMenuBtn";
 
-/** Public origin for Google Translate `u=` — localhost is often blocked. */
+/** Public origin for Google Translate `u=`. localhost is often blocked. */
 let translateOrigin = "";
 const publicSite = import.meta.env.PUBLIC_SITE_URL as string | undefined;
 if (publicSite?.trim()) {
@@ -36,31 +36,31 @@ const showLocalhostTranslateHint = import.meta.env.DEV && !translateOrigin;
 		type="button"
 		id={btnId}
 		class:list={[
-			"lang-switcher-trigger flex items-center gap-1.5 border-0 bg-transparent font-semibold tracking-wide text-brand-black transition-colors hover:text-shimano-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500",
-			{ "uppercase text-[11px]": !isDrawer, "w-full justify-between rounded-none border border-zinc-200 px-3 py-2.5 text-left text-sm normal-case": isDrawer },
+			"lang-switcher-trigger flex items-center gap-2 border-0 bg-transparent font-medium text-brand-black transition-[color,background-color,border-color,box-shadow] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-monarch-500",
+			{ "lang-switcher-trigger--subheader": !isDrawer, "w-full justify-between rounded-none border border-zinc-200 px-3 py-2.5 text-left text-sm normal-case": isDrawer },
 		]}
 		aria-expanded="false"
 		aria-haspopup="listbox"
 		aria-controls={panelId}
 	>
-		<Icon name="lucide:languages" class="size-3.5 shrink-0 text-zinc-600" is:inline aria-hidden="true" />
+		<Icon name="lucide:languages" class="lang-switcher-trigger__icon size-3.5 shrink-0" is:inline aria-hidden="true" />
 		<Icon name="circle-flags:gb" class="size-4 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" aria-hidden="true" />
 		<span class:list={[{ "hidden sm:inline": !isDrawer }]}>English</span>
 		<span class:list={[{ "sm:hidden": !isDrawer }]}>EN</span>
-		<Icon name="lucide:chevron-down" class="lang-chevron size-3.5 shrink-0 text-zinc-500 transition-transform" is:inline aria-hidden="true" />
+		<Icon name="lucide:chevron-down" class="lang-chevron size-3.5 shrink-0 opacity-60 transition-transform duration-300" is:inline aria-hidden="true" />
 	</button>
 
 	<div
 		id={panelId}
 		class:list={[
-			"lang-menu-panel invisible absolute z-[100] max-h-[min(22rem,70vh)] -translate-y-1 overflow-y-auto border border-zinc-200 bg-white py-1 opacity-0 shadow-[0_12px_40px_rgba(0,0,0,0.12)] transition-all duration-150 ease-out",
-			isDrawer ? "right-0 top-full mt-1 w-full" : "right-0 top-full mt-1 w-[min(20rem,calc(100vw-2rem))]",
+			"lang-menu-panel invisible absolute z-[100] max-h-[min(22rem,70vh)] overflow-y-auto border border-zinc-200/90 bg-white/95 py-1 opacity-0 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] backdrop-blur-md transition-[opacity,transform,visibility] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+			isDrawer ? "right-0 top-full mt-2 w-full rounded-xl" : "right-0 top-full mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-xl",
 		]}
 		role="listbox"
 		aria-labelledby={btnId}
 		hidden
 	>
-		<p class="border-b border-zinc-100 px-3 py-2 font-sans text-[10px] font-normal uppercase leading-snug tracking-wide text-zinc-500">
+		<p class="border-b border-zinc-100 px-4 py-2.5 font-sans text-[10px] font-medium uppercase leading-snug tracking-[0.12em] text-zinc-500">
 			View via Google Translate (machine translation)
 		</p>
 		{
@@ -76,7 +76,7 @@ const showLocalhostTranslateHint = import.meta.env.DEV && !translateOrigin;
 				<button
 					type="button"
 					role="option"
-					class="flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-[13px] font-normal normal-case tracking-normal text-brand-black transition-colors hover:bg-zinc-50"
+					class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left font-sans text-[13px] font-normal normal-case tracking-normal text-brand-black transition-colors hover:bg-zinc-50"
 					data-lang-tl={loc.googleTl === null ? "" : loc.googleTl}
 				>
 					<Icon
@@ -98,8 +98,8 @@ const showLocalhostTranslateHint = import.meta.env.DEV && !translateOrigin;
 
 		function closeAll() {
 			document.querySelectorAll(".lang-menu-panel").forEach(function (panel) {
-				panel.classList.add("invisible", "opacity-0", "-translate-y-1");
-				panel.classList.remove("visible", "opacity-100", "translate-y-0");
+				panel.classList.add("invisible", "opacity-0");
+				panel.classList.remove("visible", "opacity-100");
 				panel.hidden = true;
 				var labelledby = panel.getAttribute("aria-labelledby");
 				var btn = labelledby ? document.getElementById(labelledby) : null;
@@ -114,8 +114,8 @@ const showLocalhostTranslateHint = import.meta.env.DEV && !translateOrigin;
 		function openPanel(panel, btn) {
 			closeAll();
 			panel.hidden = false;
-			panel.classList.remove("invisible", "opacity-0", "-translate-y-1");
-			panel.classList.add("visible", "opacity-100", "translate-y-0");
+			panel.classList.remove("invisible", "opacity-0");
+			panel.classList.add("visible", "opacity-100");
 			btn.setAttribute("aria-expanded", "true");
 			var ch = btn.querySelector(".lang-chevron");
 			if (ch) ch.classList.add("rotate-180");

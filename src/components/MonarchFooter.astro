@@ -1,0 +1,108 @@
+---
+import { Icon } from "astro-icon/components";
+
+const year = new Date().getFullYear();
+
+const marquee = [
+	"Custom weapons & packs",
+	"Community servers",
+	"Software & scripting",
+	"Workshop releases",
+	"Built for DayZ",
+	"Live since 2019",
+	"Server infrastructure",
+	"Creator tooling",
+];
+
+const navLinks = [
+	{ label: "Home", href: "/" },
+	{ label: "About Monarch", href: "/about-monarch" },
+	{ label: "Monarch Modding", href: "/monarch-modding" },
+	{ label: "Operation Monarch", href: "/operation-monarch" },
+	{ label: "Monarch Software", href: "/monarch-software" },
+	{ label: "Monarch Hosting", href: "/monarch-hosting" },
+	{ label: "How we work", href: "/how-we-work" },
+	{ label: "Partners", href: "/partners" },
+	{ label: "News & updates", href: "/news" },
+	{ label: "Careers", href: "/careers" },
+	{ label: "Work with us", href: "/work-with-us" },
+	{ label: "Contact", href: "/contact" },
+];
+
+const legalLinks = [
+	{ label: "Privacy policy", href: "/privacy-policy" },
+	{ label: "Terms and conditions", href: "/terms-and-conditions" },
+	{ label: "Legal info", href: "/legal-info" },
+];
+
+const social = [
+	{ label: "Discord", href: "#", icon: "simple-icons:discord" as const },
+	{ label: "YouTube", href: "#", icon: "simple-icons:youtube" as const },
+	{ label: "X", href: "#", icon: "simple-icons:x" as const },
+];
+---
+
+<footer class="monarch-footer">
+	<div class="monarch-footer__marquee-wrap">
+		<div class="monarch-footer__marquee" data-footer-marquee aria-hidden="true">
+			<div class="monarch-footer__marquee-track" data-footer-marquee-track>
+				<div class="monarch-footer__marquee-set" data-footer-marquee-set>
+					{marquee.map((phrase) => <p class="monarch-footer__marquee-item">{phrase}</p>)}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="monarch-footer__stage">
+		<div class="monarch-footer__glow" aria-hidden="true"></div>
+		<div class="monarch-footer__grain" aria-hidden="true"></div>
+
+		<div class="monarch-footer__body">
+			<div class="monarch-footer__content">
+				<p class="monarch-footer__intro">
+					Monarch builds for DayZ communities that want custom content, stable servers, and software that links the game to
+					the web.
+				</p>
+
+				<nav class="monarch-footer__nav" aria-label="Footer">
+					{
+						navLinks.map((link) => (
+							<a class="monarch-footer__nav-link" href={link.href}>
+								{link.label}
+							</a>
+						))
+					}
+					{
+						social.map((item) => (
+							<a class="monarch-footer__nav-link monarch-footer__nav-link--social" href={item.href} aria-label={item.label}>
+								<Icon name={item.icon} class="size-4 shrink-0" is:inline aria-hidden="true" />
+								{item.label}
+							</a>
+						))
+					}
+				</nav>
+			</div>
+
+			<a class="monarch-footer__mark" href="/" aria-label="Monarch home">
+				<img
+					src="/LogoText.svg"
+					alt=""
+					width="2600"
+					height="770"
+					class="monarch-footer__logo"
+					loading="lazy"
+					decoding="async"
+				/>
+			</a>
+		</div>
+
+		<div class="monarch-footer__end">
+			<nav class="monarch-footer__legal" aria-label="Legal">
+				{legalLinks.map((link) => (
+					<a href={link.href}>{link.label}</a>
+				))}
+			</nav>
+			<p class="monarch-footer__copy">© {year} Monarch</p>
+		</div>
+	</div>
+</footer>

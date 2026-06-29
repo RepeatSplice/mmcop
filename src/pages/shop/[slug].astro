@@ -1,0 +1,685 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getProductBySlug } from "../../lib/products";
+import { renderMarkdown } from "../../lib/markdown";
+import {
+	getProductReviews,
+	getProductRating,
+	hasCustomerReviewed,
+	customerCanReview,
+} from "../../lib/reviews";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/shop");
+
+const product = await getProductBySlug(slug);
+if (!product || product.status === "DRAFT" || product.status === "ARCHIVED") {
+	return Astro.redirect("/shop");
+}
+
+const isWaitlist = product.status === "WAITLIST";
+const bodyHtml = renderMarkdown(product.body);
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+const customer = Astro.locals.customer;
+
+const [reviews, rating] = await Promise.all([
+	getProductReviews(product.id),
+	getProductRating(product.id),
+]);
+
+const [canReview, alreadyReviewed] = customer
+	? await Promise.all([
+			customerCanReview(customer.id, product.id),
+			hasCustomerReviewed(customer.id, product.id),
+		])
+	: [false, false];
+
+const showReviewForm = canReview && !alreadyReviewed;
+
+// Parse preview images
+let previewImages: string[] = [];
+if (product.previewImages) {
+	try {
+		const parsed = typeof product.previewImages === "string"
+			? JSON.parse(product.previewImages as string)
+			: product.previewImages;
+		if (Array.isArray(parsed)) previewImages = parsed.filter(Boolean);
+	} catch {}
+}
+
+// Build image list: main image first, then previews
+const allImages = [product.imageUrl, ...previewImages].filter(Boolean) as string[];
+
+const categoryLabels: Record<string, string> = {
+	modding: "Modding",
+	software: "Software",
+	hosting: "Hosting",
+};
+
+const activeVariants = product.variants.filter((v) => v.active);
+
+// Pre-compute image grid rows: first image is full-width hero, rest pair into rows of 2
+const imageRows: string[][] = [];
+const remainingImages = allImages.slice(1);
+for (let i = 0; i < remainingImages.length; i += 2) {
+	imageRows.push(remainingImages.slice(i, i + 2));
+}
+---
+
+<SiteLayout title={`${product.title} | Monarch Shop`} description={product.excerpt}>
+	<!-- Breadcrumb -->
+	<div class="border-b border-zinc-200 bg-white">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<nav class="flex h-11 items-center gap-2 text-xs text-zinc-500">
+				<a href="/shop" class="flex items-center gap-1.5 transition-colors hover:text-brand-black">
+					<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+						<path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					Shop
+				</a>
+				<span class="text-zinc-300">/</span>
+				<span class="text-zinc-400">{categoryLabels[product.category] ?? product.category}</span>
+				<span class="text-zinc-300">/</span>
+				<span class="font-medium text-brand-black">{product.title}</span>
+			</nav>
+		</div>
+	</div>
+
+	<!-- Main product area -->
+	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+		<div class="grid grid-cols-1 gap-0 lg:grid-cols-[1fr_400px]">
+
+			<!-- LEFT: Editorial image grid -->
+			<div class="py-6 pr-0 lg:pr-8 lg:py-8">
+				{allImages.length === 0 ? (
+					<!-- No images placeholder -->
+					<div class="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-zinc-100">
+						<svg class="h-16 w-16 text-zinc-300" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/>
+							<circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+							<path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+				) : allImages.length === 1 ? (
+					<!-- Single image, full width -->
+					<button
+						type="button"
+						class="group block w-full overflow-hidden rounded-xl cursor-zoom-in"
+						data-lightbox="0"
+						aria-label="View full size image"
+					>
+						<img src={allImages[0]} alt={product.title} class="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+					</button>
+				) : (
+					<!-- Multi-image editorial grid -->
+					<div class="flex flex-col gap-2">
+						<!-- First image: full width hero -->
+						<button
+							type="button"
+							class="group block w-full overflow-hidden rounded-xl cursor-zoom-in"
+							data-lightbox="0"
+							aria-label="View full size image"
+						>
+							<img src={allImages[0]} alt={product.title} class="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+						</button>
+						<!-- Remaining images in 2-column pairs -->
+						{imageRows.map((row, rowIdx) => (
+							<div class={`grid gap-2 ${row.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+								{row.map((src, colIdx) => (
+									<button
+										type="button"
+										class="group block w-full overflow-hidden rounded-xl cursor-zoom-in"
+										data-lightbox={String(1 + rowIdx * 2 + colIdx)}
+										aria-label="View full size image"
+									>
+										<img
+											src={src}
+											alt={`${product.title} image`}
+											class="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+										/>
+									</button>
+								))}
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+
+			<!-- RIGHT: Sticky product info panel -->
+			<div class="lg:self-start lg:sticky lg:top-0">
+				<div class="flex flex-col gap-0 divide-y divide-zinc-100 py-8 lg:pl-8">
+
+					<!-- Title & rating -->
+					<div class="pb-5">
+						<p class="m-0 mb-2 font-display text-[10px] uppercase tracking-[0.12em] text-zinc-400">
+							{categoryLabels[product.category] ?? product.category}
+							{isWaitlist && (
+								<span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] tracking-wider text-amber-700">Coming Soon</span>
+							)}
+						</p>
+						<h1 class="m-0 font-display text-2xl font-medium uppercase leading-tight tracking-wide text-brand-black">
+							{product.title}
+						</h1>
+
+						<!-- Star rating -->
+						{rating.count > 0 ? (
+							<div class="mt-2.5 flex items-center gap-2">
+								<div class="flex gap-0.5">
+									{[1, 2, 3, 4, 5].map((n) => (
+										<svg class={`h-3.5 w-3.5 ${n <= Math.round(rating.average) ? "text-amber-400" : "text-zinc-200"}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+											<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+										</svg>
+									))}
+								</div>
+								<button
+									type="button"
+									class="text-xs text-zinc-500 underline underline-offset-2 hover:text-brand-black"
+									id="goToReviews"
+								>
+									{rating.count} review{rating.count !== 1 ? "s" : ""}
+								</button>
+							</div>
+						) : (
+							<p class="m-0 mt-2.5 text-xs text-zinc-400">No reviews yet</p>
+						)}
+					</div>
+
+					<!-- Price + variants / waitlist -->
+					<div class="py-5">
+						{isWaitlist ? (
+							<div class="flex flex-col gap-4">
+								<p class="m-0 text-sm text-zinc-600">
+									Not yet available. Join the waitlist to be notified on launch.
+								</p>
+								<form id="waitlistForm">
+									<input type="hidden" id="waitlistProductId" value={product.id} />
+									<input
+										type="email"
+										id="waitlistEmail"
+										required
+										placeholder="your@email.com"
+										class="mb-2 w-full border border-zinc-300 px-3 py-2.5 text-sm text-brand-black placeholder-zinc-400 focus:border-brand-black focus:outline-none"
+									/>
+									<button
+										type="submit"
+										class="w-full border border-brand-black bg-brand-black py-3 font-display text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-zinc-800"
+									>
+										Join Waitlist
+									</button>
+									<p id="waitlistMsg" class="mt-2 hidden text-sm" />
+								</form>
+							</div>
+						) : activeVariants.length > 0 ? (
+							<div class="flex flex-col gap-4">
+								<!-- Variant selector -->
+								{activeVariants.length > 1 && (
+									<div>
+										<p class="m-0 mb-2 font-display text-[10px] uppercase tracking-[0.12em] text-zinc-400">Plan</p>
+										<div class="flex flex-col gap-2" id="variantList">
+											{activeVariants.map((variant, i) => (
+												<button
+													type="button"
+													class={`variant-btn w-full border px-4 py-3 text-left transition-all ${i === 0 ? "border-brand-black bg-zinc-50" : "border-zinc-200 hover:border-zinc-400"}`}
+													data-variant-id={variant.id}
+													data-price={formatPrice(variant.priceUsd)}
+													data-selected={i === 0 ? "true" : "false"}
+												>
+													<div class="flex items-center justify-between">
+														<div>
+															<p class="m-0 text-sm font-semibold text-brand-black">{variant.name}</p>
+															{variant.description && (
+																<p class="m-0 mt-0.5 text-xs text-zinc-500">{variant.description}</p>
+															)}
+															{variant.maxServers && (
+																<p class="m-0 mt-0.5 text-xs text-zinc-400">Up to {variant.maxServers} server{variant.maxServers !== 1 ? "s" : ""}</p>
+															)}
+														</div>
+														<p class="m-0 font-display text-base font-medium text-brand-black">{formatPrice(variant.priceUsd)}</p>
+													</div>
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{activeVariants.length === 1 && (
+									<div>
+										<p class="m-0 mb-0.5 font-display text-[10px] uppercase tracking-[0.12em] text-zinc-400">Price</p>
+										<p class="m-0 font-display text-2xl font-medium text-brand-black">{formatPrice(activeVariants[0].priceUsd)}</p>
+										{activeVariants[0].description && (
+											<p class="m-0 mt-1 text-xs text-zinc-500">{activeVariants[0].description}</p>
+										)}
+									</div>
+								)}
+
+								<!-- CTA -->
+								{customer ? (
+									<button
+										type="button"
+										id="addToCartBtn"
+										data-variant-id={activeVariants[0]?.id}
+										class="w-full border border-brand-black bg-brand-black py-4 font-display text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-zinc-800 disabled:opacity-60"
+									>
+										Add to Cart
+									</button>
+								) : (
+									<a
+										href="/account/login"
+										class="block w-full border border-brand-black bg-brand-black py-4 text-center font-display text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-zinc-800"
+									>
+										Sign in to Buy
+									</a>
+								)}
+								<p id="cartMsg" class="hidden text-center text-sm" />
+							</div>
+						) : (
+							<p class="m-0 text-sm text-zinc-500">No purchasing options available.</p>
+						)}
+					</div>
+
+					<!-- Short description -->
+					<div class="py-5">
+						<p class="m-0 text-sm leading-relaxed text-zinc-600">{product.excerpt}</p>
+					</div>
+
+					<!-- Features -->
+					<div class="py-5">
+						<ul class="m-0 flex flex-col gap-3 p-0 list-none">
+							{[
+								{ icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", label: "Instant digital delivery after purchase" },
+								{ icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4", label: "Re-download at any time from your account" },
+								{ icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", label: "All future updates included, free" },
+							].map((item) => (
+								<li class="flex items-start gap-2.5 text-xs text-zinc-500">
+									<svg class="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d={item.icon} />
+									</svg>
+									{item.label}
+								</li>
+							))}
+						</ul>
+					</div>
+
+					<!-- Accordion: Changelog -->
+					{product.changelog.length > 0 && (
+						<details class="group py-1">
+							<summary class="flex cursor-pointer select-none items-center justify-between py-4 font-display text-[11px] uppercase tracking-widest text-brand-black">
+								Changelog
+								<svg class="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+									<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							</summary>
+							<div class="flex flex-col gap-3 pb-4">
+								{product.changelog.map((entry, i) => (
+									<div class="border border-zinc-100 bg-zinc-50 px-4 py-3">
+										<div class="flex items-center gap-2">
+											<span class="rounded bg-brand-black px-1.5 py-0.5 font-display text-[9px] uppercase tracking-wide text-white">v{entry.version}</span>
+											<span class="text-xs text-zinc-400">{entry.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+										</div>
+										<p class="m-0 mt-2 whitespace-pre-line text-xs leading-relaxed text-zinc-600">{entry.notes}</p>
+									</div>
+								))}
+							</div>
+						</details>
+					)}
+
+				</div>
+			</div>
+		</div>
+
+		<!-- Description — full width below the two-column grid -->
+		<div class="border-t border-zinc-200 py-12">
+			<div class="max-w-3xl">
+				<h2 class="m-0 mb-6 font-display text-lg font-medium uppercase tracking-wide text-brand-black">About This Product</h2>
+				<article class="monarch-article" set:html={bodyHtml} />
+			</div>
+		</div>
+
+		<!-- Reviews section -->
+		<div class="border-t border-zinc-200 py-12" id="reviews-section">
+			<div class="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_400px]">
+				<div>
+					<div class="flex flex-wrap items-center justify-between gap-4">
+						<h2 class="m-0 font-display text-lg font-medium uppercase tracking-wide text-brand-black">
+							Customer Reviews
+						</h2>
+						{rating.count > 0 && (
+							<div class="flex items-center gap-3">
+								<div class="flex gap-0.5">
+									{[1, 2, 3, 4, 5].map((n) => (
+										<svg class={`h-4 w-4 ${n <= Math.round(rating.average) ? "text-amber-400" : "text-zinc-200"}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+											<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+										</svg>
+									))}
+								</div>
+								<span class="text-sm text-zinc-600">{rating.average.toFixed(1)} out of 5 ({rating.count} review{rating.count !== 1 ? "s" : ""})</span>
+							</div>
+						)}
+					</div>
+
+					{reviews.length === 0 ? (
+						<div class="mt-6 border border-dashed border-zinc-200 px-6 py-10 text-center">
+							<p class="m-0 text-sm text-zinc-400">No reviews yet. Be the first to leave one.</p>
+						</div>
+					) : (
+						<div class="mt-6 flex flex-col gap-4">
+							{reviews.map((review) => (
+								<div class="border border-zinc-200 bg-white p-5">
+									<div class="flex items-start justify-between gap-3">
+										<div class="flex items-center gap-3">
+											<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-monarch-500 font-display text-sm font-semibold uppercase text-white">
+												{review.customer.displayName.charAt(0)}
+											</div>
+											<div>
+												<p class="m-0 text-sm font-semibold text-brand-black">{review.customer.displayName}</p>
+												<p class="m-0 text-xs text-zinc-400">{review.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+											</div>
+										</div>
+										<div class="flex shrink-0 gap-0.5">
+											{[1, 2, 3, 4, 5].map((n) => (
+												<svg class={`h-3.5 w-3.5 ${n <= review.rating ? "text-amber-400" : "text-zinc-200"}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+													<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+												</svg>
+											))}
+										</div>
+									</div>
+									{review.title && (
+										<p class="m-0 mt-3 text-sm font-semibold text-brand-black">{review.title}</p>
+									)}
+									<p class="m-0 mt-2 text-sm leading-relaxed text-zinc-600">{review.body}</p>
+								</div>
+							))}
+						</div>
+					)}
+
+					{!customer && (
+						<p class="mt-6 text-sm text-zinc-500">
+							<a href="/account/login" class="font-medium text-brand-black underline underline-offset-2">Sign in</a> and purchase this product to leave a review.
+						</p>
+					)}
+					{customer && canReview && alreadyReviewed && (
+						<p class="mt-4 text-sm text-zinc-500">You have already reviewed this product.</p>
+					)}
+				</div>
+
+				<!-- Write a review -->
+				{showReviewForm && (
+					<div class="border border-zinc-200 bg-white p-6">
+						<h3 class="m-0 mb-5 font-display text-sm font-medium uppercase tracking-widest text-brand-black">Write a Review</h3>
+						<form id="reviewForm" class="flex flex-col gap-4">
+							<input type="hidden" name="productId" value={product.id} />
+							<div>
+								<label class="mb-1.5 block font-display text-[10px] uppercase tracking-widest text-zinc-400">Rating <span class="text-red-500">*</span></label>
+								<div class="flex gap-1" id="starPicker" role="radiogroup">
+									{[1, 2, 3, 4, 5].map((n) => (
+										<button type="button" class="star-btn h-8 w-8 text-zinc-200 transition-colors hover:text-amber-400" data-value={n}>
+											<svg viewBox="0 0 20 20" fill="currentColor" class="h-full w-full">
+												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+											</svg>
+										</button>
+									))}
+								</div>
+								<input type="hidden" id="ratingValue" name="rating" value="0" />
+							</div>
+							<div>
+								<label for="reviewTitle" class="mb-1.5 block font-display text-[10px] uppercase tracking-widest text-zinc-400">Title (optional)</label>
+								<input type="text" id="reviewTitle" name="title" maxlength="120" placeholder="Sum it up in a few words" class="w-full border border-zinc-300 px-3 py-2.5 text-sm placeholder-zinc-400 focus:border-brand-black focus:outline-none" />
+							</div>
+							<div>
+								<label for="reviewBody" class="mb-1.5 block font-display text-[10px] uppercase tracking-widest text-zinc-400">Review <span class="text-red-500">*</span></label>
+								<textarea id="reviewBody" name="body" required minlength="10" rows="4" placeholder="Tell us about your experience..." class="w-full border border-zinc-300 px-3 py-2.5 text-sm placeholder-zinc-400 focus:border-brand-black focus:outline-none" />
+							</div>
+							<button type="submit" id="reviewSubmitBtn" class="border border-brand-black bg-brand-black px-5 py-3 font-display text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-zinc-800 disabled:opacity-50">
+								Submit Review
+							</button>
+							<p id="reviewMsg" class="hidden text-sm" />
+						</form>
+					</div>
+				)}
+			</div>
+		</div>
+
+	</div>
+
+	<script slot="scripts">
+		// Variant selection
+		const variantList = document.getElementById("variantList");
+		const addToCartBtn = document.getElementById("addToCartBtn") as HTMLButtonElement | null;
+
+		if (variantList) {
+			variantList.querySelectorAll<HTMLButtonElement>(".variant-btn").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					variantList.querySelectorAll<HTMLButtonElement>(".variant-btn").forEach((b) => {
+						const active = b === btn;
+						b.classList.toggle("border-brand-black", active);
+						b.classList.toggle("bg-zinc-50", active);
+						b.classList.toggle("border-zinc-200", !active);
+					});
+					if (addToCartBtn) addToCartBtn.dataset.variantId = btn.dataset.variantId;
+				});
+			});
+		}
+
+		// Add to cart
+		if (addToCartBtn) {
+			addToCartBtn.addEventListener("click", async () => {
+				const variantId = addToCartBtn.dataset.variantId;
+				const msg = document.getElementById("cartMsg");
+				addToCartBtn.disabled = true;
+				addToCartBtn.textContent = "Adding...";
+				const res = await fetch("/api/shop/cart", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ variantId }),
+				});
+				if (res.ok) {
+					window.location.href = "/shop/cart";
+				} else {
+					addToCartBtn.disabled = false;
+					addToCartBtn.textContent = "Add to Cart";
+					if (msg) { msg.textContent = "Could not add to cart. Please try again."; msg.className = "text-center text-sm text-red-600"; msg.classList.remove("hidden"); }
+				}
+			});
+		}
+
+		// Waitlist
+		const waitlistForm = document.getElementById("waitlistForm");
+		if (waitlistForm) {
+			waitlistForm.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				const productId = (document.getElementById("waitlistProductId") as HTMLInputElement)?.value;
+				const email = (document.getElementById("waitlistEmail") as HTMLInputElement)?.value;
+				const msg = document.getElementById("waitlistMsg");
+				const res = await fetch("/api/shop/waitlist", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ productId, email }),
+				});
+				if (msg) {
+					msg.classList.remove("hidden");
+					if (res.ok) { msg.textContent = "You're on the list!"; msg.className = "mt-2 text-sm text-green-700"; }
+					else { msg.textContent = "Something went wrong."; msg.className = "mt-2 text-sm text-red-600"; }
+				}
+			});
+		}
+
+		// Scroll to reviews link
+		document.getElementById("goToReviews")?.addEventListener("click", () => {
+			document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" });
+		});
+
+		// Star picker
+		const starPicker = document.getElementById("starPicker");
+		const ratingInput = document.getElementById("ratingValue") as HTMLInputElement | null;
+		if (starPicker && ratingInput) {
+			const buttons = starPicker.querySelectorAll<HTMLButtonElement>(".star-btn");
+			function highlight(upTo: number) {
+				buttons.forEach((btn) => {
+					const val = Number(btn.dataset.value);
+					btn.classList.toggle("text-amber-400", val <= upTo);
+					btn.classList.toggle("text-zinc-200", val > upTo);
+				});
+			}
+			buttons.forEach((btn) => {
+				btn.addEventListener("mouseenter", () => highlight(Number(btn.dataset.value)));
+				btn.addEventListener("mouseleave", () => highlight(Number(ratingInput.value)));
+				btn.addEventListener("click", () => { ratingInput.value = btn.dataset.value ?? "0"; highlight(Number(ratingInput.value)); });
+			});
+		}
+
+		// Review form
+		const reviewForm = document.getElementById("reviewForm") as HTMLFormElement | null;
+		if (reviewForm) {
+			reviewForm.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				const fd = new FormData(reviewForm);
+				const productId = fd.get("productId");
+				const rating = Number(fd.get("rating"));
+				const title = (fd.get("title") as string).trim();
+				const body = (fd.get("body") as string).trim();
+				const msg = document.getElementById("reviewMsg");
+				const btn = document.getElementById("reviewSubmitBtn") as HTMLButtonElement | null;
+				if (!rating) {
+					if (msg) { msg.textContent = "Please select a star rating."; msg.className = "text-sm text-red-600"; msg.classList.remove("hidden"); }
+					return;
+				}
+				if (btn) btn.disabled = true;
+				try {
+					const res = await fetch("/api/shop/reviews", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ productId, rating, title: title || undefined, body }),
+					});
+					if (msg) {
+						msg.classList.remove("hidden");
+						if (res.ok) {
+							msg.textContent = "Thank you! Your review is pending approval.";
+							msg.className = "text-sm text-green-700";
+							reviewForm.reset();
+							if (ratingInput) ratingInput.value = "0";
+							document.querySelectorAll(".star-btn").forEach((b) => { b.classList.add("text-zinc-200"); b.classList.remove("text-amber-400"); });
+							if (btn) btn.disabled = true;
+						} else {
+							const data = await res.json().catch(() => ({}));
+							msg.textContent = (data as { error?: string }).error ?? "Something went wrong.";
+							msg.className = "text-sm text-red-600";
+							if (btn) btn.disabled = false;
+						}
+					}
+				} catch {
+					if (msg) { msg.textContent = "Network error. Please try again."; msg.className = "text-sm text-red-600"; msg.classList.remove("hidden"); }
+					if (btn) btn.disabled = false;
+				}
+			});
+		}
+	</script>
+
+<!-- ── Lightbox ── -->
+<div
+	id="lightbox"
+	class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/90 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-label="Image viewer"
+>
+	<!-- Close -->
+	<button
+		id="lb-close"
+		type="button"
+		class="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25"
+		aria-label="Close image viewer"
+	>
+		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+		</svg>
+	</button>
+
+	<!-- Prev -->
+	<button
+		id="lb-prev"
+		type="button"
+		class="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 disabled:opacity-0"
+		aria-label="Previous image"
+	>
+		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+		</svg>
+	</button>
+
+	<!-- Image -->
+	<img
+		id="lb-img"
+		src=""
+		alt=""
+		class="max-h-[90vh] max-w-[90vw] select-none object-contain"
+	/>
+
+	<!-- Counter -->
+	<p id="lb-counter" class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/70"></p>
+
+	<!-- Next -->
+	<button
+		id="lb-next"
+		type="button"
+		class="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 disabled:opacity-0"
+		aria-label="Next image"
+	>
+		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+		</svg>
+	</button>
+</div>
+
+<script define:vars={{ allImages }}>
+	const lb = document.getElementById("lightbox");
+	const lbImg = document.getElementById("lb-img");
+	const lbCounter = document.getElementById("lb-counter");
+	const lbClose = document.getElementById("lb-close");
+	const lbPrev = document.getElementById("lb-prev");
+	const lbNext = document.getElementById("lb-next");
+	let current = 0;
+
+	function openLightbox(idx) {
+		current = idx;
+		show();
+	}
+
+	function show() {
+		const src = allImages[current];
+		lbImg.src = src;
+		lbImg.alt = `Image ${current + 1}`;
+		lbCounter.textContent = `${current + 1} / ${allImages.length}`;
+		lbPrev.disabled = current === 0;
+		lbNext.disabled = current === allImages.length - 1;
+		lb.classList.remove("hidden");
+		lb.classList.add("flex");
+		document.body.style.overflow = "hidden";
+	}
+
+	function closeLightbox() {
+		lb.classList.add("hidden");
+		lb.classList.remove("flex");
+		document.body.style.overflow = "";
+	}
+
+	document.querySelectorAll("[data-lightbox]").forEach((btn) => {
+		btn.addEventListener("click", () => openLightbox(Number(btn.dataset.lightbox)));
+	});
+
+	lbClose.addEventListener("click", closeLightbox);
+	lbPrev.addEventListener("click", () => { if (current > 0) { current--; show(); } });
+	lbNext.addEventListener("click", () => { if (current < allImages.length - 1) { current++; show(); } });
+
+	lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
+
+	document.addEventListener("keydown", (e) => {
+		if (lb.classList.contains("hidden")) return;
+		if (e.key === "Escape") closeLightbox();
+		if (e.key === "ArrowLeft" && current > 0) { current--; show(); }
+		if (e.key === "ArrowRight" && current < allImages.length - 1) { current++; show(); }
+	});
+</script>
+</SiteLayout>

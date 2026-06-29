@@ -1,0 +1,39 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import JobEditor from "../../../components/manage/JobEditor.astro";
+import { prisma } from "../../../lib/prisma";
+import { parseJobForm } from "../../../lib/jobs-admin";
+
+export const prerender = false;
+
+let error: string | undefined;
+
+if (Astro.request.method === "POST") {
+	const parsed = parseJobForm(await Astro.request.formData());
+	if ("error" in parsed) {
+		error = parsed.error;
+	} else {
+		const exists = await prisma.job.findUnique({ where: { slug: parsed.slug } });
+		if (exists) {
+			error = `Slug "${parsed.slug}" is already in use.`;
+		} else {
+			await prisma.job.create({
+				data: {
+					...parsed,
+					applyFormConfig: parsed.applyFormConfig,
+				},
+			});
+			return Astro.redirect(`/manage/jobs/${parsed.slug}?saved=1`);
+		}
+	}
+}
+---
+
+<ManageLayout title="New job" active="jobs">
+	<a href="/manage/jobs" class="text-sm text-monarch-500 hover:text-brand-black">← Jobs</a>
+	<h1 class="mt-4 font-display text-2xl font-medium uppercase tracking-[0.12em]">New job</h1>
+	<p class="mt-1 text-sm text-zinc-600">Defaults to draft. Configure the apply form before publishing.</p>
+	<div class="mt-6">
+		<JobEditor mode="create" error={error} />
+	</div>
+</ManageLayout>

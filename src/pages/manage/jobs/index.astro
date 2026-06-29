@@ -1,0 +1,151 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+import { jobStatusBadgeClass, jobStatusLabel } from "../../../lib/jobs-admin";
+import type { JobStatus } from "../../../lib/jobs-admin";
+import { hasAlgolia } from "../../../lib/env";
+import { reindexRecord, removeFromIndex } from "../../../lib/algolia";
+
+export const prerender = false;
+
+const filter = (Astro.url.searchParams.get("status") ?? "all") as JobStatus | "all";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+	const targetSlug = String(form.get("slug") ?? "");
+	if (targetSlug && ["publish", "archive", "draft", "delete"].includes(action)) {
+		if (action === "delete") {
+			if (hasAlgolia()) {
+				try { await removeFromIndex(`job-${targetSlug}`); } catch { /* non-fatal */ }
+			}
+			await prisma.job.delete({ where: { slug: targetSlug } });
+		} else {
+			const statusMap = { publish: "PUBLISHED", archive: "ARCHIVED", draft: "DRAFT" } as const;
+			const updated = await prisma.job.update({
+				where: { slug: targetSlug },
+				data: { status: statusMap[action as keyof typeof statusMap] },
+			});
+			if (hasAlgolia()) {
+				try {
+					if (updated.status === "PUBLISHED") {
+						await reindexRecord({
+							objectID: `job-${targetSlug}`,
+							title: updated.title,
+							excerpt: updated.excerpt ?? updated.team ?? "",
+							href: `/careers/${targetSlug}`,
+							type: "job",
+							typeLabel: "Career",
+						});
+					} else {
+						await removeFromIndex(`job-${targetSlug}`);
+					}
+				} catch { /* non-fatal */ }
+			}
+		}
+		return Astro.redirect(`/manage/jobs${filter !== "all" ? `?status=${filter}` : ""}`);
+	}
+}
+
+const where = filter === "all" ? {} : { status: filter };
+const jobs = await prisma.job.findMany({
+	where,
+	orderBy: { title: "asc" },
+	include: { _count: { select: { applications: true } } },
+});
+const counts = await prisma.job.groupBy({ by: ["status"], _count: true });
+const countMap = Object.fromEntries(counts.map((c) => [c.status, c._count]));
+const totalCount = counts.reduce((sum, c) => sum + c._count, 0);
+const tabs = [
+	{ id: "all", label: "All", count: totalCount },
+	{ id: "PUBLISHED", label: "Published", count: countMap.PUBLISHED ?? 0 },
+	{ id: "DRAFT", label: "Drafts", count: countMap.DRAFT ?? 0 },
+	{ id: "ARCHIVED", label: "Archived", count: countMap.ARCHIVED ?? 0 },
+] as const;
+---
+
+<ManageLayout title="Jobs" active="jobs">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">Jobs</h1>
+			<p class="mt-1 text-sm text-zinc-500">Manage roles, descriptions, and application forms.</p>
+		</div>
+		<ManageBtn href="/manage/jobs/new" variant="primary">New job</ManageBtn>
+	</div>
+
+	<nav class="mt-6 flex flex-wrap gap-1.5" aria-label="Filter by status">
+		{tabs.map((tab) => (
+			<a
+				href={tab.id === "all" ? "/manage/jobs" : `/manage/jobs?status=${tab.id}`}
+				class:list={[
+					"font-display rounded-full border px-3.5 py-1.5 text-xs uppercase tracking-wide transition-colors",
+					filter === tab.id
+						? "border-brand-black bg-brand-black text-white"
+						: "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50",
+				]}
+			>
+				{tab.label}
+				<span class="ml-1 opacity-60">{tab.count}</span>
+			</a>
+		))}
+	</nav>
+
+	{jobs.length === 0 ? (
+		<div class="mt-5 rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center shadow-sm">
+			<svg class="mx-auto mb-3 h-8 w-8 text-zinc-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<rect x="5" y="2" width="6" height="3" rx="1" stroke="currentColor" stroke-width="1.25"/>
+				<rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.25"/>
+			</svg>
+			<p class="m-0 text-sm text-zinc-500">
+				No jobs in this view.{" "}
+				<a class="font-semibold text-monarch-500 hover:text-brand-black" href="/manage/jobs/new">Create one</a>.
+			</p>
+		</div>
+	) : (
+		<ul class="mt-4 list-none overflow-hidden rounded-xl border border-zinc-200 bg-white p-0 shadow-sm">
+			{jobs.map((job) => (
+				<li class="border-b border-zinc-100 px-5 py-4 last:border-0">
+					<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+						<div class="min-w-0 flex-1">
+							<p class="m-0 line-clamp-2 font-semibold leading-snug text-brand-black">{job.title}</p>
+							<div class="mt-2 flex flex-wrap items-center gap-2">
+								<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", jobStatusBadgeClass(job.status)]}>
+									{jobStatusLabel(job.status)}
+								</span>
+								<span class="text-xs text-zinc-500">{job.team} &middot; {job.workType}</span>
+							</div>
+							<p class="m-0 mt-1 truncate font-mono text-[11px] text-zinc-400">{job.slug}</p>
+						</div>
+						<div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+							<div class="flex flex-wrap gap-1.5">
+								{job._count.applications > 0 && (
+									<ManageBtn href={`/manage/applications?job=${job.slug}`} variant="secondary">
+										{job._count.applications} application{job._count.applications === 1 ? "" : "s"}
+									</ManageBtn>
+								)}
+								{job.status === "PUBLISHED" && (
+									<>
+										<ManageBtn href={`/careers/${job.slug}`} variant="muted" external>View</ManageBtn>
+										<ManageBtn href={`/careers/${job.slug}#apply`} variant="muted" external>Form</ManageBtn>
+									</>
+								)}
+								<ManageBtn href={`/manage/jobs/${job.slug}`} variant="primary">Edit</ManageBtn>
+							</div>
+							<form method="post" class="flex flex-wrap gap-1.5 border-t border-zinc-100 pt-2 sm:border-t-0 sm:border-l sm:pl-2 sm:pt-0">
+								<input type="hidden" name="slug" value={job.slug} />
+								{job.status !== "PUBLISHED" && (
+									<ManageBtn type="submit" name="_action" value="publish" variant="success">Publish</ManageBtn>
+								)}
+								{job.status !== "ARCHIVED" && (
+									<ManageBtn type="submit" name="_action" value="archive" variant="muted">Archive</ManageBtn>
+								)}
+								<ManageBtn type="submit" name="_action" value="delete" variant="danger" confirm="Delete this job and all applications for it?">Delete</ManageBtn>
+							</form>
+						</div>
+					</div>
+				</li>
+			))}
+		</ul>
+	)}
+</ManageLayout>

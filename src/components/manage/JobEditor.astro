@@ -1,0 +1,263 @@
+---
+import ManageBtn from "./ManageBtn.astro";
+import type { ApplyFormConfig, JobStatus } from "../../lib/jobs-admin";
+import { defaultApplyFormConfig, jobStatusOptions } from "../../lib/jobs-admin";
+
+export type JobEditorRecord = {
+	slug: string;
+	title: string;
+	team: string;
+	workType: string;
+	excerpt: string;
+	body: string;
+	applicationEmail: string;
+	status: JobStatus;
+	applyFormConfig: ApplyFormConfig;
+};
+
+interface Props {
+	mode: "create" | "edit";
+	job?: JobEditorRecord;
+	error?: string;
+	saved?: boolean;
+}
+
+const { mode, job, error, saved = false } = Astro.props;
+const isEdit = mode === "edit";
+const cfg = job?.applyFormConfig ?? defaultApplyFormConfig;
+
+function checked(val: boolean): boolean {
+	return val;
+}
+---
+
+{saved && (
+	<p class="mb-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">Changes saved.</p>
+)}
+{error && (
+	<p class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>
+)}
+
+<form method="post" class="job-editor-form" id="job-editor-form">
+	<div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+		<div class="space-y-4">
+			<fieldset class="space-y-4 border border-zinc-200 bg-white p-5">
+				<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Role details</legend>
+
+				{
+					isEdit ? (
+						<label class="block text-sm font-semibold">
+							Slug
+							<input name="slug" required value={job!.slug} pattern="[a-z0-9][a-z0-9-]*" class="mt-1 w-full border border-zinc-200 px-3 py-2 font-mono text-sm" />
+						</label>
+					) : (
+						<label class="block text-sm font-semibold">
+							Slug
+							<input id="job-slug" name="slug" required pattern="[a-z0-9][a-z0-9-]*" class="mt-1 w-full border border-zinc-200 px-3 py-2 font-mono text-sm" />
+							<button type="button" id="job-slug-from-title" class="mt-2 text-xs font-semibold text-monarch-500 hover:text-brand-black">Generate from title</button>
+						</label>
+					)
+				}
+
+				<label class="block text-sm font-semibold">
+					Job title (H1)
+					<input id="job-title" name="title" required value={job?.title ?? ""} class="mt-1 w-full border border-zinc-200 px-3 py-2" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Team
+					<input name="team" required value={job?.team ?? ""} placeholder="Monarch Modding / Software" class="mt-1 w-full border border-zinc-200 px-3 py-2" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Work type
+					<input name="workType" required value={job?.workType ?? "Remote"} class="mt-1 w-full border border-zinc-200 px-3 py-2" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Short excerpt
+					<textarea name="excerpt" required rows="2" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{job?.excerpt ?? ""}</textarea>
+				</label>
+				<label class="block text-sm font-semibold">
+					Applications email
+					<input name="applicationEmail" type="email" value={job?.applicationEmail ?? "careers@monarch-modding.com"} class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+
+				<fieldset class="space-y-2">
+					<legend class="text-sm font-semibold">Status</legend>
+					{jobStatusOptions.map((opt) => (
+						<label class="flex cursor-pointer items-start gap-3 rounded border border-zinc-100 px-3 py-2 hover:bg-zinc-50">
+							<input type="radio" name="status" value={opt.value} checked={job ? job.status === opt.value : opt.value === "DRAFT"} class="mt-1" />
+							<span>
+								<span class="block text-sm font-semibold">{opt.label}</span>
+								<span class="block text-xs text-zinc-500">{opt.description}</span>
+							</span>
+						</label>
+					))}
+				</fieldset>
+			</fieldset>
+
+			<fieldset class="space-y-4 border border-zinc-200 bg-white p-5">
+				<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Application form</legend>
+				<p class="m-0 text-xs text-zinc-500">Controls the apply section on the public job page for this role only.</p>
+
+				<label class="block text-sm font-semibold">
+					Intro text
+					<textarea name="applyIntro" rows="2" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{cfg.intro}</textarea>
+				</label>
+				<label class="block text-sm font-semibold">
+					Cover letter label
+					<input name="coverLetterLabel" value={cfg.coverLetterLabel} class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Cover letter placeholder
+					<textarea name="coverLetterPlaceholder" rows="2" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{cfg.coverLetterPlaceholder}</textarea>
+				</label>
+				<label class="flex items-center gap-2 text-sm">
+					<input type="checkbox" name="coverLetterRequired" value="on" checked={checked(cfg.coverLetterRequired)} />
+					Cover letter required
+				</label>
+
+				<div class="grid gap-2 border-t border-zinc-100 pt-3 sm:grid-cols-2">
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showPhone" value="on" checked={checked(cfg.showPhone)} /> Show phone</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requirePhone" value="on" checked={checked(cfg.requirePhone)} /> Require phone</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showLocation" value="on" checked={checked(cfg.showLocation)} /> Show location</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requireLocation" value="on" checked={checked(cfg.requireLocation)} /> Require location</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showPortfolio" value="on" checked={checked(cfg.showPortfolio)} /> Show portfolio</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requirePortfolio" value="on" checked={checked(cfg.requirePortfolio)} /> Require portfolio</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showGithub" value="on" checked={checked(cfg.showGithub)} /> Show GitHub</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requireGithub" value="on" checked={checked(cfg.requireGithub)} /> Require GitHub</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showDiscord" value="on" checked={checked(cfg.showDiscord)} /> Show Discord</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requireDiscord" value="on" checked={checked(cfg.requireDiscord)} /> Require Discord</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="showResume" value="on" checked={checked(cfg.showResume)} /> Show CV upload</label>
+					<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="requireResume" value="on" checked={checked(cfg.requireResume)} /> Require CV</label>
+				</div>
+
+				<label class="block text-sm font-semibold">
+					Consent text
+					<textarea name="consentText" rows="2" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{cfg.consentText}</textarea>
+				</label>
+				<label class="block text-sm font-semibold">
+					Submit button label
+					<input name="submitLabel" value={cfg.submitLabel} class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Success title
+					<input name="successTitle" value={cfg.successTitle} class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+				<label class="block text-sm font-semibold">
+					Success message
+					<textarea name="successMessage" rows="2" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{cfg.successMessage}</textarea>
+				</label>
+			</fieldset>
+		</div>
+
+		<div class="space-y-4">
+			<fieldset class="border border-zinc-200 bg-white p-5">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Role description (Markdown)</legend>
+					<div class="flex flex-wrap gap-1.5" id="job-md-toolbar" role="toolbar">
+						<button type="button" data-md="## " class="manage-toolbar-btn">H2</button>
+						<button type="button" data-md="### " class="manage-toolbar-btn">H3</button>
+						<button type="button" data-md="**" data-md-end="**" class="manage-toolbar-btn">Bold</button>
+						<button type="button" data-md="[" data-md-end="](url)" class="manage-toolbar-btn">Link</button>
+						<button type="button" data-md="- " class="manage-toolbar-btn">List</button>
+					</div>
+				</div>
+				<textarea id="job-body" name="body" required rows="20" class="mt-3 w-full border border-zinc-200 px-3 py-2 font-mono text-sm">{job?.body ?? ""}</textarea>
+			</fieldset>
+			<div class="border border-zinc-200 bg-zinc-50 p-5">
+				<h3 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Description preview</h3>
+				<div id="job-preview" class="monarch-article mt-4 min-h-[8rem] text-sm"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="mt-8 space-y-4 border-t border-zinc-200 pt-6">
+		<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+			<div class="flex flex-wrap gap-2">
+				<ManageBtn type="submit" name="_action" value="save" variant="primary">{isEdit ? "Save changes" : "Create job"}</ManageBtn>
+				{isEdit && job?.status === "PUBLISHED" && (
+					<ManageBtn href={`/careers/${job.slug}`} variant="secondary" external>View live</ManageBtn>
+				)}
+				{isEdit && job?.status === "PUBLISHED" && (
+					<ManageBtn href={`/careers/${job.slug}#apply`} variant="muted" external>Preview form</ManageBtn>
+				)}
+			</div>
+			{isEdit && (
+				<div class="flex flex-wrap gap-2">
+					{job?.status !== "PUBLISHED" && <ManageBtn type="submit" name="_action" value="publish" variant="success">Publish</ManageBtn>}
+					{job?.status !== "ARCHIVED" && <ManageBtn type="submit" name="_action" value="archive" variant="muted">Archive</ManageBtn>}
+					{job?.status !== "DRAFT" && <ManageBtn type="submit" name="_action" value="draft" variant="warning">To draft</ManageBtn>}
+				</div>
+			)}
+		</div>
+	</div>
+</form>
+
+{isEdit && (
+	<form method="post" class="mt-4 flex justify-end border-t border-zinc-100 pt-4">
+		<ManageBtn type="submit" name="_action" value="delete" variant="danger" confirm="Permanently delete this job and its applications?">Delete job</ManageBtn>
+	</form>
+)}
+
+<script>
+	import { renderMarkdown } from "../../lib/markdown";
+
+	function bindMdToolbar(toolbarId: string, bodyId: string) {
+		const body = document.getElementById(bodyId) as HTMLTextAreaElement | null;
+		const toolbar = document.getElementById(toolbarId);
+		if (!body || !toolbar || toolbar.dataset.bound === "1") return;
+		toolbar.dataset.bound = "1";
+		toolbar.querySelectorAll("button[data-md]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const before = btn.getAttribute("data-md") ?? "";
+				const after = btn.getAttribute("data-md-end") ?? "";
+				const start = body.selectionStart;
+				const end = body.selectionEnd;
+				body.setRangeText(before + body.value.slice(start, end) + after, start, end, "end");
+				body.focus();
+				body.dispatchEvent(new Event("input"));
+			});
+		});
+	}
+
+	function initJobPreview() {
+		const body = document.getElementById("job-body") as HTMLTextAreaElement | null;
+		const preview = document.getElementById("job-preview");
+		if (!body || !preview || preview.dataset.bound === "1") return;
+		preview.dataset.bound = "1";
+		const update = () => {
+			preview.innerHTML = renderMarkdown(body.value || "_Nothing to preview yet._");
+		};
+		body.addEventListener("input", update);
+		update();
+		document.getElementById("job-slug-from-title")?.addEventListener("click", () => {
+			const title = (document.getElementById("job-title") as HTMLInputElement)?.value ?? "";
+			const slug = document.getElementById("job-slug") as HTMLInputElement | null;
+			if (!slug) return;
+			slug.value = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+		});
+	}
+
+	function init() {
+		bindMdToolbar("job-md-toolbar", "job-body");
+		initJobPreview();
+	}
+	init();
+	document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+	.job-editor-form :is(input, textarea, select):focus {
+		outline: 2px solid rgb(53 90 122 / 0.35);
+		border-color: #355a7a;
+	}
+	.manage-toolbar-btn {
+		border: 1px solid #e4e4e7;
+		border-radius: 0.25rem;
+		background: #fff;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+	}
+	.manage-toolbar-btn:hover {
+		background: #f4f4f5;
+	}
+</style>

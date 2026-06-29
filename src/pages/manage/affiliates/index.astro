@@ -1,0 +1,167 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+
+export const prerender = false;
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+
+	if (action === "create") {
+		const code = String(form.get("code") ?? "").trim().toUpperCase();
+		const label = String(form.get("label") ?? "").trim();
+		const discountPct = parseInt(String(form.get("discountPct") ?? "0"));
+		const commissionPct = parseInt(String(form.get("commissionPct") ?? "0"));
+		if (code && label) {
+			await prisma.affiliateCode.create({
+				data: { code, label, discountPct, commissionPct, active: true },
+			});
+		}
+	}
+
+	if (action === "deactivate") {
+		const id = String(form.get("id") ?? "");
+		if (id) await prisma.affiliateCode.update({ where: { id }, data: { active: false } });
+	}
+
+	if (action === "activate") {
+		const id = String(form.get("id") ?? "");
+		if (id) await prisma.affiliateCode.update({ where: { id }, data: { active: true } });
+	}
+
+	return Astro.redirect("/manage/affiliates");
+}
+
+const affiliates = await prisma.affiliateCode.findMany({
+	orderBy: { createdAt: "desc" },
+	include: { _count: { select: { orders: true } } },
+});
+---
+
+<ManageLayout title="Affiliates" active="affiliates">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">Affiliates</h1>
+			<p class="mt-1 text-sm text-zinc-500">Manage affiliate and promo codes.</p>
+		</div>
+	</div>
+
+	<!-- Create form -->
+	<div class="mt-7 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+		<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">New Affiliate Code</h2>
+		<form method="post" class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+			<input type="hidden" name="_action" value="create" />
+			<div>
+				<label class="mb-1 block font-display text-[10px] uppercase tracking-widest text-zinc-500">
+					Code <span class="text-red-500">*</span>
+				</label>
+				<input
+					type="text"
+					name="code"
+					required
+					placeholder="PARTNER20"
+					class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-sm uppercase focus:border-brand-black focus:outline-none"
+				/>
+			</div>
+			<div>
+				<label class="mb-1 block font-display text-[10px] uppercase tracking-widest text-zinc-500">
+					Label <span class="text-red-500">*</span>
+				</label>
+				<input
+					type="text"
+					name="label"
+					required
+					placeholder="Partner name"
+					class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-brand-black focus:outline-none"
+				/>
+			</div>
+			<div>
+				<label class="mb-1 block font-display text-[10px] uppercase tracking-widest text-zinc-500">Discount %</label>
+				<input
+					type="number"
+					name="discountPct"
+					min="0"
+					max="100"
+					value="0"
+					class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-brand-black focus:outline-none"
+				/>
+			</div>
+			<div>
+				<label class="mb-1 block font-display text-[10px] uppercase tracking-widest text-zinc-500">Commission %</label>
+				<input
+					type="number"
+					name="commissionPct"
+					min="0"
+					max="100"
+					value="0"
+					class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-brand-black focus:outline-none"
+				/>
+			</div>
+			<div class="col-span-2 sm:col-span-4">
+				<ManageBtn type="submit" variant="primary">Create Code</ManageBtn>
+			</div>
+		</form>
+	</div>
+
+	<!-- Code list -->
+	<div class="mt-6">
+		{affiliates.length === 0 ? (
+			<div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center shadow-sm">
+				<svg class="mx-auto mb-3 h-8 w-8 text-zinc-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+					<circle cx="4" cy="8" r="2" stroke="currentColor" stroke-width="1.25"/>
+					<circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.25"/>
+					<circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.25"/>
+					<path d="M6 7l4-2M6 9l4 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+				</svg>
+				<p class="m-0 text-sm text-zinc-500">No affiliate codes yet. Create one above.</p>
+			</div>
+		) : (
+			<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<table class="w-full border-collapse text-sm">
+					<thead>
+						<tr class="border-b border-zinc-100 bg-zinc-50">
+							<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400">Code</th>
+							<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400">Label</th>
+							<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden sm:table-cell">Discount</th>
+							<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden sm:table-cell">Commission</th>
+							<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400">Orders</th>
+							<th class="px-5 py-3 text-center font-display text-[10px] uppercase tracking-widest text-zinc-400">Status</th>
+							<th class="px-5 py-3" />
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-zinc-100">
+						{affiliates.map((aff) => (
+							<tr class="transition-colors hover:bg-zinc-50">
+								<td class="px-5 py-3.5 font-mono font-medium text-brand-black">{aff.code}</td>
+								<td class="px-5 py-3.5 text-zinc-600">{aff.label}</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500 hidden sm:table-cell">{aff.discountPct}%</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500 hidden sm:table-cell">{aff.commissionPct}%</td>
+								<td class="px-5 py-3.5 text-right text-zinc-600">{aff._count.orders}</td>
+								<td class="px-5 py-3.5 text-center">
+									<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", aff.active ? "bg-emerald-100 text-emerald-800" : "bg-zinc-100 text-zinc-500"]}>
+										{aff.active ? "Active" : "Inactive"}
+									</span>
+								</td>
+								<td class="px-5 py-3.5 text-right">
+									<form method="post">
+										<input type="hidden" name="id" value={aff.id} />
+										<ManageBtn
+											type="submit"
+											name="_action"
+											value={aff.active ? "deactivate" : "activate"}
+											variant={aff.active ? "muted" : "success"}
+										>
+											{aff.active ? "Deactivate" : "Activate"}
+										</ManageBtn>
+									</form>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		)}
+	</div>
+</ManageLayout>

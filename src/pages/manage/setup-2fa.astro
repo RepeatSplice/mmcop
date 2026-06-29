@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Set up 2FA | Monarch Admin</title>
+	</head>
+	<body class="min-h-screen bg-zinc-100 px-4 py-10 font-sans text-brand-black">
+		<div class="mx-auto max-w-lg border border-zinc-200 bg-white p-8">
+			<h1 class="font-display text-xl uppercase tracking-wide">Set up two-factor authentication</h1>
+			<p class="mt-2 text-sm text-zinc-600">Scan the QR code with Google Authenticator, Authy, or 1Password.</p>
+			<div id="qr-wrap" class="mt-6 flex justify-center"></div>
+			<p id="secret-text" class="mt-4 break-all text-center font-mono text-xs text-zinc-600"></p>
+			<form id="confirm-form" class="mt-8 flex flex-col gap-4 border-t border-zinc-200 pt-6">
+				<label class="text-sm font-semibold">
+					Enter code from app to confirm
+					<input type="text" name="code" required class="mt-1.5 w-full border border-zinc-200 px-3 py-2.5" />
+				</label>
+				<p id="confirm-error" class="hidden text-sm text-red-700"></p>
+				<button type="submit" class="font-display bg-brand-black py-3 text-sm uppercase tracking-wide text-white">
+					Enable 2FA
+				</button>
+			</form>
+			<div id="backup-wrap" class="mt-8 hidden border-t border-zinc-200 pt-6">
+				<p class="text-sm font-semibold text-brand-black">Save these backup codes (shown once):</p>
+				<ul id="backup-list" class="mt-2 list-none space-y-1 font-mono text-sm"></ul>
+				<a href="/manage" class="font-display mt-4 inline-block text-sm uppercase tracking-wide text-monarch-500">
+					Go to dashboard →
+				</a>
+			</div>
+		</div>
+		<script>
+			async function loadQr() {
+				const res = await fetch("/api/auth/setup-2fa");
+				const data = await res.json();
+				if (!res.ok) return;
+				const wrap = document.getElementById("qr-wrap");
+				if (wrap && data.qrDataUrl) {
+					wrap.innerHTML = `<img src="${data.qrDataUrl}" alt="QR code" width="200" height="200" />`;
+				}
+				const secret = document.getElementById("secret-text");
+				if (secret) secret.textContent = data.secret ? `Manual key: ${data.secret}` : "";
+			}
+			loadQr();
+
+			document.getElementById("confirm-form")?.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				const code = new FormData(e.target).get("code");
+				const res = await fetch("/api/auth/confirm-2fa", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ code }),
+				});
+				const data = await res.json();
+				const err = document.getElementById("confirm-error");
+				if (!res.ok) {
+					if (err) {
+						err.textContent = data.error ?? "Failed.";
+						err.classList.remove("hidden");
+					}
+					return;
+				}
+				e.target.classList.add("hidden");
+				const backup = document.getElementById("backup-wrap");
+				const list = document.getElementById("backup-list");
+				if (backup && list && data.backupCodes) {
+					list.innerHTML = data.backupCodes.map((c) => `<li>${c}</li>`).join("");
+					backup.classList.remove("hidden");
+				}
+			});
+		</script>
+	</body>
+</html>

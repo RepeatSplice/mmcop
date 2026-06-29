@@ -1,0 +1,749 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchPageHero from "../components/MonarchPageHero.astro";
+import { Icon } from "astro-icon/components";
+
+const allDisciplines = ["Scripts", "GFX", "Imports", "Weapons & gear", "Branding", "VFX / promo", "Hosting ops"];
+
+const retainerTiers = [
+	{
+		label: "Foundation",
+		subtitle: "Up to 8 hrs / sprint",
+		image: "/Hero_Custom_Mapping.png",
+		description:
+			"A consistent allocation every two weeks for communities building momentum. Covers all disciplines so your hours go where the server needs them most.",
+		benefits: [
+			"Up to 8 hours per sprint",
+			"All disciplines available",
+			"Dedicated point of contact",
+			"Partner pricing on Monarch Software",
+			"Priority over one-off clients",
+			"Monthly review",
+		],
+		disciplines: allDisciplines,
+		cta: "Start a conversation",
+		href: "/contact",
+	},
+	{
+		label: "Partner",
+		subtitle: "Up to 12 hrs / sprint",
+		image: "/MM_Service_Banner.png",
+		description:
+			"Built for active communities with a release cadence. Twelve hours every two weeks across every discipline, with a named senior lead who knows your server.",
+		benefits: [
+			"Up to 12 hours per sprint across all disciplines",
+			"Dedicated senior lead",
+			"Monarch Software suite included",
+			"Discount on all Monarch service add-ons",
+			"Bi-weekly milestone check-ins",
+			"First access to new releases",
+		],
+		disciplines: allDisciplines,
+		cta: "Apply for partnership",
+		href: "/contact",
+	},
+	{
+		label: "Studio",
+		subtitle: "Up to 16 hrs / sprint",
+		image: "/Hero_Software_Scripting.png",
+		description:
+			"A full studio allocation for communities running their server like a product with a roadmap, release calendar, and live player base that cannot afford downtime.",
+		benefits: [
+			"Up to 16 hours per sprint across all disciplines",
+			"Dedicated dev and design leads",
+			"Full Monarch Software suite included",
+			"Maximum discount on all Monarch one off services",
+			"Weekly roadmap syncs",
+			"Custom response window for critical fixes",
+		],
+		disciplines: allDisciplines,
+		cta: "Let's build together",
+		href: "/contact",
+	},
+	{
+		label: "Custom",
+		subtitle: "Your allocation",
+		image: "/Hero_GFX.png",
+		description:
+			"Not a clean fit with the tiers above? Tell us your sprint needs, disciplines, and budget. We will scope a custom allocation built around your server and release schedule.",
+		benefits: [
+			"Hours and cadence agreed per brief",
+			"All disciplines available",
+			"Full Monarch Software suite",
+			"Dedicated leads across active disciplines",
+			"SLA and response windows set at scoping",
+			"Bespoke onboarding and kickoff",
+		],
+		disciplines: allDisciplines,
+		cta: "Get in touch",
+		href: "/contact",
+	},
+];
+
+const disciplineShowcase = [
+	{
+		title: "Modding & assets",
+		tagline: "Weapons, gear, imports",
+		detail: "Custom packs, configs, and workshop releases tuned to your ruleset and wipe calendar.",
+		image: "/MM_Service_Banner.png",
+	},
+	{
+		title: "Software & tooling",
+		tagline: "Bots, APIs, dedi utilities",
+		detail: "Discord automation, license bridges, admin panels, and build pipelines for server operators.",
+		image: "/SOFT_Service_Banner.png",
+	},
+	{
+		title: "GFX & brand",
+		tagline: "Skins, UI, identity",
+		detail: "In-game interfaces, server branding, season artwork, and marketing graphics under one standard.",
+		image: "/Hero_GFX.png",
+	},
+	{
+		title: "Hosting & ops",
+		tagline: "Infrastructure aligned",
+		detail: "Server infrastructure and operational support aligned with Monarch stacks and release cadence.",
+		image: "/HOST_Service_Banner.png",
+	},
+];
+
+const oneOffServices = [
+	{
+		category: "Weapons & loadouts",
+		icon: "lucide:crosshair",
+		items: [
+			"Individual weapon commissions",
+			"Full weapons packs with ammo types",
+			"Sniper and specialist platforms",
+			"Weapon attachment sets (suppressors, stocks, scopes)",
+			"Ammunition type integration (30MM, 20MM, .50AP, EMP and more)",
+			"Weapons pack bundles at scale",
+		],
+	},
+	{
+		category: "Gear & clothing",
+		icon: "lucide:shirt",
+		items: [
+			"Individual clothing items",
+			"Multi-item gear sets",
+			"Full gear sets (vest, helmet, belt, pants, shirt, mask, shoes)",
+			"Custom inventory slot configurations",
+			"Vanilla clothing slot expansions",
+			"Themed seasonal apparel",
+		],
+	},
+	{
+		category: "Scripts & gameplay",
+		icon: "lucide:code-2",
+		items: [
+			"Movement and locomotion overhauls",
+			"Inventory and action overrides",
+			"No weapon sway, jam, fog, or grass",
+			"No unconscious, stun, or stun lock",
+			"Building item resize (customisable per project)",
+			"Vehicle and swimming inventory access",
+			"LegMeta and advanced meta systems",
+		],
+	},
+	{
+		category: "GFX & skins",
+		icon: "lucide:palette",
+		items: [
+			"Weapon skins: solid, glow, transparent, animated",
+			"Clothing and gear skin design",
+			"Server branding and identity systems",
+			"Social and marketing graphics",
+			"Season artwork and event banners",
+			"In-game UI and HUD assets",
+			"Logo, icon, and badge design",
+		],
+	},
+	{
+		category: "Imports & retextures",
+		icon: "lucide:box",
+		items: [
+			"Storage imports",
+			"Weapon imports",
+			"Vest and helmet imports",
+			"Collectable and sellable imports",
+			"Attachment imports",
+			"Multi-texture variants (5+ texture surcharge applies)",
+			"Full retexture commissions",
+		],
+	},
+	{
+		category: "VFX & media",
+		icon: "lucide:film",
+		items: [
+			"Server trailers and season promos",
+			"Wipe announcement videos",
+			"Gameplay highlight edits",
+			"Event coverage and recap reels",
+			"Community content packages",
+			"Animated overlays and stream assets",
+		],
+	},
+	{
+		category: "Web development",
+		icon: "lucide:globe",
+		items: [
+			"Full website design and build",
+			"Server community sites and landing pages",
+			"Custom web applications and dashboards",
+			"API integrations and backend services",
+			"Headless CMS and content pipelines",
+			"Performance, accessibility, and speed audits",
+		],
+	},
+	{
+		category: "Software development",
+		icon: "lucide:terminal",
+		items: [
+			"Game-to-web API bridges and live stat feeds",
+			"Discord bots and automation",
+			"Admin and player-facing panels",
+			"Dedi utilities, PBO tooling, and build pipelines",
+			"Custom tooling for server operators",
+			"SaaS and subscription platform builds",
+		],
+	},
+	{
+		category: "SEO & search",
+		icon: "lucide:search",
+		items: [
+			"Technical SEO audits and fixes",
+			"On-page and content optimisation",
+			"Keyword strategy and competitor analysis",
+			"Structured data and schema markup",
+			"Core Web Vitals and page speed work",
+			"Local and international SEO",
+		],
+	},
+	{
+		category: "Paid media & ads",
+		icon: "lucide:megaphone",
+		items: [
+			"Google Search and Display campaigns",
+			"YouTube advertising",
+			"Meta (Facebook and Instagram) ads",
+			"Campaign setup, copy, and creative",
+			"Audience targeting and retargeting",
+			"Ongoing management and reporting",
+		],
+	},
+	{
+		category: "Social media",
+		icon: "lucide:share-2",
+		items: [
+			"Profile setup and brand alignment",
+			"Content calendar and post scheduling",
+			"Community growth strategy",
+			"Reel, short, and clip production",
+			"Influencer and creator outreach",
+			"Analytics and monthly reporting",
+		],
+	},
+	{
+		category: "Marketing & strategy",
+		icon: "lucide:target",
+		items: [
+			"Go-to-market planning for server launches",
+			"Brand positioning and messaging",
+			"Email marketing setup and campaigns",
+			"Wipe and season launch campaigns",
+			"Content marketing and editorial",
+			"Full digital marketing retainers",
+		],
+	},
+];
+
+const commissionTabs = [
+	{ id: "modding", label: "Modding & assets", groups: oneOffServices.slice(0, 6) },
+	{ id: "software", label: "Software & web", groups: oneOffServices.slice(6, 8) },
+	{ id: "marketing", label: "Marketing", groups: oneOffServices.slice(8, 12) },
+];
+
+const retainerBenefits = [
+	{
+		step: "01",
+		title: "Sprint cadence",
+		body: "Every two weeks your allocation resets. Work is planned in advance so you always know what ships before a wipe or patch window.",
+	},
+	{
+		step: "02",
+		title: "Flexible disciplines",
+		body: "Hours flex across scripts, GFX, imports, or weapons based on what your server needs that sprint. No rigid silos.",
+	},
+	{
+		step: "03",
+		title: "Software included",
+		body: "Retainer partners get access to Monarch Software tools at partner pricing or included outright depending on tier.",
+	},
+	{
+		step: "04",
+		title: "Single roof",
+		body: "One contact, one invoice, one team that already knows your server. No re-briefing a new vendor every season.",
+	},
+];
+
+const processSteps = [
+	{
+		step: "01",
+		title: "Open a ticket",
+		body: "Tell us your server, current setup, and what you need. We reply within 48 hours with questions or a proposed scope.",
+	},
+	{
+		step: "02",
+		title: "Scoping call",
+		body: "A short call to align on goals and timeline. We come prepared with options, not a blank slide deck.",
+	},
+	{
+		step: "03",
+		title: "Proposal",
+		body: "Written scope, sprint plan, deliverables, and pricing. No surprises after you sign.",
+	},
+	{
+		step: "04",
+		title: "Build & ship",
+		body: "Work runs on two-week sprints with check-ins. You review and approve before anything goes live on your server.",
+	},
+];
+
+const audiences = [
+	{
+		title: "Server owners",
+		subtitle: "Built for your ruleset",
+		body: "You run a defined economy, wipe rhythm, and player base. You need weapons, scripts, and gear that fit how the server actually works, not generic packs.",
+		typical: "Typical: weapon platform, script set, season gear drop, branding pack.",
+	},
+	{
+		title: "Community studios",
+		subtitle: "Production partner",
+		body: "You have a team, a brand, and a release calendar. You need Monarch as a production partner across multiple disciplines on a fixed schedule.",
+		typical: "Typical: Partner or Studio retainer across mods, GFX, and imports.",
+	},
+	{
+		title: "Creators & brands",
+		subtitle: "Campaign-ready assets",
+		body: "You want a custom skin pack, a trailer, branded server assets, or a one-off piece that fits a larger release or campaign.",
+		typical: "Typical: standalone GFX, VFX promo, themed content pack.",
+	},
+];
+
+const guidelines = [
+	{
+		title: "Availability",
+		body: "Specific scripts, weapons, and assets may vary based on current availability. Open a ticket to confirm before committing to a scope.",
+	},
+	{
+		title: "Payment policy",
+		body: "Chargebacks are not permitted. If you experience any issue with a delivery, our team is available to resolve it directly before any dispute is raised.",
+	},
+	{
+		title: "Support",
+		body: "Our team is on hand if you have questions about usage, installation, or anything that needs a follow-up after delivery. Open a ticket and we will get back to you.",
+	},
+];
+---
+
+<SiteLayout
+	title="Work with us | Monarch"
+	description="Long-term retainer partnerships and one-off commissions for DayZ server owners. Weapons, scripts, GFX, imports, and server branding under one roof."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-20 px-6 pb-24"
+>
+	<slot slot="pre-main">
+		<MonarchPageHero
+			eyebrow="Connect"
+			title="Work with us"
+			lead="Long-term partnerships for communities that run like studios. One-off commissions for everything else."
+			image="/Work_With_Us_Banner.png"
+			cta={{ label: "Start a conversation", href: "/contact" }}
+		/>
+	</slot>
+
+	<!-- Intro: homepage split layout -->
+	<section class="monarch-about-home" aria-labelledby="wwu-intro-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Partnerships</p>
+			<h2
+				id="wwu-intro-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Studio standard, your server
+			</h2>
+		</header>
+
+		<div class="monarch-about-home__split st-reveal">
+			<div class="monarch-about-home__copy">
+				<p>
+					Monarch works with DayZ server owners the way a studio works with a publisher: on a defined cadence, with named
+					leads, and with enough context about your economy and player base that we do not need re-briefing every season.
+					Whether you want a long-term partner or a single deliverable, the standard is the same.
+				</p>
+				<p>
+					We cover weapons, gear, scripts, GFX, imports, and server branding. One place, one team, one standard from first
+					brief to live on your server.
+				</p>
+			</div>
+			<figure class="monarch-about-home__media">
+				<img
+					src="/Hero_Custom_Weapons.png"
+					alt="Monarch custom DayZ weapons and gear in game"
+					width="1600"
+					height="1000"
+					loading="lazy"
+					decoding="async"
+				/>
+			</figure>
+		</div>
+	</section>
+
+	<!-- Retainer pricing -->
+	<section id="retainer-model" aria-labelledby="retainer-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Retainers</p>
+			<h2
+				id="retainer-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Retainer partnerships
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				A fixed sprint allocation every two weeks. Work is planned ahead so you always know what ships before a wipe or patch
+				window. Larger allocations available on request.
+			</p>
+		</header>
+
+		<div class="monarch-pricing-grid st-reveal">
+			{retainerTiers.map((tier) => (
+				<article class="monarch-pricing-card">
+					<div class="monarch-pricing-card__banner">
+						<img src={tier.image} alt="" width="600" height="360" loading="lazy" decoding="async" />
+						<div class="monarch-pricing-card__banner-shade" aria-hidden="true"></div>
+					</div>
+					<div class="monarch-pricing-card__body">
+						<p class="monarch-pricing-card__subtitle">{tier.subtitle}</p>
+						<h3 class="monarch-pricing-card__title">{tier.label}</h3>
+						<p class="monarch-pricing-card__desc">{tier.description}</p>
+						<ul class="monarch-pricing-card__list">
+							{tier.benefits.map((b) => (
+								<li>{b}</li>
+							))}
+						</ul>
+						<div class="monarch-pricing-card__tags">
+							{tier.disciplines.map((d) => (
+								<span class="monarch-pricing-card__tag">{d}</span>
+							))}
+						</div>
+						<a class="monarch-pill-btn monarch-pricing-card__cta" href={tier.href}>
+							{tier.cta}
+							<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+						</a>
+					</div>
+				</article>
+			))}
+		</div>
+
+		<p class="st-reveal mx-auto mt-5 max-w-2xl text-center text-sm text-zinc-500">
+			Sprint hours do not roll over. Scope unused hours at the start of each sprint. Need more than 12 hours?{" "}
+			<a class="font-semibold text-monarch-500 hover:text-brand-black" href="/contact">Get in touch</a> and we will build a custom allocation.
+		</p>
+	</section>
+
+	<!-- Why retainer: homepage process cards -->
+	<section class="monarch-process" aria-labelledby="retainer-benefits" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Why retainer</p>
+			<h2
+				id="retainer-benefits"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Why retainer works
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				A studio relationship instead of a vendor queue.
+			</p>
+		</header>
+
+		<ol class="monarch-process__steps monarch-process__steps--grid monarch-process__steps--four st-reveal list-none p-0">
+			{retainerBenefits.map((item) => (
+				<li class="monarch-process-card">
+					<div class="monarch-process-card__inner">
+						<span class="monarch-process-card__step" aria-hidden="true">{item.step}</span>
+						<h3 class="monarch-process-card__title">{item.title}</h3>
+						<p class="monarch-process-card__body">{item.body}</p>
+					</div>
+				</li>
+			))}
+		</ol>
+	</section>
+
+	<!-- Disciplines: homepage service cards -->
+	<section aria-labelledby="disciplines-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Scope</p>
+			<h2
+				id="disciplines-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				What we cover
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				Every retainer tier flexes hours across the disciplines your server needs each sprint.
+			</p>
+		</header>
+
+		<div class="monarch-services__grid st-reveal">
+			{disciplineShowcase.map((item) => (
+				<article class="monarch-service-card monarch-service-card--static">
+					<div class="monarch-service-card__media">
+						<img
+							src={item.image}
+							alt=""
+							width="600"
+							height="360"
+							loading="lazy"
+							decoding="async"
+							class="monarch-service-card__img monarch-service-card__img--banner"
+						/>
+						<div class="monarch-service-card__media-shade" aria-hidden="true"></div>
+					</div>
+					<div class="monarch-service-card__body">
+						<h3 class="monarch-service-card__title">{item.title}</h3>
+						<p class="monarch-service-card__tagline">{item.tagline}</p>
+						<p class="monarch-service-card__detail">{item.detail}</p>
+					</div>
+				</article>
+			))}
+		</div>
+	</section>
+
+	<!-- Visual break -->
+	<div class="monarch-about-home__split monarch-about-home__split--reverse st-reveal" data-scroll-reveal>
+		<figure class="monarch-about-home__media">
+			<img
+				src="/About_2.png"
+				alt="Operation Monarch community characters in custom DayZ apparel"
+				width="1600"
+				height="1000"
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+		<div class="monarch-about-home__copy">
+			<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">One-off work</p>
+			<h3 class="m-0 mt-2 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+				Not on a retainer?
+			</h3>
+			<p class="m-0 mt-3">
+				Every deliverable in our commission catalogue is available as a standalone scope. Open a ticket with your brief and
+				we will come back with a quote. Retainer partners receive priority scheduling; one-off clients are served between
+				sprint windows.
+			</p>
+			<p class="m-0 mt-3">
+				The categories below cover the most common requests, but they are not the limit. If it involves code, design,
+				content, or marketing, we can scope it.
+			</p>
+			<a class="monarch-pill-btn mt-4 inline-flex" href="/contact">
+				Open a ticket
+				<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+			</a>
+		</div>
+	</div>
+
+	<!-- One-off commissions: tabbed -->
+	<section class="monarch-news" aria-labelledby="oneoff-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Commissions</p>
+			<h2
+				id="oneoff-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				One-off commissions
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				Browse by category. Lead times depend on current studio capacity and are confirmed at scoping.
+			</p>
+		</header>
+
+		<div class="monarch-news__tabs st-reveal" role="tablist" aria-label="Commission categories">
+			{commissionTabs.map((tab, i) => (
+				<button
+					type="button"
+					class:list={["monarch-news__tab", i === 0 && "is-active"]}
+					data-commission-tab={tab.id}
+					role="tab"
+					aria-selected={i === 0 ? "true" : "false"}
+				>
+					{tab.label}
+				</button>
+			))}
+		</div>
+
+		{commissionTabs.map((tab, i) => (
+			<div
+				class:list={["st-reveal", i === 0 && "is-active"]}
+				data-commission-panel={tab.id}
+				role="tabpanel"
+				hidden={i !== 0 ? true : undefined}
+			>
+				<div class="monarch-commission-grid">
+					{tab.groups.map((group) => (
+						<div class="monarch-commission-group">
+							<div class="monarch-commission-group__head">
+								<div class="monarch-commission-group__icon">
+									<Icon name={group.icon} class="size-4" is:inline aria-hidden="true" />
+								</div>
+								<h3 class="monarch-commission-group__title">{group.category}</h3>
+							</div>
+							<ul class="monarch-commission-group__list">
+								{group.items.map((item) => (
+									<li>{item}</li>
+								))}
+							</ul>
+						</div>
+					))}
+				</div>
+			</div>
+		))}
+	</section>
+
+	<!-- How it starts: process cards -->
+	<section class="monarch-process" aria-labelledby="process-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Process</p>
+			<h2
+				id="process-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				How it starts
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				From enquiry to delivery in four steps.
+			</p>
+		</header>
+
+		<ol class="monarch-process__steps monarch-process__steps--grid monarch-process__steps--four st-reveal list-none p-0">
+			{processSteps.map((item) => (
+				<li class="monarch-process-card">
+					<div class="monarch-process-card__inner">
+						<span class="monarch-process-card__step" aria-hidden="true">{item.step}</span>
+						<h3 class="monarch-process-card__title">{item.title}</h3>
+						<p class="monarch-process-card__body">{item.body}</p>
+					</div>
+				</li>
+			))}
+		</ol>
+	</section>
+
+	<!-- Who this is for: contact-style cards -->
+	<section class="monarch-contact-home" aria-labelledby="who-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Audience</p>
+			<h2
+				id="who-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Who this is for
+			</h2>
+		</header>
+
+		<div class="monarch-contact-home__grid st-reveal">
+			{audiences.map((item) => (
+				<article class="monarch-contact-card">
+					<div class="monarch-contact-card__head">
+						<h3 class="monarch-contact-card__title">{item.title}</h3>
+						<p class="monarch-contact-card__subtitle">{item.subtitle}</p>
+					</div>
+					<p class="monarch-contact-card__body">{item.body}</p>
+					<p class="mt-3 text-sm text-zinc-500">{item.typical}</p>
+				</article>
+			))}
+		</div>
+	</section>
+
+	<!-- Guidelines: contact-style cards -->
+	<section class="monarch-contact-home" aria-labelledby="guidelines-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Guidelines</p>
+			<h2
+				id="guidelines-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Before you commission
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				A few things that keep projects on track.
+			</p>
+		</header>
+
+		<div class="monarch-contact-home__grid st-reveal">
+			{guidelines.map((item) => (
+				<article class="monarch-contact-card">
+					<div class="monarch-contact-card__head">
+						<h3 class="monarch-contact-card__title">{item.title}</h3>
+					</div>
+					<p class="monarch-contact-card__body">{item.body}</p>
+				</article>
+			))}
+		</div>
+	</section>
+
+	<!-- CTA -->
+	<section
+		class="st-reveal relative overflow-hidden border border-zinc-200 bg-brand-black px-8 py-16 text-center text-white sm:px-12 sm:py-20"
+		data-scroll-reveal
+	>
+		<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/50">Ready when you are</p>
+		<h2 class="m-0 mt-3 font-display text-[clamp(1.5rem,4vw,2.5rem)] font-medium uppercase leading-tight tracking-wide">
+			Tell us your server. We will tell you what we can build.
+		</h2>
+		<p class="mx-auto m-0 mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 sm:text-base">
+			Start with a brief, a ruleset, and a rough timeline. We scope honestly, price clearly, and only take the work we can
+			deliver to the standard Monarch puts on its own servers.
+		</p>
+		<div class="mt-8 flex flex-wrap justify-center gap-3">
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+				href="/contact"
+			>
+				Open a ticket
+			</a>
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 border border-white/40 px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-white/10"
+				href="/how-we-work"
+			>
+				How we work
+			</a>
+		</div>
+	</section>
+</SiteLayout>
+
+<script>
+	function initCommissionTabs() {
+		const tabs = document.querySelectorAll<HTMLButtonElement>("[data-commission-tab]");
+		const panels = document.querySelectorAll<HTMLElement>("[data-commission-panel]");
+		if (!tabs.length || document.body.dataset.commissionTabsBound === "1") return;
+		document.body.dataset.commissionTabsBound = "1";
+
+		tabs.forEach((tab) => {
+			tab.addEventListener("click", () => {
+				const id = tab.dataset.commissionTab;
+				tabs.forEach((t) => {
+					const active = t === tab;
+					t.classList.toggle("is-active", active);
+					t.setAttribute("aria-selected", active ? "true" : "false");
+				});
+				panels.forEach((p) => {
+					const active = p.dataset.commissionPanel === id;
+					p.classList.toggle("is-active", active);
+					if (active) p.removeAttribute("hidden");
+					else p.setAttribute("hidden", "");
+				});
+			});
+		});
+	}
+
+	initCommissionTabs();
+	document.addEventListener("astro:page-load", initCommissionTabs);
+</script>

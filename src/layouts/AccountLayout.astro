@@ -1,0 +1,346 @@
+---
+import "../styles/global.css";
+import type { Customer } from "@prisma/client";
+
+interface Props {
+	title: string;
+	tab: "overview" | "orders" | "licenses" | "downloads" | "security";
+	customer: Customer;
+}
+
+const { title, tab, customer } = Astro.props;
+
+const tabs = [
+	{ id: "overview",  label: "Overview",   href: "/account",            icon: `<path d="M2 5.5h5M2 8.5h5M2 11.5h3M9 3h5v4H9zM9 9h5v4H9z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>` },
+	{ id: "orders",    label: "Orders",     href: "/account/orders",     icon: `<path d="M4 6h8M4 9h8M4 12h5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><rect x="2" y="3" width="12" height="13" rx="1.5" stroke="currentColor" stroke-width="1.25"/>` },
+	{ id: "licenses",  label: "Licenses",   href: "/account/licenses",   icon: `<path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>` },
+	{ id: "downloads", label: "Downloads",  href: "/account/downloads",  icon: `<path d="M8 3v7M5 8l3 3 3-3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12v1.5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5V12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>` },
+	{ id: "security",  label: "Security",   href: "/account/security",   icon: `<path d="M8 2l5 2v4c0 2.8-2 5.4-5 6.5C5 13.4 3 10.8 3 8V4l5-2z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>` },
+] as const;
+
+const avatarInitial = (customer.displayName ?? "?")[0]?.toUpperCase() ?? "?";
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet" />
+	</head>
+	<body class="acct-body font-sans text-brand-black">
+
+		<!-- Top bar (mobile + desktop header) -->
+		<header class="acct-topbar">
+			<a href="/" class="acct-topbar__logo">
+				<img src="/LogoText.svg" alt="Monarch" width="120" height="36" class="h-7 w-auto" />
+			</a>
+			<div class="acct-topbar__right">
+				<a href="/shop" class="acct-topbar__link">Shop</a>
+				<form method="post" action="/api/auth/customer-logout" class="inline">
+					<button type="submit" class="acct-topbar__signout">Sign out</button>
+				</form>
+			</div>
+		</header>
+
+		<div class="acct-layout">
+
+			<!-- Sidebar -->
+			<aside class="acct-sidebar">
+				<!-- Avatar + name -->
+				<div class="acct-profile">
+					<div class="acct-avatar">
+						{customer.avatarUrl ? (
+							<img src={customer.avatarUrl} alt={customer.displayName} width="44" height="44" />
+						) : (
+							<span>{avatarInitial}</span>
+						)}
+					</div>
+					<div class="acct-profile__info">
+						<strong>{customer.displayName}</strong>
+						{customer.email && <span>{customer.email}</span>}
+					</div>
+				</div>
+
+				<!-- Nav -->
+				<nav class="acct-nav" aria-label="Account navigation">
+					{tabs.map((t) => (
+						<a
+							href={t.href}
+							class={`acct-nav__item ${tab === t.id ? "is-active" : ""}`}
+							aria-current={tab === t.id ? "page" : undefined}
+						>
+							<svg viewBox="0 0 16 16" fill="none" class="acct-nav__icon" aria-hidden="true" set:html={t.icon} />
+							{t.label}
+						</a>
+					))}
+				</nav>
+
+				<div class="acct-sidebar__footer">
+					<a href="/shop" class="acct-sidebar__shop-btn">Browse shop</a>
+				</div>
+			</aside>
+
+			<!-- Mobile tab bar -->
+			<nav class="acct-mobile-tabs" aria-label="Account navigation">
+				{tabs.map((t) => (
+					<a href={t.href} class={`acct-mobile-tab ${tab === t.id ? "is-active" : ""}`} aria-current={tab === t.id ? "page" : undefined}>
+						<svg viewBox="0 0 16 16" fill="none" class="acct-mobile-tab__icon" aria-hidden="true" set:html={t.icon} />
+						<span>{t.label}</span>
+					</a>
+				))}
+			</nav>
+
+			<!-- Main content -->
+			<main class="acct-main">
+				<slot />
+			</main>
+		</div>
+
+		<style>
+			*, *::before, *::after { box-sizing: border-box; }
+
+			.acct-body {
+				min-height: 100dvh;
+				background: rgb(248 248 250);
+				margin: 0;
+			}
+
+			/* Top bar */
+			.acct-topbar {
+				position: sticky;
+				top: 0;
+				z-index: 20;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				height: 3.5rem;
+				padding: 0 1.5rem;
+				background: #fff;
+				border-bottom: 1px solid rgb(228 228 231);
+			}
+			.acct-topbar__logo img { display: block; }
+			.acct-topbar__right {
+				display: flex;
+				align-items: center;
+				gap: 1.25rem;
+			}
+			.acct-topbar__link {
+				font-family: "Oswald", sans-serif;
+				font-size: 0.6875rem;
+				font-weight: 500;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: rgb(113 113 122);
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+			.acct-topbar__link:hover { color: #0a0a0a; }
+			.acct-topbar__signout {
+				padding: 0;
+				border: none;
+				background: none;
+				cursor: pointer;
+				font-family: "Oswald", sans-serif;
+				font-size: 0.6875rem;
+				font-weight: 500;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: rgb(113 113 122);
+				transition: color 0.2s ease;
+			}
+			.acct-topbar__signout:hover { color: #0a0a0a; }
+
+			/* Layout grid */
+			.acct-layout {
+				display: grid;
+				grid-template-columns: 1fr;
+				grid-template-rows: auto 1fr;
+				min-height: calc(100dvh - 3.5rem);
+			}
+			@media (min-width: 900px) {
+				.acct-layout {
+					grid-template-columns: 15rem 1fr;
+					grid-template-rows: 1fr;
+				}
+			}
+
+			/* Sidebar */
+			.acct-sidebar {
+				display: none;
+				flex-direction: column;
+				background: #fff;
+				border-right: 1px solid rgb(228 228 231);
+				padding: 1.5rem 0;
+			}
+			@media (min-width: 900px) {
+				.acct-sidebar { display: flex; }
+			}
+
+			/* Profile */
+			.acct-profile {
+				display: flex;
+				align-items: center;
+				gap: 0.875rem;
+				padding: 0 1.25rem 1.5rem;
+				border-bottom: 1px solid rgb(244 244 245);
+				margin-bottom: 0.75rem;
+			}
+			.acct-avatar {
+				width: 2.75rem;
+				height: 2.75rem;
+				border-radius: 0.875rem;
+				overflow: hidden;
+				background: rgb(228 228 231);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				font-family: "Oswald", sans-serif;
+				font-size: 1.125rem;
+				font-weight: 500;
+				color: rgb(113 113 122);
+			}
+			.acct-avatar img { width: 100%; height: 100%; object-fit: cover; }
+			.acct-profile__info {
+				display: flex;
+				flex-direction: column;
+				gap: 0.125rem;
+				min-width: 0;
+				flex: 1;
+			}
+			.acct-profile__info strong {
+				font-family: "Oswald", sans-serif;
+				font-size: 0.9375rem;
+				font-weight: 500;
+				letter-spacing: 0.03em;
+				text-transform: uppercase;
+				color: #0a0a0a;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.acct-profile__info span {
+				font-size: 0.75rem;
+				color: rgb(161 161 170);
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			/* Nav */
+			.acct-nav {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				gap: 0.125rem;
+				padding: 0 0.75rem;
+			}
+			.acct-nav__item {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				padding: 0.625rem 0.875rem;
+				border-radius: 0.75rem;
+				font-family: "Oswald", sans-serif;
+				font-size: 0.8125rem;
+				font-weight: 500;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: rgb(113 113 122);
+				text-decoration: none;
+				transition: background-color 0.15s ease, color 0.15s ease;
+			}
+			.acct-nav__item:hover {
+				background: rgb(244 244 245);
+				color: #0a0a0a;
+			}
+			.acct-nav__item.is-active {
+				background: rgb(244 244 245);
+				color: #0a0a0a;
+			}
+			.acct-nav__icon {
+				width: 1rem;
+				height: 1rem;
+				flex-shrink: 0;
+			}
+
+			.acct-sidebar__footer {
+				padding: 1.25rem 1.25rem 0.5rem;
+				border-top: 1px solid rgb(244 244 245);
+				margin-top: 0.75rem;
+			}
+			.acct-sidebar__shop-btn {
+				display: block;
+				padding: 0.625rem 1rem;
+				border-radius: 0.75rem;
+				background: #0a0a0a;
+				font-family: "Oswald", sans-serif;
+				font-size: 0.75rem;
+				font-weight: 500;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: #fff;
+				text-decoration: none;
+				text-align: center;
+				transition: opacity 0.2s ease;
+			}
+			.acct-sidebar__shop-btn:hover { opacity: 0.8; }
+
+			/* Mobile tabs */
+			.acct-mobile-tabs {
+				display: flex;
+				overflow-x: auto;
+				background: #fff;
+				border-bottom: 1px solid rgb(228 228 231);
+				-webkit-overflow-scrolling: touch;
+				scrollbar-width: none;
+			}
+			.acct-mobile-tabs::-webkit-scrollbar { display: none; }
+			@media (min-width: 900px) {
+				.acct-mobile-tabs { display: none; }
+			}
+			.acct-mobile-tab {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.25rem;
+				padding: 0.625rem 1rem;
+				min-width: 4.5rem;
+				flex-shrink: 0;
+				text-decoration: none;
+				color: rgb(161 161 170);
+				border-bottom: 2px solid transparent;
+				transition: color 0.15s ease, border-color 0.15s ease;
+			}
+			.acct-mobile-tab.is-active {
+				color: #0a0a0a;
+				border-bottom-color: #0a0a0a;
+			}
+			.acct-mobile-tab__icon {
+				width: 1.125rem;
+				height: 1.125rem;
+			}
+			.acct-mobile-tab span {
+				font-family: "Oswald", sans-serif;
+				font-size: 0.5625rem;
+				font-weight: 500;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+
+			/* Main */
+			.acct-main {
+				padding: 2rem 1.5rem;
+				min-width: 0;
+			}
+			@media (min-width: 900px) {
+				.acct-main { padding: 2.5rem 2.5rem; }
+			}
+		</style>
+	</body>
+</html>

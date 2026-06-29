@@ -1,0 +1,232 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+import { renderMarkdown } from "../../../lib/markdown";
+import {
+	applicationStatusBadgeClass,
+	applicationStatusLabel,
+	applicationStatusOptions,
+} from "../../../lib/applications-admin";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/manage/applications");
+
+let error: string | undefined;
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "save");
+
+	if (action === "delete") {
+		await prisma.jobApplication.delete({ where: { id } });
+		return Astro.redirect("/manage/applications");
+	}
+
+	if (action === "auto-review") {
+		// Triggered silently from client on first page view
+		await prisma.jobApplication.update({
+			where: { id },
+			data: { status: "REVIEWED" },
+		});
+		return new Response(null, { status: 204 });
+	}
+
+	const status = String(form.get("status") ?? "");
+	const staffNotes = String(form.get("staffNotes") ?? "");
+
+	if (!["NEW", "REVIEWED", "SHORTLISTED", "REJECTED"].includes(status)) {
+		error = "Invalid status.";
+	} else {
+		await prisma.jobApplication.update({
+			where: { id },
+			data: {
+				status: status as "NEW" | "REVIEWED" | "SHORTLISTED" | "REJECTED",
+				staffNotes: staffNotes || null,
+			},
+		});
+		return Astro.redirect(`/manage/applications/${id}?saved=1`);
+	}
+}
+
+const app = await prisma.jobApplication.findUnique({
+	where: { id },
+	include: { job: true, files: true },
+});
+
+if (!app) return Astro.redirect("/manage/applications");
+---
+
+<ManageLayout title="Application" active="applications">
+	<a href="/manage/applications" class="inline-flex items-center gap-1.5 text-sm text-monarch-500 hover:text-brand-black">
+		← Applications
+	</a>
+
+	<!-- Header -->
+	<div class="mt-4 flex flex-wrap items-start justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">{app.fullName}</h1>
+			<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+				<span class:list={["rounded px-2.5 py-0.5 text-[10px] font-semibold uppercase", applicationStatusBadgeClass(app.status)]}>
+					{applicationStatusLabel(app.status)}
+				</span>
+				<a class="font-medium text-monarch-500 hover:text-brand-black" href={`/careers/${app.job.slug}`} target="_blank" rel="noopener">
+					{app.job.title}
+				</a>
+				<span class="text-zinc-400">&middot;</span>
+				<span class="text-zinc-500">{app.createdAt.toLocaleString("en-GB")}</span>
+			</div>
+		</div>
+		<div class="flex flex-wrap gap-2">
+			<ManageBtn
+				href={`mailto:${app.email}?subject=Re: Your application for ${app.job.title}`}
+				variant="primary"
+			>
+				Reply by email
+			</ManageBtn>
+			<ManageBtn href={`/manage/jobs/${app.job.slug}`} variant="muted">Edit job</ManageBtn>
+		</div>
+	</div>
+
+	{saved && (
+		<p class="mt-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">Changes saved.</p>
+	)}
+	{error && (
+		<p class="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>
+	)}
+
+	<!-- Main grid -->
+	<div class="mt-6 grid gap-6 lg:grid-cols-[1fr_280px]">
+
+		<!-- Left column: applicant info + cover letter + staff notes -->
+		<div class="space-y-6">
+			<!-- Contact -->
+			<section class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Contact</h2>
+				<ul class="mt-4 list-none space-y-2 p-0 text-sm">
+					<li>
+						<strong class="text-zinc-600">Email:</strong>{" "}
+						<a href={`mailto:${app.email}`} class="text-monarch-500 hover:text-brand-black">{app.email}</a>
+					</li>
+					{app.phone && <li><strong class="text-zinc-600">Phone:</strong> {app.phone}</li>}
+					{app.location && <li><strong class="text-zinc-600">Location:</strong> {app.location}</li>}
+					{app.discord && <li><strong class="text-zinc-600">Discord:</strong> {app.discord}</li>}
+				</ul>
+			</section>
+
+			<!-- Links & files -->
+			<section class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Links &amp; files</h2>
+				<ul class="mt-4 list-none space-y-2 p-0 text-sm">
+					{app.portfolioUrl && (
+						<li>
+							<a href={app.portfolioUrl} target="_blank" rel="noopener noreferrer" class="text-monarch-500 hover:text-brand-black">
+								Portfolio ↗
+							</a>
+						</li>
+					)}
+					{app.githubUrl && (
+						<li>
+							<a href={app.githubUrl} target="_blank" rel="noopener noreferrer" class="text-monarch-500 hover:text-brand-black">
+								GitHub ↗
+							</a>
+						</li>
+					)}
+					{app.files.length === 0 && !app.portfolioUrl && !app.githubUrl && (
+						<li class="text-zinc-500">No links or CV attached.</li>
+					)}
+					{app.files.map((f) => (
+						<li>
+							<a href={`/api/manage/files/${f.id}`} class="text-monarch-500 hover:text-brand-black">
+								Download {f.filename}
+							</a>
+							<span class="text-zinc-400"> ({Math.round(f.sizeBytes / 1024)} KB)</span>
+						</li>
+					))}
+				</ul>
+			</section>
+
+			<!-- Cover letter -->
+			<section class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Cover letter</h2>
+				{app.coverLetter.trim() ? (
+					<div class="monarch-article mt-4" set:html={renderMarkdown(app.coverLetter)} />
+				) : (
+					<p class="mt-4 text-sm text-zinc-500">No cover letter provided.</p>
+				)}
+			</section>
+
+			<!-- Staff notes -->
+			<form method="post" class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Staff notes</h2>
+				<p class="mt-1 text-[13px] text-zinc-500">Internal only — not visible to the applicant.</p>
+				<textarea
+					name="staffNotes"
+					rows="5"
+					placeholder="Add internal notes about this applicant…"
+					class="mt-3 w-full resize-y border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-brand-black placeholder-zinc-400 focus:border-monarch-500 focus:outline-none"
+				>{app.staffNotes ?? ""}</textarea>
+
+				{/* Include the current status so saving notes doesn't reset status */}
+				<input type="hidden" name="status" value={app.status} />
+
+				<div class="mt-3">
+					<ManageBtn type="submit" name="_action" value="save" variant="primary">Save notes</ManageBtn>
+				</div>
+			</form>
+		</div>
+
+		<!-- Right sidebar: status + actions -->
+		<aside class="space-y-4 lg:sticky lg:top-6">
+			<form method="post" class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Status</h2>
+				<select name="status" class="mt-3 w-full border border-zinc-200 bg-white px-3 py-2 text-sm text-brand-black focus:border-monarch-500 focus:outline-none">
+					{applicationStatusOptions.map((opt) => (
+						<option value={opt.value} selected={app.status === opt.value}>
+							{opt.label}
+						</option>
+					))}
+				</select>
+				{/* Preserve staffNotes when only updating status */}
+				<input type="hidden" name="staffNotes" value={app.staffNotes ?? ""} />
+				<div class="mt-3">
+					<ManageBtn type="submit" name="_action" value="save" variant="primary">Save status</ManageBtn>
+				</div>
+			</form>
+
+			<div class="border border-zinc-200 bg-white p-5">
+				<h2 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Applicant</h2>
+				<p class="mt-2 text-sm font-medium text-brand-black">{app.fullName}</p>
+				<p class="mt-0.5 text-xs text-zinc-500">{app.email}</p>
+				<p class="mt-3 text-xs text-zinc-500">Applied {app.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+			</div>
+
+			<div class="border border-dashed border-red-200 bg-white p-5">
+				<form method="post">
+					<ManageBtn
+						type="submit"
+						name="_action"
+						value="delete"
+						variant="danger"
+						confirm="Permanently delete this application?"
+					>
+						Delete application
+					</ManageBtn>
+				</form>
+			</div>
+		</aside>
+	</div>
+</ManageLayout>
+
+{/* Auto-mark as REVIEWED when staff first view a NEW application */}
+{app.status === "NEW" && (
+	<script define:vars={{ appId: id }}>
+		fetch(`/manage/applications/${appId}`, {
+			method: "POST",
+			body: new URLSearchParams({ _action: "auto-review" }),
+		}).catch(() => {});
+	</script>
+)}

@@ -1,0 +1,135 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import { prisma } from "../../../lib/prisma";
+
+export const prerender = false;
+
+const staff = Astro.locals.staff;
+const isShopManager = staff?.role === "ADMIN" || staff?.role === "SHOP_MANAGER";
+if (!isShopManager) return Astro.redirect("/manage");
+
+const entries = await prisma.waitlist.findMany({
+	include: { product: { select: { id: true, title: true, slug: true } } },
+	orderBy: { createdAt: "desc" },
+});
+
+// Group by product
+const byProduct = new Map<string, { product: { id: string; title: string; slug: string }; entries: typeof entries }>();
+
+for (const entry of entries) {
+	const existing = byProduct.get(entry.productId);
+	if (existing) {
+		existing.entries.push(entry);
+	} else {
+		byProduct.set(entry.productId, { product: entry.product, entries: [entry] });
+	}
+}
+
+const groups = [...byProduct.values()];
+const totalEntries = entries.length;
+---
+
+<ManageLayout title="Waitlist" active="waitlist">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">Waitlist</h1>
+			<p class="mt-1 text-sm text-zinc-500">
+				{totalEntries} sign-up{totalEntries !== 1 ? "s" : ""} across {groups.length} product{groups.length !== 1 ? "s" : ""}
+			</p>
+		</div>
+	</div>
+
+	{groups.length === 0 ? (
+		<div class="mt-7 rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
+			<svg class="mx-auto mb-3 h-8 w-8 text-zinc-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.25"/>
+				<path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			<p class="m-0 text-sm text-zinc-500">No waitlist sign-ups yet.</p>
+			<p class="m-0 mt-1 text-xs text-zinc-400">Customers can join by clicking "Join waitlist" on a product in waitlist status.</p>
+		</div>
+	) : (
+		<div class="mt-7 space-y-4">
+			{groups.map((group) => {
+				const emails = group.entries.map((e) => e.email).join(", ");
+				const groupId = `group-${group.product.id}`;
+				return (
+					<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+						<!-- Product header -->
+						<div class="flex items-center justify-between gap-4 px-5 py-4">
+							<div class="flex items-center gap-3">
+								<button
+									type="button"
+									class="flex items-center gap-2 font-semibold text-brand-black transition-colors hover:text-monarch-500"
+									aria-expanded="false"
+									aria-controls={groupId}
+									data-waitlist-toggle
+								>
+									<svg
+										class="h-4 w-4 shrink-0 text-zinc-400 transition-transform"
+										data-chevron
+										viewBox="0 0 16 16"
+										fill="none"
+										aria-hidden="true"
+									>
+										<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+									{group.product.title}
+								</button>
+								<span class="rounded-full bg-zinc-100 px-2.5 py-0.5 font-display text-[10px] uppercase tracking-wide text-zinc-600">
+									{group.entries.length} sign-up{group.entries.length !== 1 ? "s" : ""}
+								</span>
+							</div>
+							<div class="flex items-center gap-2">
+								<button
+									type="button"
+									class="font-display rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50"
+									data-copy-emails={emails}
+									onclick="navigator.clipboard.writeText(this.dataset.copyEmails).then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy emails'; }, 2000); })"
+								>
+									Copy emails
+								</button>
+								<a
+									href={`/manage/products/${group.product.slug}`}
+									class="font-display rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50"
+								>
+									Edit product
+								</a>
+							</div>
+						</div>
+
+						<!-- Expandable email list -->
+						<div id={groupId} class="hidden border-t border-zinc-100">
+							<ul class="list-none divide-y divide-zinc-100 p-0">
+								{group.entries.map((entry) => (
+									<li class="flex items-center justify-between gap-4 px-5 py-3">
+										<p class="m-0 text-sm text-brand-black">{entry.email}</p>
+										<p class="m-0 text-xs text-zinc-400">{entry.createdAt.toLocaleDateString("en-GB")}</p>
+									</li>
+								))}
+							</ul>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	)}
+</ManageLayout>
+
+<script>
+	document.querySelectorAll("[data-waitlist-toggle]").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const controlsId = btn.getAttribute("aria-controls");
+			const panel = controlsId ? document.getElementById(controlsId) : null;
+			const chevron = btn.querySelector("[data-chevron]");
+			if (!panel) return;
+
+			const isOpen = !panel.classList.contains("hidden");
+			panel.classList.toggle("hidden", isOpen);
+			btn.setAttribute("aria-expanded", String(!isOpen));
+			if (chevron instanceof SVGElement) {
+				chevron.style.transform = isOpen ? "" : "rotate(180deg)";
+			}
+		});
+	});
+</script>

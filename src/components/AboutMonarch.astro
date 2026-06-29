@@ -1,0 +1,98 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	kicker?: string;
+	heading?: string;
+	lead?: string;
+}
+
+const {
+	kicker = "Company",
+	heading = "About Monarch",
+	lead = "The parent company behind every service on this site. Custom DayZ content, stable servers, and software that links the game to the web.",
+} = Astro.props;
+---
+
+<section class="monarch-about-home" id="about-monarch" aria-labelledby="about-monarch-heading" data-scroll-reveal>
+	<header class="monarch-section-header">
+		<p class="monarch-section-kicker st-reveal">{kicker}</p>
+		<h2
+			id="about-monarch-heading"
+			class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+		>
+			{heading}
+		</h2>
+		<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			{lead}
+		</p>
+	</header>
+
+	<div class="monarch-about-home__split st-reveal">
+		<div class="monarch-about-home__copy">
+			<p>
+				Monarch is the parent company behind every service on this site. We build for DayZ communities that want custom
+				content, stable servers, and software that links the game to the web instead of stock assets and copy pasted
+				setups.
+			</p>
+			<p>
+				Our work is split into focused brands so you can start with modding, live gameplay, tooling, or infrastructure
+				without guessing who owns delivery. Each brand has a clear remit, but the same team and standards sit behind all of
+				them.
+			</p>
+			<p>
+				Monarch Modding ships weapon packs, configs, and workshop releases built for real server rulesets. Operation Monarch
+				runs community servers, events, and curated worlds where players meet that work. Monarch Software covers in game bots,
+				API bridges to websites, dedi utilities, dedbin workflows, and PBO tooling for large projects.
+			</p>
+		</div>
+		<figure class="monarch-about-home__media">
+			<img
+				src="/About_1.png"
+				alt="Monarch custom DayZ base and modded environment in game"
+				width="1600"
+				height="1000"
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+	</div>
+
+	<div class="monarch-about-home__split monarch-about-home__split--reverse st-reveal">
+		<figure class="monarch-about-home__media">
+			<img
+				src="/About_2.png"
+				alt="Operation Monarch community characters in custom DayZ apparel"
+				width="1600"
+				height="1000"
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+		<div class="monarch-about-home__copy">
+			<p>
+				Monarch was founded in 2021. Our team has been active in the DayZ space since 2019, so what we ship is grounded in
+				live launches, player feedback after wipes, and the quiet work of fixing what did not scale the first time.
+			</p>
+			<p>
+				We are a small company by headcount and a large one by output. That balance keeps decisions fast and quality high
+				when a patch lands or a server needs attention before the weekend crowd arrives.
+			</p>
+			<p>
+				Developers handle gameplay systems, automation, and build pipelines. UI/UX designers shape panels, branding, and in
+				game interfaces so communities feel cohesive.
+			</p>
+			<p>
+				Whether you need a weapon line, a stable home for players, or tooling that reports live stats to your site, Monarch
+				keeps it under one roof. You can choose the right entry point without losing the depth behind it.
+			</p>
+		</div>
+	</div>
+
+	<div class="monarch-about-home__footer st-reveal">
+		<a class="monarch-pill-btn" href="/about-monarch">
+			About Monarch
+			<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+		</a>
+	</div>
+</section>

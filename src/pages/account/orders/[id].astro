@@ -1,0 +1,141 @@
+---
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import MonarchPageHero from "../../../components/MonarchPageHero.astro";
+import { prisma } from "../../../lib/prisma";
+
+export const prerender = false;
+
+const customer = Astro.locals.customer!;
+const { id } = Astro.params;
+
+if (!id) return Astro.redirect("/account");
+
+const order = await prisma.order.findUnique({
+	where: { id },
+	include: {
+		items: {
+			include: {
+				variant: { include: { product: true } },
+				license: { include: { servers: true } },
+			},
+		},
+	},
+});
+
+if (!order || order.customerId !== customer.id) {
+	return Astro.redirect("/account");
+}
+
+const paid = Astro.url.searchParams.get("paid") === "1";
+
+const statusLabel: Record<string, string> = {
+	PENDING: "Pending",
+	PAID: "Paid",
+	REFUNDED: "Refunded",
+	DISPUTED: "Disputed",
+};
+
+const statusClass: Record<string, string> = {
+	PENDING: "bg-yellow-100 text-yellow-800",
+	PAID: "bg-green-100 text-green-800",
+	REFUNDED: "bg-zinc-100 text-zinc-700",
+	DISPUTED: "bg-red-100 text-red-700",
+};
+---
+
+<SiteLayout title={`Order #${order.id.slice(-8).toUpperCase()} | Monarch`}>
+	<slot slot="pre-main">
+		<MonarchPageHero eyebrow="Monarch" title="Order Details" lead={`Order #${order.id.slice(-8).toUpperCase()}`} image="/Careers_Banner.png" />
+	</slot>
+
+	<div class="mx-auto w-full max-w-3xl py-12">
+		{
+			paid && (
+				<div class="mb-6 border border-green-300 bg-green-50 px-5 py-4">
+					<p class="m-0 font-semibold text-green-800">Payment received! Your license has been activated.</p>
+					<p class="m-0 mt-1 text-sm text-green-700">
+						You can now register server IPs on your{" "}
+						<a href="/account/licenses" class="font-semibold underline hover:no-underline">
+							licenses page
+						</a>
+						.
+					</p>
+				</div>
+			)
+		}
+
+		<div class="border border-zinc-200 bg-white">
+			<div class="border-b border-zinc-100 px-6 py-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<h2 class="m-0 font-display text-lg font-medium uppercase tracking-wide text-brand-black">
+							Order #{order.id.slice(-8).toUpperCase()}
+						</h2>
+						<p class="m-0 mt-1 text-sm text-zinc-500">
+							{order.createdAt.toLocaleDateString("en-GB", { dateStyle: "long" })}
+						</p>
+					</div>
+					<span class={`rounded px-2.5 py-1 text-xs font-semibold uppercase ${statusClass[order.status]}`}>
+						{statusLabel[order.status]}
+					</span>
+				</div>
+			</div>
+
+			<ul class="list-none divide-y divide-zinc-100 p-0">
+				{
+					order.items.map((item) => (
+						<li class="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
+							<div class="flex-1">
+								<p class="m-0 font-semibold text-brand-black">{item.variant.product.title}</p>
+								<p class="m-0 mt-0.5 text-sm text-zinc-500">{item.variant.name}</p>
+								{item.license && (
+									<p class="mt-2 text-xs text-zinc-400">
+										License: <span class="font-mono">{item.license.id}</span> &middot;{" "}
+										<span class={`font-semibold ${item.license.status === "ACTIVE" ? "text-green-700" : "text-red-700"}`}>
+											{item.license.status}
+										</span>
+									</p>
+								)}
+							</div>
+							<div class="shrink-0 text-right">
+								<p class="m-0 font-display text-sm font-medium text-brand-black">
+									&pound;{(item.priceMinorUnits / 100).toFixed(2)}
+								</p>
+								{order.status === "PAID" && (
+									<a
+										href={`/api/shop/download/${item.id}`}
+										class="mt-2 inline-block border border-monarch-500 px-3 py-1 font-display text-[11px] uppercase tracking-wide text-monarch-500 transition-colors hover:bg-monarch-500 hover:text-white"
+									>
+										Download
+									</a>
+								)}
+							</div>
+						</li>
+					))
+				}
+			</ul>
+
+			<div class="flex justify-between border-t border-zinc-200 px-6 py-4">
+				<span class="font-display text-sm uppercase tracking-wide text-zinc-600">Total</span>
+				<span class="font-display text-base font-medium text-brand-black">
+					&pound;{(order.totalMinorUnits / 100).toFixed(2)}
+				</span>
+			</div>
+		</div>
+
+		<div class="mt-4 flex gap-3">
+			<a
+				href="/account"
+				class="border border-zinc-300 bg-white px-4 py-2 font-display text-xs uppercase tracking-widest text-brand-black transition-colors hover:border-brand-black hover:bg-brand-black hover:text-white"
+			>
+				Back to Account
+			</a>
+			<a
+				href="/account/licenses"
+				class="border border-monarch-500 bg-monarch-500 px-4 py-2 font-display text-xs uppercase tracking-widest text-white transition-colors hover:bg-monarch-600"
+			>
+				My Licenses
+			</a>
+		</div>
+	</div>
+</SiteLayout>

@@ -1,0 +1,46 @@
+---
+interface Props {
+	href?: string;
+	type?: "button" | "submit";
+	name?: string;
+	value?: string;
+	variant?: "primary" | "secondary" | "success" | "muted" | "danger" | "warning";
+	class?: string;
+	external?: boolean;
+	confirm?: string;
+}
+
+const { href, type = href ? undefined : "button", name, value, variant = "secondary", class: className = "", external, confirm } = Astro.props;
+
+const base =
+	"font-display inline-flex min-h-[32px] shrink-0 items-center justify-center rounded border px-3 py-1.5 text-[11px] uppercase leading-none tracking-wide transition-colors";
+
+const variants: Record<string, string> = {
+	primary: "border-brand-black bg-brand-black text-white hover:bg-zinc-800",
+	secondary: "border-zinc-300 bg-white text-brand-black hover:border-zinc-400 hover:bg-zinc-50",
+	success: "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700",
+	muted: "border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100",
+	danger: "border-red-200 bg-red-50 text-red-800 hover:border-red-300 hover:bg-red-100",
+	warning: "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100",
+};
+
+const classes = `${base} ${variants[variant]} ${className}`;
+---
+
+{
+	href ? (
+		<a href={href} class={classes} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+			<slot />
+		</a>
+	) : (
+		<button
+			type={type}
+			name={name}
+			value={value}
+			class={classes}
+			{...(confirm ? { onclick: `return confirm(${JSON.stringify(confirm)});` } : {})}
+		>
+			<slot />
+		</button>
+	)
+}

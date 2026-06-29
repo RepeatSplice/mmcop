@@ -1,0 +1,234 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ProductEditor from "../../../components/manage/ProductEditor.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+import {
+	updateProduct,
+	createVariant,
+	updateVariant,
+	addChangelogEntry,
+	syncStripePrice,
+} from "../../../lib/products-admin";
+import type { ProductCategory, ProductStatus } from "@prisma/client";
+import { hasAlgolia, hasR2 } from "../../../lib/env";
+import { reindexRecord, removeFromIndex } from "../../../lib/algolia";
+
+const r2Enabled = hasR2();
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/manage/products");
+
+const fetchProduct = async () =>
+	prisma.product.findUnique({
+		where: { slug },
+		include: {
+			variants: { orderBy: { sortOrder: "asc" } },
+			files: { orderBy: { uploadedAt: "desc" } },
+			changelog: { orderBy: { createdAt: "desc" }, take: 50 },
+		},
+	});
+
+let product = await fetchProduct();
+if (!product) return Astro.redirect("/manage/products");
+
+let error = "";
+let success = "";
+
+// Pick up query-string flash messages from file upload redirect
+const qError = Astro.url.searchParams.get("error");
+const qSuccess = Astro.url.searchParams.get("success");
+if (qError === "missing-fields") error = "File upload failed — label, version and file are all required.";
+if (qSuccess === "file-uploaded") success = "File uploaded successfully.";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+
+	// ── Core product ─────────────────────────────────────────────────────────
+	if (action === "update-product") {
+		const title = String(form.get("title") ?? "");
+		const newSlug = String(form.get("slug") ?? "");
+		const excerpt = String(form.get("excerpt") ?? "");
+		const body = String(form.get("body") ?? "");
+		const category = String(form.get("category") ?? "") as ProductCategory;
+		const imageUrl = String(form.get("imageUrl") ?? "").trim() || undefined;
+		const status = String(form.get("status") ?? "DRAFT") as ProductStatus;
+
+		// previewImages: one URL per line → JSON array
+		const previewRaw = String(form.get("previewImages") ?? "");
+		const previewImages = JSON.stringify(
+			previewRaw
+				.split("\n")
+				.map((u) => u.trim())
+				.filter(Boolean),
+		);
+
+		if (title && newSlug && excerpt && body && category) {
+			await updateProduct(product.id, {
+				title,
+				slug: newSlug,
+				excerpt,
+				body,
+				category,
+				imageUrl,
+				status,
+				previewImages: previewImages === "[]" ? undefined : previewImages,
+			});
+			if (hasAlgolia()) {
+				try {
+					if (status === "PUBLISHED" || status === "WAITLIST") {
+						await reindexRecord({
+							objectID: `product-${product.id}`,
+							title,
+							excerpt,
+							href: `/shop/${newSlug}`,
+							type: "product",
+							typeLabel: "Product",
+						});
+					} else {
+						await removeFromIndex(`product-${product.id}`);
+					}
+				} catch { /* non-fatal */ }
+			}
+			return Astro.redirect(`/manage/products/${newSlug}?success=saved`);
+		}
+		error = "Please fill in all required fields.";
+	}
+
+	// ── Variants ──────────────────────────────────────────────────────────────
+	if (action === "add-variant") {
+		const name = String(form.get("variantName") ?? "");
+		const priceStr = String(form.get("variantPriceGbp") ?? "");
+		const priceUsd = Math.round(parseFloat(priceStr) * 100); // $ → cents
+		const maxServersStr = String(form.get("variantMaxServers") ?? "").trim();
+		const maxServers = maxServersStr ? parseInt(maxServersStr) : undefined;
+		const description = String(form.get("variantDescription") ?? "").trim() || undefined;
+
+		if (name && !isNaN(priceUsd) && priceUsd >= 0) {
+			await createVariant(product.id, { name, priceUsd, maxServers, description });
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+		error = "Variant name and price are required.";
+	}
+
+	if (action === "update-variant") {
+		const variantId = String(form.get("variantId") ?? "");
+		const name = String(form.get("variantName") ?? "");
+		const priceStr = String(form.get("variantPriceGbp") ?? "");
+		const priceUsd = Math.round(parseFloat(priceStr) * 100);
+		const maxServersStr = String(form.get("variantMaxServers") ?? "").trim();
+		const maxServers = maxServersStr ? parseInt(maxServersStr) : undefined;
+		const description = String(form.get("variantDescription") ?? "").trim() || undefined;
+
+		if (variantId && name && !isNaN(priceUsd)) {
+			await updateVariant(variantId, { name, priceUsd, maxServers, description });
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+		error = "Variant update failed — name and price required.";
+	}
+
+	if (action === "toggle-variant") {
+		const variantId = String(form.get("variantId") ?? "");
+		if (variantId) {
+			const v = await prisma.productVariant.findUnique({ where: { id: variantId } });
+			if (v) {
+				await updateVariant(variantId, { active: !v.active });
+			}
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+	}
+
+	if (action === "delete-variant") {
+		const variantId = String(form.get("variantId") ?? "");
+		if (variantId) {
+			await prisma.productVariant.delete({ where: { id: variantId } });
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+	}
+
+	if (action === "sync-stripe") {
+		const variantId = String(form.get("variantId") ?? "");
+		if (variantId) {
+			try {
+				await syncStripePrice(variantId);
+				success = "Stripe price synced successfully.";
+			} catch (err) {
+				error = err instanceof Error ? err.message : "Stripe sync failed.";
+			}
+		}
+	}
+
+	// ── Files ─────────────────────────────────────────────────────────────────
+	if (action === "delete-file") {
+		const fileId = String(form.get("fileId") ?? "");
+		if (fileId) {
+			await prisma.productFile.delete({ where: { id: fileId } });
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+	}
+
+	// ── Changelog ─────────────────────────────────────────────────────────────
+	if (action === "add-changelog") {
+		const version = String(form.get("changelogVersion") ?? "");
+		const notes = String(form.get("changelogNotes") ?? "");
+		if (version && notes) {
+			await addChangelogEntry(product.id, version, notes);
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+		error = "Version and notes are required.";
+	}
+
+	if (action === "delete-changelog") {
+		const changelogId = String(form.get("changelogId") ?? "");
+		if (changelogId) {
+			await prisma.productChangelog.delete({ where: { id: changelogId } });
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+	}
+
+	// Reload product after any action that didn't redirect
+	product = await fetchProduct();
+	if (!product) return Astro.redirect("/manage/products");
+}
+
+// Pick up "saved" flash from redirect
+if (Astro.url.searchParams.get("success") === "saved") success = "Product saved.";
+---
+
+<ManageLayout title={`Edit: ${product.title}`} active="products">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">
+				{product.title}
+			</h1>
+			<p class="mt-1 flex items-center gap-3">
+				<span class="font-mono text-xs text-zinc-400">/shop/{product.slug}</span>
+				{product.status === "PUBLISHED" && (
+					<a
+						href={`/shop/${product.slug}`}
+						target="_blank"
+						class="font-display text-[10px] uppercase tracking-wide text-monarch-500 hover:text-brand-black"
+					>
+						View live &rarr;
+					</a>
+				)}
+			</p>
+		</div>
+		<a
+			href="/manage/products"
+			class="font-display rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50"
+		>
+			&larr; Back
+		</a>
+	</div>
+
+	{error && <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+	{success && <div class="mt-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</div>}
+
+	<div class="mt-6">
+		<ProductEditor product={product} action={`/manage/products/${slug}`} r2Enabled={r2Enabled} />
+	</div>
+</ManageLayout>

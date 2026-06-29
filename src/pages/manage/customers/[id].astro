@@ -1,0 +1,271 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/manage/customers");
+
+let successMsg = "";
+let formError = "";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+
+	if (action === "add-note") {
+		const body = String(form.get("body") ?? "").trim();
+		const currentStaff = Astro.locals.staff;
+		if (body && currentStaff) {
+			const staffUser = await prisma.staffUser.findUnique({ where: { email: currentStaff.email } });
+			if (staffUser) {
+				await prisma.supportNote.create({
+					data: { customerId: id, body, staffId: staffUser.id },
+				});
+				successMsg = "Note added.";
+			}
+		} else {
+			formError = "Note cannot be empty.";
+		}
+	}
+}
+
+const customer = await prisma.customer.findUnique({
+	where: { id },
+	include: {
+		accounts: true,
+		orders: {
+			orderBy: { createdAt: "desc" },
+			include: { items: { include: { variant: { include: { product: true } } } } },
+		},
+		licenses: {
+			include: { variant: { include: { product: true } }, servers: true },
+			orderBy: { createdAt: "desc" },
+		},
+		supportNotes: {
+			orderBy: { createdAt: "desc" },
+			include: { staff: true },
+		},
+	},
+});
+
+if (!customer) return Astro.redirect("/manage/customers");
+
+const statusClass: Record<string, string> = {
+	PAID: "bg-emerald-100 text-emerald-800",
+	PENDING: "bg-amber-100 text-amber-800",
+	REFUNDED: "bg-zinc-100 text-zinc-700",
+	DISPUTED: "bg-red-100 text-red-700",
+};
+
+const licenseStatusClass: Record<string, string> = {
+	ACTIVE: "bg-emerald-100 text-emerald-800",
+	GRACE: "bg-amber-100 text-amber-800",
+	REVOKED: "bg-red-100 text-red-700",
+	SUSPENDED: "bg-zinc-100 text-zinc-700",
+};
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+---
+
+<ManageLayout title={customer.displayName} active="customers">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div class="flex items-center gap-3">
+			{customer.avatarUrl ? (
+				<img src={customer.avatarUrl} alt="" class="h-11 w-11 rounded-full border border-zinc-200" />
+			) : (
+				<div class="flex h-11 w-11 items-center justify-center rounded-full bg-monarch-500 font-display text-base font-medium text-white">
+					{customer.displayName.charAt(0).toUpperCase()}
+				</div>
+			)}
+			<div>
+				<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">{customer.displayName}</h1>
+				{customer.email && <p class="m-0 text-sm text-zinc-500">{customer.email}</p>}
+			</div>
+		</div>
+		<a href="/manage/customers" class="font-display rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50">
+			&larr; Back
+		</a>
+	</div>
+
+	<div class="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
+		<!-- Main column -->
+		<div class="space-y-5 lg:col-span-2">
+			<!-- Connected accounts -->
+			<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<div class="border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">Connected Accounts</h2>
+				</div>
+				{customer.accounts.length === 0 ? (
+					<p class="px-5 py-4 text-sm text-zinc-400">No linked accounts.</p>
+				) : (
+					<ul class="list-none divide-y divide-zinc-100 p-0">
+						{customer.accounts.map((acc) => (
+							<li class="flex items-center gap-4 px-5 py-3">
+								<span class="rounded-full bg-zinc-100 px-2.5 py-0.5 font-display text-[10px] uppercase tracking-widest text-zinc-600">
+									{acc.provider}
+								</span>
+								<span class="flex-1 text-sm text-brand-black">{acc.username}</span>
+								<span class="font-mono text-xs text-zinc-400">{acc.providerId}</span>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+
+			<!-- Order history -->
+			<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<div class="border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">
+						Order History
+					</h2>
+				</div>
+				{customer.orders.length === 0 ? (
+					<p class="px-5 py-6 text-sm text-zinc-400">No orders.</p>
+				) : (
+					<ul class="list-none divide-y divide-zinc-100 p-0">
+						{customer.orders.map((order) => (
+							<li>
+								<a
+									href={`/manage/orders/${order.id}`}
+									class="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-zinc-50"
+								>
+									<div>
+										<p class="m-0 font-semibold text-brand-black">#{order.id.slice(-8).toUpperCase()}</p>
+										<p class="m-0 text-xs text-zinc-400">
+											{order.createdAt.toLocaleDateString("en-GB")} &middot;{" "}
+											{order.items.map((i) => i.variant.product.title).join(", ")}
+										</p>
+									</div>
+									<div class="flex items-center gap-3">
+										<span class="font-display text-sm font-medium text-brand-black">{formatPrice(order.totalMinorUnits)}</span>
+										<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", statusClass[order.status] ?? "bg-zinc-100 text-zinc-700"]}>
+											{order.status}
+										</span>
+									</div>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+
+			<!-- Licenses -->
+			<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<div class="border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">Licenses</h2>
+				</div>
+				{customer.licenses.length === 0 ? (
+					<p class="px-5 py-6 text-sm text-zinc-400">No licenses.</p>
+				) : (
+					<ul class="list-none divide-y divide-zinc-100 p-0">
+						{customer.licenses.map((license) => (
+							<li>
+								<a
+									href={`/manage/licenses/${license.id}`}
+									class="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-zinc-50"
+								>
+									<div>
+										<p class="m-0 font-semibold text-brand-black">
+											{license.variant.product.title} &ndash; {license.variant.name}
+										</p>
+										<p class="m-0 text-xs text-zinc-400">{license.servers.length} server IPs registered</p>
+									</div>
+									<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", licenseStatusClass[license.status] ?? "bg-zinc-100 text-zinc-700"]}>
+										{license.status}
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+
+			<!-- Support notes -->
+			<div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<div class="border-b border-zinc-100 px-5 py-4">
+					<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">Support Notes</h2>
+				</div>
+
+				{successMsg && (
+					<div class="border-b border-green-100 bg-green-50 px-5 py-3 text-sm text-green-700">{successMsg}</div>
+				)}
+				{formError && (
+					<div class="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-700">{formError}</div>
+				)}
+
+				{customer.supportNotes.length > 0 && (
+					<ul class="list-none divide-y divide-zinc-100 p-0">
+						{customer.supportNotes.map((note) => (
+							<li class="px-5 py-4">
+								<p class="m-0 whitespace-pre-wrap text-sm text-brand-black">{note.body}</p>
+								<p class="m-0 mt-2 text-xs text-zinc-400">
+									{note.staff.name} &middot; {note.createdAt.toLocaleString("en-GB")}
+								</p>
+							</li>
+						))}
+					</ul>
+				)}
+
+				<form method="post" class="border-t border-zinc-100 px-5 py-4">
+					<input type="hidden" name="_action" value="add-note" />
+					<textarea
+						name="body"
+						rows="3"
+						placeholder="Add a support note..."
+						class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-brand-black focus:outline-none"
+					/>
+					<div class="mt-2">
+						<ManageBtn type="submit" variant="primary">Add Note</ManageBtn>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Sidebar stats -->
+		<div class="space-y-4">
+			<div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+				<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">Summary</h2>
+				<dl class="mt-4 space-y-3">
+					<div>
+						<dt class="text-xs text-zinc-400">Member since</dt>
+						<dd class="mt-0.5 text-sm font-semibold text-brand-black">
+							{customer.createdAt.toLocaleDateString("en-GB", { dateStyle: "medium" })}
+						</dd>
+					</div>
+					<div>
+						<dt class="text-xs text-zinc-400">Total orders</dt>
+						<dd class="mt-0.5 text-sm font-semibold text-brand-black">{customer.orders.length}</dd>
+					</div>
+					<div>
+						<dt class="text-xs text-zinc-400">Total spent</dt>
+						<dd class="mt-0.5 font-display text-base font-medium text-monarch-500">
+							{formatPrice(customer.orders.filter((o) => o.status === "PAID").reduce((s, o) => s + o.totalMinorUnits, 0))}
+						</dd>
+					</div>
+					<div>
+						<dt class="text-xs text-zinc-400">Active licenses</dt>
+						<dd class="mt-0.5 text-sm font-semibold text-brand-black">
+							{customer.licenses.filter((l) => l.status === "ACTIVE").length}
+						</dd>
+					</div>
+				</dl>
+			</div>
+
+			{customer.accounts.length > 0 && (
+				<div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+					<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">Linked Providers</h2>
+					<ul class="mt-3 list-none space-y-2 p-0">
+						{customer.accounts.map((acc) => (
+							<li class="text-xs text-zinc-500">
+								<span class="font-semibold text-brand-black capitalize">{acc.provider}</span>: {acc.username}
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
+		</div>
+	</div>
+</ManageLayout>

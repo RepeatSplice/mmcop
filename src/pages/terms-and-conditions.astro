@@ -1,146 +1,150 @@
 ---
-import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchBasicPage from "../components/MonarchBasicPage.astro";
+import LegalArticle from "../components/LegalArticle.astro";
 
-const sections = [
-	{
-		id: "agreement",
-		title: "Agreement",
-		body: "By accessing this website you agree to these terms. If you do not agree, you should not use the site. Replace with jurisdiction-specific wording and any age restrictions required for your market.",
-	},
-	{
-		id: "use-of-site",
-		title: "Use of the website",
-		body: "Set out permitted uses, prohibited conduct (e.g. scraping, malware, impersonation), account rules if applicable, and consequences of breach. Reference acceptable use policies from your IT and legal teams.",
-	},
-	{
-		id: "ip",
-		title: "Intellectual property",
-		body: "Trademarks, logos, images, videos, and text are protected. Clarify what users may not copy or modify, and any limited licence for personal, non-commercial viewing. Align with group brand guidelines.",
-	},
-	{
-		id: "products-orders",
-		title: "Products, pricing, and orders",
-		body: "If this site is informational only, state that purchases are made through authorised dealers or separate e-commerce platforms and that prices on this site are indicative. If you sell online, add contract formation, delivery, returns, and consumer rights (UK/EU).",
-	},
-	{
-		id: "liability",
-		title: "Disclaimer and limitation of liability",
-		body: "Describe exclusions and limits permitted under applicable law — for example, liability for indirect loss, and accuracy of site content. This must be drafted by qualified lawyers; demo text has no legal effect.",
-	},
-	{
-		id: "law",
-		title: "Governing law and disputes",
-		body: "Specify governing law (e.g. England and Wales) and courts or alternative dispute resolution. Cross-border sales may need additional consumer provisions.",
-	},
-	{
-		id: "changes-terms",
-		title: "Changes to these terms",
-		body: "Explain how and when terms may be updated, how users will be notified, and that continued use may constitute acceptance where law allows.",
-	},
-];
+const linkClass =
+	"font-semibold text-brand-black underline decoration-monarch-500/40 underline-offset-2 hover:text-monarch-500";
 ---
 
-<SiteLayout
-	title="Terms and conditions — Shimano Fishing United Kingdom"
-	description="Terms of use for this Shimano Fishing UK website. Demo legal layout — replace with counsel-approved terms."
+<MonarchBasicPage
+	title="Terms and conditions | Monarch"
+	description="Terms of use for Monarch websites, enquiries, careers applications, and commissioned services."
+	eyebrow="Legal"
+	heading="Terms and conditions"
+	lead="Rules for using our websites and engaging with Monarch services. Read alongside any proposal or statement of work for commissioned work."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-10 px-6 pb-20"
 >
-	<div slot="pre-main" class="mb-20 w-full">
-		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
-			<div class="absolute inset-0">
-				<img
-					src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=2000&q=80"
-					alt=""
-					width="2000"
-					height="800"
-					loading="eager"
-					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
-				/>
-			</div>
-			<div
-				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.15)_100%)]"
-				aria-hidden="true"
-			>
-			</div>
-			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
-				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Legal</p>
-				<h1 class="m-0 max-w-[22ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
-					Terms and conditions
-				</h1>
-				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
-					Rules for using this website and our digital services in the UK. Demo copy for layout — not for publication without
-					legal sign-off.
-				</p>
-				<a
-					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
-					href="#agreement"
-				>
-					Read the terms
-				</a>
-			</div>
-		</div>
-	</div>
-
-	<section class="text-center" aria-labelledby="draft-terms-heading">
-		<h2 id="draft-terms-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Draft terms
-		</h2>
-	</section>
-
-	<div class="w-full max-w-none text-left">
-		<p class="m-0 text-base leading-relaxed text-zinc-600">
-			<strong class="font-semibold text-brand-black">These terms are placeholders only.</strong> They do not create a contract
-			with visitors and must not be relied upon. Insert definitive language from your legal department, including any
-			mandatory consumer information and links to policies that form part of the contract.
+	<LegalArticle>
+		<h2>Agreement</h2>
+		<p>
+			By accessing monarch-dayz.com or related Monarch group websites (the "Site"), you agree to these Terms and conditions
+			("Terms"). If you do not agree, do not use the Site. Commissioned work, retainers, and services tied to a specific brand may
+			also be governed by a separate proposal, statement of work, or terms for that brand. If there is a conflict, the signed
+			or written project terms prevail for that project.
 		</p>
-		<p class="mt-5 text-base leading-relaxed text-zinc-600">
-			Last updated (demo): <time datetime="2026-05-18">18 May 2026</time>
+
+		<h2>Who we are</h2>
+		<p>
+			The Site is operated by Monarch, a United States based business. Further details are on our{" "}
+			<a class={linkClass} href="/legal-info">Legal info</a> page.
 		</p>
-	</div>
 
-	{
-		sections.map((s) => (
-			<>
-				<section class="text-center" id={s.id} aria-labelledby={`${s.id}-heading`}>
-					<h2 id={`${s.id}-heading`} class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-						{s.title}
-					</h2>
-				</section>
-				<div class="w-full max-w-none text-left">
-					<p class="m-0 text-base leading-relaxed text-zinc-600">{s.body}</p>
-				</div>
-			</>
-		))
-	}
+		<h2>Using the Site</h2>
+		<p>You may use the Site for lawful purposes only. You must not:</p>
+		<ul>
+			<li>Attempt unauthorised access to any part of the Site, admin areas, or related systems</li>
+			<li>Introduce malware, scrape or harvest data at scale without permission, or overload our infrastructure</li>
+			<li>Misrepresent your identity or affiliation when contacting us or applying for work</li>
+			<li>Use content from the Site in a way that infringes our rights or another party's rights</li>
+			<li>Use the Site in any way that harms Monarch, our clients, our communities, or other users</li>
+		</ul>
+		<p>
+			We may suspend or block access if we reasonably believe these Terms have been breached or to protect the Site and our
+			users.
+		</p>
 
-	<section class="text-center" aria-labelledby="related-terms-heading">
-		<h2 id="related-terms-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Related legal pages
-		</h2>
-	</section>
+		<h2>Information on the Site</h2>
+		<p>
+			Content on the Site is provided for general information about Monarch services. We aim to keep it accurate but do not
+			warrant that every description, availability note, or timeline on the Site is complete or current. Service scope,
+			capacity, and pricing are confirmed in writing when you commission work.
+		</p>
 
-	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/privacy-policy"
-		>
-			Privacy policy
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/legal-info"
-		>
-			Legal info
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-			href="/"
-		>
-			Back to home
-		</a>
-	</div>
+		<h2>Enquiries, tickets, and commissioning</h2>
+		<p>
+			Submitting a contact form or opening a ticket does not create a binding contract. A project begins when both sides
+			agree scope, deliverables, timeline, and payment in writing (email confirmation or formal proposal). Availability of
+			specific scripts, weapons, or assets may vary; we confirm what is possible at scoping.
+		</p>
+		<p>
+			Retainer hours are allocated per sprint as described on our <a class={linkClass} href="/work-with-us">Work with us</a>{" "}
+			page. Unused hours in a sprint do not roll over unless we agree otherwise in writing.
+		</p>
 
-	<script>
-		import { initHome } from "../scripts/home.ts";
-		initHome();
-	</script>
-</SiteLayout>
+		<h2>Payments and chargebacks</h2>
+		<p>
+			Payment terms are set in your proposal or invoice. Work starts or continues according to those terms. Chargebacks are
+			not permitted for work delivered in line with the agreed scope. If you believe there is a problem with a delivery,
+			contact us promptly so we can investigate and resolve it.
+		</p>
+
+		<h2>Intellectual property</h2>
+		<h3>Our content</h3>
+		<p>
+			The Site, its design, text, graphics, logos, and underlying code are owned by Monarch or our licensors and are protected
+			by intellectual property laws. You may not copy, modify, or distribute them without our prior written permission except
+			as allowed by law.
+		</p>
+		<h3>Client work</h3>
+		<p>
+			Ownership and licence for commissioned deliverables are set out in your project terms. Unless stated otherwise, Monarch
+			may retain the right to use general know how, tools that are not unique to your project, and portfolio style excerpts where no
+			confidential client information is revealed.
+		</p>
+		<h3>Game and platform rules</h3>
+		<p>
+			DayZ modding, server operation, and distribution may be subject to Bohemia Interactive, Steam Workshop, and other third
+			party terms. You are responsible for compliance on your server and community.
+		</p>
+
+		<h2>Careers applications</h2>
+		<p>
+			Information you submit when applying for a role is handled under our <a class={linkClass} href="/privacy-policy">Privacy policy</a>.
+			Providing false or misleading information may result in rejection or withdrawal of an offer.
+		</p>
+
+		<h2>Other sites and services</h2>
+		<p>
+			The Site may link to Operation Monarch, Monarch Modding, partner sites, social platforms, and other third parties. We do
+			not control those services and are not responsible for their content, terms, or availability.
+		</p>
+
+		<h2>Disclaimer</h2>
+		<p>
+			The Site and any information on it are provided "as is" and "as available" to the fullest extent permitted by law. We do
+			not guarantee uninterrupted operation or operation without errors. We disclaim implied warranties of merchantability, fitness for a
+			particular purpose, and any implied duty not to infringe intellectual property where the law allows.
+		</p>
+
+		<h2>Limitation of liability</h2>
+		<p>
+			To the fullest extent permitted by law, Monarch and its team will not be liable for any indirect, incidental, special,
+			consequential, or punitive damages, or for loss of profits, revenue, data, or goodwill, arising from use of the Site or
+			reliance on its content.
+		</p>
+		<p>
+			Our total liability arising from the Site or these Terms (other than liability that cannot be limited by law) will not
+			exceed the greater of one hundred United States dollars (USD $100) or the amount you paid to Monarch for the specific
+			service giving rise to the claim in the twelve months before the claim.
+		</p>
+		<p>
+			Nothing in these Terms limits liability for death or personal injury caused by negligence, fraud, or any other liability
+			that cannot be excluded by law.
+		</p>
+
+		<h2>Indemnity</h2>
+		<p>
+			You agree to indemnify and hold Monarch harmless from claims, losses, and expenses (including reasonable legal fees)
+			arising from your misuse of the Site, your breach of these Terms, or your violation of another party's rights, except where
+			caused by our intentional misconduct or negligence.
+		</p>
+
+		<h2>Governing law</h2>
+		<p>
+			These Terms are governed by the laws of the State of New Hampshire, United States, without regard to conflict of law
+			rules. Courts in New Hampshire will have exclusive jurisdiction over disputes relating to the Site and these Terms,
+			unless applicable law requires otherwise.
+		</p>
+
+		<h2>Changes</h2>
+		<p>
+			We may update these Terms from time to time. The last updated date appears at the top of this page. Your continued use of
+			the Site after changes constitutes acceptance of the revised Terms to the extent permitted by law.
+		</p>
+
+		<p>
+			See also <a class={linkClass} href="/privacy-policy">Privacy policy</a> and{" "}
+			<a class={linkClass} href="/legal-info">Legal info</a>.
+		</p>
+	</LegalArticle>
+</MonarchBasicPage>

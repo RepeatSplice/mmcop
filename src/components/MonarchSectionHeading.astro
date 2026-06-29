@@ -1,0 +1,32 @@
+---
+interface Props {
+	id: string;
+	title: string;
+	lead?: string;
+	class?: string;
+	centerLead?: boolean;
+}
+
+const { id, title, lead, class: className, centerLead = false } = Astro.props;
+---
+
+<header class:list={className}>
+	<h2
+		id={id}
+		class="st-reveal m-0 text-center font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+	>
+		{title}
+	</h2>
+	{
+		lead ? (
+			<p
+				class:list={[
+					"st-reveal mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base",
+					centerLead && "mx-auto text-center",
+				]}
+			>
+				{lead}
+			</p>
+		) : null
+	}
+</header>

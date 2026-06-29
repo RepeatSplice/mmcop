@@ -1,0 +1,64 @@
+---
+import type { NewsCtaButton } from "../lib/news-admin";
+
+interface Props {
+	eyebrow?: string;
+	title: string;
+	lead: string;
+	image?: string;
+	cta?: { label: string; href: string; external?: boolean };
+	ctas?: NewsCtaButton[];
+}
+
+const { eyebrow = "", title, lead, image = "/Banner%20AR50.png", cta, ctas = [] } = Astro.props;
+const buttons = ctas.length > 0 ? ctas : cta ? [{ ...cta, style: "primary" as const }] : [];
+---
+
+<div class="mb-20 w-full">
+	<div class="group/banner relative h-[420px] overflow-hidden text-white">
+		<div class="absolute inset-0">
+			<img
+				src={image}
+				alt=""
+				width="2000"
+				height="800"
+				loading="eager"
+				class="h-full w-full object-cover object-center"
+			/>
+		</div>
+		<div
+			class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(16,28,39,0.88)_0%,rgba(16,28,39,0.5)_55%,rgba(16,28,39,0.2)_100%)]"
+			aria-hidden="true"
+		>
+		</div>
+		<div class="relative z-10 mx-auto flex h-full max-w-7xl flex-col items-start justify-center gap-3 px-6 py-10 md:gap-4">
+			{eyebrow && (
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">{eyebrow}</p>
+			)}
+			<h1 class="m-0 max-w-[20ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
+				{title}
+			</h1>
+			<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">{lead}</p>
+			{
+				buttons.length > 0 && (
+					<div class="mt-2 flex flex-wrap gap-3">
+						{buttons.map((btn) => (
+							<a
+								class:list={[
+									"font-display inline-flex min-h-[44px] items-center justify-center px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide transition-colors",
+									btn.style === "secondary"
+										? "border border-white/60 bg-transparent text-white hover:bg-white/10"
+										: "border-0 bg-white text-brand-black hover:bg-zinc-100",
+								]}
+								href={btn.href}
+								{...(btn.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+							>
+								{btn.label}
+							</a>
+						))}
+					</div>
+				)
+			}
+		</div>
+	</div>
+</div>

@@ -1,0 +1,144 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+export const prerender = false;
+
+const customer = Astro.locals.customer!;
+
+// Find all paid order items that have a product file available
+const orderItems = await prisma.orderItem.findMany({
+	where: {
+		order: { customerId: customer.id, status: "PAID" },
+	},
+	include: {
+		order: { select: { createdAt: true, id: true } },
+		variant: {
+			include: {
+				product: {
+					include: {
+						files: { where: { isLatest: true }, orderBy: { uploadedAt: "desc" }, take: 1 },
+					},
+				},
+			},
+		},
+	},
+	orderBy: { order: { createdAt: "desc" } },
+});
+
+// Deduplicate by product (only show the latest version once per product)
+const seenProducts = new Set<string>();
+const downloads = orderItems.filter((item) => {
+	const pid = item.variant.productId;
+	if (seenProducts.has(pid)) return false;
+	seenProducts.add(pid);
+	return item.variant.product.files.length > 0;
+});
+---
+
+<AccountLayout title="Downloads | Monarch Account" tab="downloads" customer={customer}>
+
+	<div class="acct-page-header">
+		<div>
+			<h1 class="acct-page-header__title">Downloads</h1>
+			<p class="acct-page-header__sub">Latest files for your purchased mods and products.</p>
+		</div>
+	</div>
+
+	{downloads.length === 0 ? (
+		<div class="acct-empty">
+			<svg viewBox="0 0 24 24" fill="none" class="acct-empty__icon" aria-hidden="true"><path d="M12 3v11M8 10l4 5 4-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 18v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+			<p>No downloads available yet.</p>
+			<a href="/shop" class="acct-empty__cta">Browse the shop</a>
+		</div>
+	) : (
+		<div class="acct-card-list">
+			{downloads.map((item) => {
+				const product = item.variant.product;
+				const file = product.files[0];
+				return (
+					<div class="acct-download-card">
+						<div class="acct-download-card__info">
+							<strong class="acct-download-card__name">{product.title}</strong>
+							<span class="acct-download-card__variant">{item.variant.name}</span>
+							{file && (
+								<span class="acct-download-card__meta">
+									v{file.version} &middot; {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB &middot; Updated {file.uploadedAt.toLocaleDateString("en-GB")}
+								</span>
+							)}
+						</div>
+						{file ? (
+							<a
+								href={`/api/shop/download/${item.id}`}
+								class="acct-btn acct-btn--download"
+							>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4" aria-hidden="true"><path d="M8 3v7M5 8l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+								Download
+							</a>
+						) : (
+							<span class="acct-download-card__unavail">File not yet available</span>
+						)}
+					</div>
+				);
+			})}
+		</div>
+	)}
+
+</AccountLayout>
+
+<style>
+	.acct-page-header { margin-bottom: 2rem; }
+	.acct-page-header__title {
+		margin: 0 0 0.375rem;
+		font-family: "Oswald", sans-serif; font-size: 1.625rem; font-weight: 500;
+		letter-spacing: 0.03em; text-transform: uppercase; color: #0a0a0a;
+	}
+	.acct-page-header__sub { margin: 0; font-size: 0.9375rem; color: rgb(113 113 122); }
+
+	.acct-card-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+	.acct-download-card {
+		display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+		padding: 1.25rem 1.5rem;
+		background: #fff; border-radius: 1.125rem; border: 1px solid rgb(228 228 231);
+	}
+	@media (max-width: 500px) {
+		.acct-download-card { flex-direction: column; align-items: flex-start; }
+	}
+	.acct-download-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+	.acct-download-card__name {
+		font-family: "Oswald", sans-serif; font-size: 1rem; font-weight: 500;
+		letter-spacing: 0.03em; text-transform: uppercase; color: #0a0a0a;
+	}
+	.acct-download-card__variant { font-size: 0.8125rem; color: rgb(113 113 122); }
+	.acct-download-card__meta { font-size: 0.8125rem; color: rgb(161 161 170); }
+	.acct-download-card__unavail { font-size: 0.8125rem; color: rgb(161 161 170); font-style: italic; }
+
+	.acct-btn {
+		display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+		padding: 0.5rem 1rem; border-radius: 0.625rem;
+		border: 1px solid rgb(228 228 231); background: #fff;
+		font-family: "Oswald", sans-serif; font-size: 0.6875rem; font-weight: 500;
+		letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; text-decoration: none;
+		transition: background-color 0.15s ease, border-color 0.15s ease;
+		flex-shrink: 0;
+	}
+	.acct-btn:hover { background: rgb(244 244 245); border-color: rgb(161 161 170); }
+	.acct-btn--download { border-color: #0a0a0a; }
+	.acct-btn--download:hover { background: #0a0a0a; color: #fff; }
+
+	.acct-empty {
+		display: flex; flex-direction: column; align-items: center;
+		gap: 0.75rem; padding: 3rem 2rem;
+		background: #fff; border-radius: 1.125rem; border: 1px dashed rgb(212 212 216); text-align: center;
+	}
+	.acct-empty__icon { width: 2.5rem; height: 2.5rem; color: rgb(212 212 216); }
+	.acct-empty p { margin: 0; font-size: 0.9375rem; color: rgb(113 113 122); }
+	.acct-empty__cta {
+		font-family: "Oswald", sans-serif; font-size: 0.75rem; font-weight: 500;
+		letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; text-decoration: none;
+		padding: 0.5rem 1.25rem; border: 1px solid #0a0a0a; border-radius: 0.625rem;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+	.acct-empty__cta:hover { background: #0a0a0a; color: #fff; }
+</style>

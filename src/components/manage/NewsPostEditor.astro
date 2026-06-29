@@ -1,0 +1,379 @@
+---
+import ManageBtn from "./ManageBtn.astro";
+import type { NewsCategory } from "../../lib/news";
+import type { NewsCtaButton, NewsStatus } from "../../lib/news-admin";
+import { newsAssetPicker, newsCategoryOptions, newsStatusOptions, toDateInputValue } from "../../lib/news-admin";
+
+export type NewsEditorPost = {
+	slug: string;
+	title: string;
+	excerpt: string;
+	body: string;
+	category: NewsCategory;
+	status: NewsStatus;
+	bannerImageUrl: string | null;
+	heroImageUrl: string | null;
+	externalLink: string | null;
+	ctaButtons: NewsCtaButton[];
+	publishedAt: Date;
+};
+
+interface Props {
+	mode: "create" | "edit";
+	post?: NewsEditorPost;
+	error?: string;
+	saved?: boolean;
+}
+
+const { mode, post, error, saved = false } = Astro.props;
+const isEdit = mode === "edit";
+const dateValue = post ? toDateInputValue(post.publishedAt) : toDateInputValue(new Date());
+const ctas = post?.ctaButtons ?? [];
+const cta0 = ctas[0];
+const cta1 = ctas[1];
+const cta2 = ctas[2];
+---
+
+{saved && (
+	<p class="mb-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+		Changes saved.
+	</p>
+)}
+{error && (
+	<p class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+		{error}
+	</p>
+)}
+
+<form method="post" class="news-editor-form" id="news-editor-form">
+	<div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+		<div class="space-y-4">
+			<fieldset class="space-y-4 border border-zinc-200 bg-white p-5">
+				<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Post details</legend>
+
+				{
+					isEdit ? (
+						<label class="block text-sm font-semibold">
+							Slug
+							<input
+								name="slug"
+								required
+								value={post!.slug}
+								pattern="[a-z0-9][a-z0-9-]*"
+								class="mt-1 w-full border border-zinc-200 px-3 py-2 font-mono text-sm"
+							/>
+						</label>
+					) : (
+						<label class="block text-sm font-semibold">
+							Slug
+							<input id="news-slug" name="slug" required pattern="[a-z0-9][a-z0-9-]*" class="mt-1 w-full border border-zinc-200 px-3 py-2 font-mono text-sm" />
+							<button type="button" id="news-slug-from-title" class="mt-2 text-xs font-semibold text-monarch-500 hover:text-brand-black">
+								Generate from title
+							</button>
+						</label>
+					)
+				}
+
+				<label class="block text-sm font-semibold">
+					Title (H1 on page)
+					<input id="news-title" name="title" required value={post?.title ?? ""} class="mt-1 w-full border border-zinc-200 px-3 py-2" />
+				</label>
+
+				<label class="block text-sm font-semibold">
+					Excerpt
+					<textarea name="excerpt" required rows="3" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm">{post?.excerpt ?? ""}</textarea>
+				</label>
+
+				<label class="block text-sm font-semibold">
+					Category
+					<select name="category" class="mt-1 w-full border border-zinc-200 px-3 py-2">
+						{newsCategoryOptions.map((opt) => (
+							<option value={opt.value} selected={post ? post.category === opt.value : opt.value === "company"}>
+								{opt.label}
+							</option>
+						))}
+					</select>
+				</label>
+
+				<label class="block text-sm font-semibold">
+					Published date
+					<input type="date" name="publishedAt" required value={dateValue} class="mt-1 border border-zinc-200 px-3 py-2" />
+				</label>
+
+				<fieldset class="space-y-2">
+					<legend class="text-sm font-semibold">Status</legend>
+					{newsStatusOptions.map((opt) => (
+						<label class="flex cursor-pointer items-start gap-3 rounded border border-zinc-100 px-3 py-2 hover:bg-zinc-50">
+							<input
+								type="radio"
+								name="status"
+								value={opt.value}
+								checked={post ? post.status === opt.value : opt.value === "DRAFT"}
+								class="mt-1"
+							/>
+							<span>
+								<span class="block text-sm font-semibold">{opt.label}</span>
+								<span class="block text-xs text-zinc-500">{opt.description}</span>
+							</span>
+						</label>
+					))}
+				</fieldset>
+			</fieldset>
+
+			<fieldset class="space-y-4 border border-zinc-200 bg-white p-5">
+				<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Page images</legend>
+				<p class="m-0 text-xs text-zinc-500">
+					<strong>Banner</strong> fills the top hero behind the H1. <strong>Hero image</strong> appears below the banner in the article.
+				</p>
+
+				<label class="block text-sm font-semibold">
+					Banner image URL
+					<input id="news-banner" name="bannerImageUrl" value={post?.bannerImageUrl ?? ""} placeholder="/Banner AR50.png" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+				<div class="flex flex-wrap gap-2" data-pick-target="news-banner">
+					{newsAssetPicker.map((src) => (
+						<button type="button" data-pick={src} class="rounded border border-zinc-200 p-1 hover:border-monarch-500">
+							<img src={src} alt="" class="h-10 w-16 object-cover" />
+						</button>
+					))}
+				</div>
+				<div id="news-banner-preview" class="hidden overflow-hidden rounded border border-zinc-200">
+					<img src="" alt="Banner preview" class="h-24 w-full object-cover" />
+				</div>
+
+				<label class="block text-sm font-semibold">
+					Hero / featured image URL
+					<input id="news-hero" name="heroImageUrl" value={post?.heroImageUrl ?? ""} placeholder="/Banne Vyse Gun.png" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+				<div class="flex flex-wrap gap-2" data-pick-target="news-hero">
+					{newsAssetPicker.map((src) => (
+						<button type="button" data-pick={src} class="rounded border border-zinc-200 p-1 hover:border-monarch-500">
+							<img src={src} alt="" class="h-10 w-16 object-cover" />
+						</button>
+					))}
+				</div>
+				<div id="news-hero-preview" class="hidden overflow-hidden rounded border border-zinc-200">
+					<img src="" alt="Hero preview" class="h-32 w-full object-contain bg-zinc-50" />
+				</div>
+			</fieldset>
+
+			<fieldset class="space-y-4 border border-zinc-200 bg-white p-5">
+				<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Buttons & links</legend>
+				<label class="block text-sm font-semibold">
+					Legacy external link (footer)
+					<input name="externalLink" type="url" value={post?.externalLink ?? ""} placeholder="https://" class="mt-1 w-full border border-zinc-200 px-3 py-2 text-sm" />
+				</label>
+
+				<div class="space-y-3 border-t border-zinc-100 pt-3">
+					<p class="m-0 text-xs font-semibold uppercase tracking-wide text-zinc-500">Hero CTA buttons (up to 3)</p>
+					{[0, 1, 2].map((i) => {
+						const c = i === 0 ? cta0 : i === 1 ? cta1 : cta2;
+						return (
+							<div class="grid gap-2 rounded border border-zinc-100 bg-zinc-50 p-3 sm:grid-cols-2">
+								<label class="text-xs font-semibold sm:col-span-2">
+									Button {i + 1} label
+									<input name={`ctaLabel${i}`} value={c?.label ?? ""} placeholder={i === 0 ? "Visit site" : ""} class="mt-1 w-full border border-zinc-200 px-2 py-1.5 text-sm" />
+								</label>
+								<label class="text-xs font-semibold sm:col-span-2">
+									URL
+									<input name={`ctaHref${i}`} value={c?.href ?? ""} placeholder="https://" class="mt-1 w-full border border-zinc-200 px-2 py-1.5 text-sm" />
+								</label>
+								<label class="flex items-center gap-2 text-xs">
+									<input type="checkbox" name={`ctaExternal${i}`} checked={c?.external} />
+									Open in new tab
+								</label>
+							</div>
+						);
+					})}
+				</div>
+			</fieldset>
+		</div>
+
+		<div class="space-y-4">
+			<fieldset class="border border-zinc-200 bg-white p-5">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<legend class="font-display text-xs uppercase tracking-wide text-zinc-500">Body (Markdown)</legend>
+					<div class="flex flex-wrap gap-1.5" id="news-md-toolbar" role="toolbar" aria-label="Markdown formatting">
+						<button type="button" data-md="## " class="manage-toolbar-btn">H2</button>
+						<button type="button" data-md="### " class="manage-toolbar-btn">H3</button>
+						<button type="button" data-md="**" data-md-end="**" class="manage-toolbar-btn">Bold</button>
+						<button type="button" data-md="[" data-md-end="](url)" class="manage-toolbar-btn">Link</button>
+						<button type="button" data-md="![alt](" data-md-end=")" class="manage-toolbar-btn">Image</button>
+						<button type="button" data-md="- " class="manage-toolbar-btn">List</button>
+					</div>
+				</div>
+				<textarea
+					id="news-body"
+					name="body"
+					required
+					rows="20"
+					class="mt-3 w-full border border-zinc-200 px-3 py-2 font-mono text-sm leading-relaxed"
+					placeholder="Write the article in Markdown…">{post?.body ?? ""}</textarea
+				>
+			</fieldset>
+
+			<div class="border border-zinc-200 bg-zinc-50 p-5">
+				<h3 class="m-0 font-display text-xs uppercase tracking-wide text-zinc-500">Article preview</h3>
+				<div id="news-preview" class="monarch-article mt-4 min-h-[8rem] text-sm"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="mt-8 space-y-4 border-t border-zinc-200 pt-6">
+		<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+			<div class="flex flex-wrap gap-2">
+				<ManageBtn type="submit" name="_action" value="save" variant="primary">
+					{isEdit ? "Save changes" : "Create post"}
+				</ManageBtn>
+				{
+					isEdit && post?.status === "PUBLISHED" && (
+						<ManageBtn href={`/news/${post.slug}`} variant="secondary" external>
+							View live
+						</ManageBtn>
+					)
+				}
+			</div>
+			{
+				isEdit && (
+					<div class="flex flex-wrap gap-2">
+						{post?.status !== "PUBLISHED" && (
+							<ManageBtn type="submit" name="_action" value="publish" variant="success">
+								Publish
+							</ManageBtn>
+						)}
+						{post?.status !== "ARCHIVED" && (
+							<ManageBtn type="submit" name="_action" value="archive" variant="muted">
+								Archive
+							</ManageBtn>
+						)}
+						{post?.status !== "DRAFT" && (
+							<ManageBtn type="submit" name="_action" value="draft" variant="warning">
+								To draft
+							</ManageBtn>
+						)}
+					</div>
+				)
+			}
+		</div>
+	</div>
+</form>
+
+{
+	isEdit && (
+		<form method="post" class="mt-4 flex justify-end border-t border-zinc-100 pt-4">
+			<ManageBtn type="submit" name="_action" value="delete" variant="danger" confirm="Permanently delete this post?">
+				Delete post
+			</ManageBtn>
+		</form>
+	)
+}
+
+<script>
+	import { renderMarkdown } from "../../lib/markdown";
+
+	function bindImagePickers() {
+		document.querySelectorAll("[data-pick-target]").forEach((wrap) => {
+			const targetId = wrap.getAttribute("data-pick-target");
+			const input = document.getElementById(targetId!) as HTMLInputElement | null;
+			if (!input || wrap.getAttribute("data-bound") === "1") return;
+			wrap.setAttribute("data-bound", "1");
+			wrap.querySelectorAll("[data-pick]").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					const src = btn.getAttribute("data-pick");
+					if (src) {
+						input.value = src;
+						input.dispatchEvent(new Event("input"));
+					}
+				});
+			});
+		});
+	}
+
+	function bindImagePreview(inputId: string, previewId: string) {
+		const input = document.getElementById(inputId) as HTMLInputElement | null;
+		const box = document.getElementById(previewId);
+		const img = box?.querySelector("img");
+		if (!input || !box || !img) return;
+		const update = () => {
+			const v = input.value.trim();
+			if (v) {
+				img.src = v;
+				box.classList.remove("hidden");
+			} else {
+				box.classList.add("hidden");
+			}
+		};
+		input.addEventListener("input", update);
+		update();
+	}
+
+	function bindMdToolbar() {
+		const body = document.getElementById("news-body") as HTMLTextAreaElement | null;
+		const toolbar = document.getElementById("news-md-toolbar");
+		if (!body || !toolbar || toolbar.dataset.bound === "1") return;
+		toolbar.dataset.bound = "1";
+		toolbar.querySelectorAll("button[data-md]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const before = btn.getAttribute("data-md") ?? "";
+				const after = btn.getAttribute("data-md-end") ?? "";
+				const start = body.selectionStart;
+				const end = body.selectionEnd;
+				const selected = body.value.slice(start, end);
+				const insert = before + selected + after;
+				body.setRangeText(insert, start, end, "end");
+				body.focus();
+				body.dispatchEvent(new Event("input"));
+			});
+		});
+	}
+
+	function initNewsPreview() {
+		const body = document.getElementById("news-body") as HTMLTextAreaElement | null;
+		const preview = document.getElementById("news-preview");
+		if (!body || !preview || preview.dataset.bound === "1") return;
+		preview.dataset.bound = "1";
+		const update = () => {
+			preview.innerHTML = renderMarkdown(body.value || "_Nothing to preview yet._");
+		};
+		body.addEventListener("input", update);
+		update();
+
+		document.getElementById("news-slug-from-title")?.addEventListener("click", () => {
+			const title = (document.getElementById("news-title") as HTMLInputElement)?.value ?? "";
+			const slug = document.getElementById("news-slug") as HTMLInputElement | null;
+			if (!slug) return;
+			const date = new Date().toISOString().slice(0, 10);
+			const base = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+			slug.value = `${date}-${base || "post"}`;
+		});
+	}
+
+	function init() {
+		bindImagePickers();
+		bindImagePreview("news-banner", "news-banner-preview");
+		bindImagePreview("news-hero", "news-hero-preview");
+		bindMdToolbar();
+		initNewsPreview();
+	}
+
+	init();
+	document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+	.news-editor-form :is(input, textarea, select):focus {
+		outline: 2px solid rgb(53 90 122 / 0.35);
+		border-color: #355a7a;
+	}
+	.manage-toolbar-btn {
+		border: 1px solid #e4e4e7;
+		border-radius: 0.25rem;
+		background: #fff;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+		line-height: 1.25;
+	}
+	.manage-toolbar-btn:hover {
+		background: #f4f4f5;
+	}
+</style>

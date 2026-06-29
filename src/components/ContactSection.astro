@@ -1,0 +1,102 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface ContactColumn {
+	title: string;
+	subtitle: string;
+	body: string;
+	cta: string;
+	href: string;
+	external?: boolean;
+}
+
+interface Props {
+	kicker?: string;
+	heading?: string;
+	columns?: ContactColumn[];
+	embedded?: boolean;
+}
+
+const defaultColumns: ContactColumn[] = [
+	{
+		title: "Send a message",
+		subtitle: "General enquiries",
+		body: "Questions about Monarch services, partnerships, or anything that does not fit careers or commissioning.",
+		cta: "Contact form",
+		href: "/contact#contact-form",
+	},
+	{
+		title: "Work with us",
+		subtitle: "Server owners & creators",
+		body: "Commission mods, discuss software tooling, or plan infrastructure for your DayZ community.",
+		cta: "Get in touch",
+		href: "/work-with-us",
+	},
+	{
+		title: "Play & connect",
+		subtitle: "Players & community",
+		body: "Join Operation Monarch for live servers and events, explore partner content, and stay up to date on wipes.",
+		cta: "Join Operation Monarch",
+		href: "/join-operation-monarch",
+	},
+];
+
+const {
+	kicker = "Get in touch",
+	heading = "Contact",
+	columns = defaultColumns,
+	embedded = false,
+} = Astro.props;
+---
+
+<section
+	id="contact"
+	aria-labelledby="contact-heading"
+	data-scroll-reveal={embedded ? undefined : true}
+	class:list={["monarch-contact-home", embedded && "monarch-contact-home--embedded"]}
+>
+	{
+		embedded ? (
+			<h2 id="contact-heading" class="sr-only">
+				{heading}
+			</h2>
+		) : (
+			<header class="monarch-section-header">
+				<p class="monarch-section-kicker st-reveal">{kicker}</p>
+				<h2
+					id="contact-heading"
+					class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+				>
+					{heading}
+				</h2>
+			</header>
+		)
+	}
+
+	<div
+		class:list={[
+			"monarch-contact-home__grid st-reveal",
+			columns.length === 2 && "monarch-contact-home__grid--two",
+		]}
+	>
+		{
+			columns.map((col) => (
+				<article class="monarch-contact-card">
+					<div class="monarch-contact-card__head">
+						<h3 class="monarch-contact-card__title">{col.title}</h3>
+						<p class="monarch-contact-card__subtitle">{col.subtitle}</p>
+					</div>
+					<p class="monarch-contact-card__body">{col.body}</p>
+					<a
+						class="monarch-pill-btn monarch-contact-card__cta"
+						href={col.href}
+						{...(col.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+					>
+						{col.cta}
+						<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+					</a>
+				</article>
+			))
+		}
+	</div>
+</section>

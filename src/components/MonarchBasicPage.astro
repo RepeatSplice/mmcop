@@ -1,0 +1,57 @@
+---
+
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+import MonarchPageHero from "./MonarchPageHero.astro";
+
+import type { NewsCtaButton } from "../lib/news-admin";
+
+
+
+interface Props {
+
+	title: string;
+
+	description: string;
+
+	eyebrow: string;
+
+	heading: string;
+
+	lead: string;
+
+	image?: string;
+
+	cta?: { label: string; href: string; external?: boolean };
+
+	ctas?: NewsCtaButton[];
+
+	mainClass?: string;
+
+}
+
+
+
+const { title, description, eyebrow, heading, lead, image, cta, ctas, mainClass = "mx-auto mt-20 flex max-w-7xl flex-col gap-10 px-6 pb-20" } =
+
+	Astro.props;
+
+---
+
+
+
+<SiteLayout title={title} description={description} mainClass={mainClass}>
+
+	<MonarchPageHero slot="pre-main" eyebrow={eyebrow} title={heading} lead={lead} image={image} cta={cta} ctas={ctas} />
+
+	<slot />
+
+	<script slot="scripts">
+		import { initHome } from "../scripts/home.ts";
+
+		initHome();
+		document.addEventListener("astro:page-load", initHome);
+	</script>
+
+</SiteLayout>
+

@@ -1,0 +1,111 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import NewsPostEditor from "../../../components/manage/NewsPostEditor.astro";
+import { prisma } from "../../../lib/prisma";
+import { parseNewsForm, parseCtaButtonsFromDb, statusBadgeClass, statusLabel } from "../../../lib/news-admin";
+import type { NewsStatus } from "../../../lib/news-admin";
+import { hasAlgolia } from "../../../lib/env";
+import { reindexRecord, removeFromIndex } from "../../../lib/algolia";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/manage/news");
+
+let error: string | undefined;
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "save");
+
+	if (action === "delete") {
+		if (hasAlgolia()) { try { await removeFromIndex(`news-${slug}`); } catch { /* non-fatal */ } }
+		await prisma.newsPost.delete({ where: { slug } });
+		return Astro.redirect("/manage/news");
+	}
+
+	const quickStatus: Record<string, NewsStatus> = {
+		publish: "PUBLISHED",
+		archive: "ARCHIVED",
+		draft: "DRAFT",
+	};
+
+	if (action in quickStatus) {
+		const updated = await prisma.newsPost.update({
+			where: { slug },
+			data: { status: quickStatus[action] },
+		});
+		if (hasAlgolia()) {
+			try {
+				if (updated.status === "PUBLISHED") {
+					await reindexRecord({ objectID: `news-${slug}`, title: updated.title, excerpt: updated.excerpt, href: `/news/${slug}`, type: "news", typeLabel: "News" });
+				} else {
+					await removeFromIndex(`news-${slug}`);
+				}
+			} catch { /* non-fatal */ }
+		}
+		return Astro.redirect(`/manage/news/${slug}?saved=1`);
+	}
+
+	const parsed = parseNewsForm(form);
+	if ("error" in parsed) {
+		error = parsed.error;
+	} else {
+		const data = {
+			...parsed,
+			ctaButtons: parsed.ctaButtons.length > 0 ? parsed.ctaButtons : undefined,
+		};
+		if (parsed.slug !== slug) {
+			const taken = await prisma.newsPost.findUnique({ where: { slug: parsed.slug } });
+			if (taken) {
+				error = `Slug "${parsed.slug}" is already in use.`;
+			} else {
+				const updated = await prisma.newsPost.update({ where: { slug }, data });
+				if (hasAlgolia() && updated.status === "PUBLISHED") {
+					try { await reindexRecord({ objectID: `news-${parsed.slug}`, title: updated.title, excerpt: updated.excerpt, href: `/news/${parsed.slug}`, type: "news", typeLabel: "News" }); } catch { /* non-fatal */ }
+					try { await removeFromIndex(`news-${slug}`); } catch { /* non-fatal */ }
+				}
+				return Astro.redirect(`/manage/news/${parsed.slug}?saved=1`);
+			}
+		} else {
+			const updated = await prisma.newsPost.update({ where: { slug }, data });
+			if (hasAlgolia() && updated.status === "PUBLISHED") {
+				try { await reindexRecord({ objectID: `news-${slug}`, title: updated.title, excerpt: updated.excerpt, href: `/news/${slug}`, type: "news", typeLabel: "News" }); } catch { /* non-fatal */ }
+			}
+			return Astro.redirect(`/manage/news/${slug}?saved=1`);
+		}
+	}
+}
+
+const row = await prisma.newsPost.findUnique({ where: { slug } });
+if (!row) return Astro.redirect("/manage/news");
+
+const post = {
+	...row,
+	ctaButtons: parseCtaButtonsFromDb(row.ctaButtons),
+};
+---
+
+<ManageLayout title="Edit news" active="news">
+	<a href="/manage/news" class="text-sm text-monarch-500 hover:text-brand-black">← News</a>
+	<h1 class="mt-4 font-display text-2xl font-medium uppercase tracking-[0.12em]">Edit post</h1>
+	<p class="mt-2 text-sm text-zinc-600">
+		<span class:list={["rounded px-2 py-0.5 text-xs font-semibold uppercase", statusBadgeClass(post.status)]}>
+			{statusLabel(post.status)}
+		</span>
+		{
+			post.status === "PUBLISHED" && (
+				<>
+					{" · "}
+					<a href={`/news/${post.slug}`} target="_blank" rel="noopener noreferrer" class="text-monarch-500 hover:text-brand-black">
+						/news/{post.slug}
+					</a>
+				</>
+			)
+		}
+	</p>
+	<div class="mt-6">
+		<NewsPostEditor mode="edit" post={post} error={error} saved={saved} />
+	</div>
+</ManageLayout>

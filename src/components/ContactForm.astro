@@ -1,0 +1,176 @@
+---
+import { Icon } from "astro-icon/components";
+import { contactTopicOptions } from "../lib/contact-admin";
+import { getTurnstileSiteKey } from "../lib/env";
+
+interface Props {
+	turnstileSiteKey?: string;
+}
+
+const turnstileSiteKey = Astro.props.turnstileSiteKey ?? getTurnstileSiteKey();
+const turnstileEnabled = Boolean(turnstileSiteKey.trim());
+---
+
+<section
+	id="contact-form"
+	class="monarch-contact-form scroll-mt-24"
+	aria-labelledby="contact-form-heading"
+>
+	<div class="monarch-contact-form__panel">
+		<h2
+			id="contact-form-heading"
+			class="m-0 font-display text-[clamp(1.25rem,2.5vw,1.5rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+		>
+			Send a message
+		</h2>
+		<p class="mt-2 text-[15px] leading-relaxed text-zinc-600">
+			We typically reply within a few business days. For job applications, use
+			<a class="font-semibold text-monarch-500 hover:text-brand-black" href="/careers">Careers</a>.
+		</p>
+
+		<form id="contact-enquiry-form" class="monarch-contact-form__form mt-8" novalidate>
+			<input type="text" name="website" tabindex="-1" autocomplete="off" class="absolute -left-[9999px] h-0 w-0 opacity-0" aria-hidden="true" />
+
+			<div class="monarch-contact-form__fields">
+				<label class="monarch-contact-form__label monarch-contact-form__label--full">
+					<span class="monarch-contact-form__label-text">Full name<span class="text-red-600"> *</span></span>
+					<input type="text" name="fullName" required autocomplete="name" class="monarch-contact-form__input" />
+				</label>
+
+				<label class="monarch-contact-form__label">
+					<span class="monarch-contact-form__label-text">Email<span class="text-red-600"> *</span></span>
+					<input type="email" name="email" required autocomplete="email" class="monarch-contact-form__input" />
+				</label>
+
+				<label class="monarch-contact-form__label">
+					<span class="monarch-contact-form__label-text">Topic<span class="text-red-600"> *</span></span>
+					<select name="topic" required class="monarch-contact-form__input monarch-contact-form__select">
+						{contactTopicOptions.map((opt) => (
+							<option value={opt.value}>{opt.label}</option>
+						))}
+					</select>
+				</label>
+
+				<label class="monarch-contact-form__label">
+					<span class="monarch-contact-form__label-text">Phone <span class="font-normal text-zinc-500">(optional)</span></span>
+					<input type="tel" name="phone" autocomplete="tel" class="monarch-contact-form__input" />
+				</label>
+
+				<label class="monarch-contact-form__label">
+					<span class="monarch-contact-form__label-text">Company / Discord <span class="font-normal text-zinc-500">(optional)</span></span>
+					<input type="text" name="company" class="monarch-contact-form__input" />
+				</label>
+
+				<label class="monarch-contact-form__label monarch-contact-form__label--full">
+					<span class="monarch-contact-form__label-text">Message<span class="text-red-600"> *</span></span>
+					<textarea
+						name="message"
+						required
+						rows="6"
+						minlength="10"
+						placeholder="Tell us what you need help with…"
+						class="monarch-contact-form__input monarch-contact-form__textarea"></textarea>
+				</label>
+
+				<label class="monarch-contact-form__consent monarch-contact-form__label--full">
+					<input type="checkbox" name="consent" required class="monarch-contact-form__checkbox" />
+					<span>
+						I agree that Monarch may store and process my details to respond to this enquiry. See our
+						<a href="/privacy-policy" class="font-semibold text-monarch-500 underline hover:text-brand-black">privacy policy</a>.
+					</span>
+				</label>
+
+				{
+					turnstileEnabled && (
+						<div class="monarch-contact-form__turnstile monarch-contact-form__label--full">
+							<div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="light"></div>
+						</div>
+					)
+				}
+
+				<div class="monarch-contact-form__actions monarch-contact-form__label--full">
+					<button type="submit" id="contact-submit" class="monarch-pill-btn monarch-contact-form__submit sm:w-auto">
+						<span id="contact-submit-text">Send message</span>
+						<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+					</button>
+				</div>
+			</div>
+
+			<p id="contact-error" class="monarch-contact-form__error hidden" role="alert"></p>
+		</form>
+
+		<div id="contact-success" class="monarch-contact-form__success hidden" role="status">
+			<p class="monarch-contact-form__success-title">Message sent</p>
+			<p class="monarch-contact-form__success-body">
+				Thank you. We have received your enquiry and sent a confirmation to your email. Our team will be in touch soon.
+			</p>
+		</div>
+	</div>
+</section>
+
+{
+	turnstileEnabled && (
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+	)
+}
+
+<script define:vars={{ turnstileRequired: turnstileEnabled }}>
+	function initContactForm() {
+		const form = document.getElementById("contact-enquiry-form");
+		if (!form || form.dataset.bound === "1") return;
+		form.dataset.bound = "1";
+
+		const err = document.getElementById("contact-error");
+		const success = document.getElementById("contact-success");
+		const submitBtn = document.getElementById("contact-submit");
+		const submitText = document.getElementById("contact-submit-text");
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			err?.classList.add("hidden");
+
+			if (turnstileRequired) {
+				const token = form.querySelector('input[name="cf-turnstile-response"]')?.value;
+				if (!token) {
+					if (err) {
+						err.textContent = "Please complete the security check.";
+						err.classList.remove("hidden");
+					}
+					return;
+				}
+			}
+
+			if (submitBtn) submitBtn.disabled = true;
+			if (submitText) submitText.textContent = "Sending…";
+
+			try {
+				const res = await fetch("/api/contact", { method: "POST", body: new FormData(form) });
+				const data = await res.json();
+				if (!res.ok) {
+					if (err) {
+						err.textContent = data.error ?? "Something went wrong.";
+						err.classList.remove("hidden");
+					}
+					if (turnstileRequired && window.turnstile) {
+						const widget = form.querySelector(".cf-turnstile");
+						if (widget) window.turnstile.reset(widget);
+					}
+					return;
+				}
+				form.classList.add("hidden");
+				success?.classList.remove("hidden");
+			} catch {
+				if (err) {
+					err.textContent = "Network error. Please try again.";
+					err.classList.remove("hidden");
+				}
+			} finally {
+				if (submitBtn) submitBtn.disabled = false;
+				if (submitText) submitText.textContent = "Send message";
+			}
+		});
+	}
+
+	initContactForm();
+	document.addEventListener("astro:page-load", initContactForm);
+</script>

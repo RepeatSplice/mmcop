@@ -1,0 +1,287 @@
+---
+import { Icon } from "astro-icon/components";
+import { listPublishedProducts } from "../lib/products";
+import { getProductRating } from "../lib/reviews";
+
+interface Props {
+	kicker?: string;
+	heading?: string;
+	lead?: string;
+	limit?: number;
+}
+
+const {
+	kicker = "Monarch Shop",
+	heading = "Licensed mods & software",
+	lead = "Download-ready DayZ content with IP-verified licensing. Buy once, deploy to your server, and get every update automatically.",
+	limit = 4,
+} = Astro.props;
+
+let products: Awaited<ReturnType<typeof listPublishedProducts>> = [];
+try {
+	const all = await listPublishedProducts();
+	products = all.slice(0, limit);
+} catch {
+	products = [];
+}
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+
+const ratings = await Promise.all(
+	products.map((p) => getProductRating(p.id).catch(() => ({ average: 0, count: 0 })))
+);
+---
+
+<section class="monarch-shop-preview" id="shop" aria-labelledby="shop-preview-heading" data-scroll-reveal>
+	<header class="monarch-section-header">
+		<p class="monarch-section-kicker st-reveal">{kicker}</p>
+		<h2
+			id="shop-preview-heading"
+			class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+		>
+			{heading}
+		</h2>
+		<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			{lead}
+		</p>
+	</header>
+
+	{
+		products.length > 0 ? (
+			<div class="mt-10 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-4 sm:gap-x-6 st-reveal">
+				{products.map((product, i) => {
+					const lowestVariant = [...product.variants].sort((a, b) => a.priceUsd - b.priceUsd)[0];
+					const isWaitlist = product.status === "WAITLIST";
+					const rating = ratings[i];
+
+					return (
+						<a href={`/shop/${product.slug}`} class="group flex flex-col leading-none">
+
+							{/* ── Image area ── */}
+							<div class="relative aspect-square overflow-hidden bg-zinc-100">
+								{product.imageUrl ? (
+									<img
+										src={product.imageUrl}
+										alt={product.title}
+										loading="lazy"
+										decoding="async"
+										class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+									/>
+								) : (
+									<div class="flex h-full w-full items-center justify-center">
+										<img src="/Logo.svg" alt="" class="h-10 w-auto opacity-20" />
+									</div>
+								)}
+
+								{/* Rating — top-right pill */}
+								{rating.count > 0 && (
+									<span
+										class="pointer-events-none absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-[12px] font-semibold leading-none text-brand-black backdrop-blur-sm"
+										title={`${rating.count} review${rating.count === 1 ? "" : "s"}`}
+									>
+										<svg class="h-3.5 w-3.5 text-amber-400" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+											<path d="M8 0L9.889 5.813H16L11.056 9.406L12.945 15.218L8 11.625L3.056 15.218L4.944 9.405L0 5.812H6.111L8 0Z"/>
+										</svg>
+										{rating.average.toFixed(1)}
+									</span>
+								)}
+
+								{/* Waitlist — bottom left */}
+								{isWaitlist && (
+									<span class="pointer-events-none absolute bottom-3 left-3 z-10 rounded-full bg-amber-400 px-3 py-1.5 font-display text-[10px] uppercase leading-none tracking-widest text-black">
+										Waitlist
+									</span>
+								)}
+							</div>
+
+							{/* ── Card content ── */}
+							<div class="mt-4 px-0.5">
+								<div class="flex items-baseline justify-between gap-3">
+									<h3 class="m-0 grow text-[16px] font-medium leading-snug text-brand-black transition-colors group-hover:text-monarch-500">
+										{product.title}
+									</h3>
+									{lowestVariant && (
+										<p class="m-0 shrink-0 text-[16px] font-semibold text-brand-black">
+											{isWaitlist ? (
+												<span class="text-[13px] font-normal text-zinc-400">Waitlist</span>
+											) : (
+												formatPrice(lowestVariant.priceUsd)
+											)}
+										</p>
+									)}
+								</div>
+								{product.excerpt && (
+									<p class="m-0 mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-zinc-500">
+										{product.excerpt}
+									</p>
+								)}
+							</div>
+
+						</a>
+					);
+				})}
+			</div>
+		) : (
+			<div class="monarch-shop-preview__empty st-reveal">
+				<p>Products coming soon.</p>
+			</div>
+		)
+	}
+
+	<div class="monarch-shop-preview__features st-reveal">
+		<div class="monarch-shop-preview__feature">
+			<Icon name="lucide:shield-check" class="size-5 shrink-0 text-monarch-500" is:inline aria-hidden="true" />
+			<div>
+				<strong>IP-verified licenses</strong>
+				<p>Register your server IP and the mod validates on startup. Control who runs your content.</p>
+			</div>
+		</div>
+		<div class="monarch-shop-preview__feature">
+			<Icon name="lucide:download" class="size-5 shrink-0 text-monarch-500" is:inline aria-hidden="true" />
+			<div>
+				<strong>Automatic updates</strong>
+				<p>Every patch and version bump is available to existing license holders from day one.</p>
+			</div>
+		</div>
+		<div class="monarch-shop-preview__feature">
+			<Icon name="lucide:layers" class="size-5 shrink-0 text-monarch-500" is:inline aria-hidden="true" />
+			<div>
+				<strong>Single, studio, or unlimited</strong>
+				<p>License tiers for solo servers, studio teams, and community networks of any size.</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="monarch-shop-preview__footer st-reveal">
+		<a class="monarch-pill-btn" href="/shop">
+			Browse the shop
+			<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+		</a>
+		<a class="monarch-pill-btn monarch-pill-btn--secondary" href="/account/login">
+			Sign in to account
+			<Icon name="lucide:log-in" class="size-4 shrink-0" is:inline aria-hidden="true" />
+		</a>
+	</div>
+</section>
+
+<style>
+	.monarch-shop-preview__grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1.25rem;
+		margin-top: 2.5rem;
+	}
+
+	@media (min-width: 640px) {
+		.monarch-shop-preview__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.monarch-shop-preview__grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	.monarch-shop-preview__badge {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		border-radius: 999px;
+		background: rgb(234 179 8);
+		padding: 0.2rem 0.625rem;
+		font-family: var(--font-display);
+		font-size: 0.625rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #fff;
+	}
+
+	.monarch-shop-preview__price {
+		margin: 0.5rem 0 0;
+		font-family: var(--font-display);
+		font-size: 0.9375rem;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		color: var(--color-monarch-500);
+	}
+
+	.monarch-shop-preview__empty {
+		margin-top: 2.5rem;
+		border: 1px dashed rgb(212 212 216);
+		border-radius: 1rem;
+		background: rgb(250 250 250);
+		padding: 3rem 1.5rem;
+		text-align: center;
+		color: rgb(113 113 122);
+		font-size: 0.9375rem;
+	}
+
+	.monarch-shop-preview__empty p {
+		margin: 0;
+	}
+
+	.monarch-shop-preview__features {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+		margin-top: 2.5rem;
+	}
+
+	@media (min-width: 768px) {
+		.monarch-shop-preview__features {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	.monarch-shop-preview__feature {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.875rem;
+		padding: 1.25rem 1.375rem;
+		border: 1px solid rgb(228 228 231);
+		border-radius: 1rem;
+		background: #fff;
+	}
+
+	.monarch-shop-preview__feature strong {
+		display: block;
+		font-family: var(--font-display);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--color-brand-black);
+		margin-bottom: 0.25rem;
+	}
+
+	.monarch-shop-preview__feature p {
+		margin: 0;
+		font-size: 0.875rem;
+		line-height: 1.55;
+		color: rgb(113 113 122);
+	}
+
+	.monarch-shop-preview__footer {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		justify-content: center;
+		margin-top: 2rem;
+	}
+
+	.monarch-pill-btn--secondary {
+		background: transparent;
+		color: rgb(82 82 91);
+		border-color: rgb(228 228 231);
+	}
+
+	.monarch-pill-btn--secondary:hover {
+		border-color: rgb(161 161 170);
+		background: transparent;
+		color: var(--color-brand-black);
+	}
+</style>

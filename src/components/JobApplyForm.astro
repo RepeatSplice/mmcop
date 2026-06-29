@@ -1,0 +1,350 @@
+---
+import type { ApplyFormConfig } from "../lib/jobs-admin";
+import { defaultApplyFormConfig } from "../lib/jobs-admin";
+
+interface Props {
+	jobSlug: string;
+	config?: ApplyFormConfig;
+}
+
+const { jobSlug, config = defaultApplyFormConfig } = Astro.props;
+const c = config;
+---
+
+<div class="mt-8" data-apply-config={JSON.stringify(c)}>
+
+	{/* Intro text — rendered when the admin has set one */}
+	{c.intro && (
+		<p class="mb-6 text-[15px] leading-relaxed text-zinc-600">{c.intro}</p>
+	)}
+
+	{/* Step progress indicator */}
+	<div class="mb-8 flex items-center gap-0" role="tablist" aria-label="Application steps">
+		<div data-step-tab="1" class="flex flex-1 items-center gap-3 border border-brand-black bg-brand-black px-4 py-3 transition-colors">
+			<span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/40 font-display text-[11px] font-medium text-white" aria-hidden="true">1</span>
+			<span class="font-display text-[11px] uppercase tracking-[0.12em] text-white">You</span>
+		</div>
+		<div class="h-px w-4 bg-zinc-300 shrink-0" aria-hidden="true"></div>
+		<div data-step-tab="2" class="flex flex-1 items-center gap-3 border border-zinc-200 bg-white px-4 py-3 transition-colors">
+			<span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-zinc-300 font-display text-[11px] font-medium text-zinc-500" aria-hidden="true">2</span>
+			<span class="font-display text-[11px] uppercase tracking-[0.12em] text-zinc-500">Experience</span>
+		</div>
+	</div>
+
+	<form id="job-apply-form" enctype="multipart/form-data" novalidate>
+		<input type="hidden" name="jobSlug" value={jobSlug} />
+
+		{/* ── Step 1: Personal info ── */}
+		<div data-step-panel="1" class="space-y-5">
+			<div class="grid gap-4 sm:grid-cols-2">
+				<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black sm:col-span-2">
+					<span>Full name<span class="font-normal text-red-600"> *</span></span>
+					<input
+						type="text"
+						name="fullName"
+						required
+						autocomplete="name"
+						class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+					/>
+				</label>
+				<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+					<span>Email<span class="font-normal text-red-600"> *</span></span>
+					<input
+						type="email"
+						name="email"
+						required
+						autocomplete="email"
+						class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+					/>
+				</label>
+				{c.showPhone && (
+					<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+						<span>
+							Phone{c.requirePhone && <span class="font-normal text-red-600"> *</span>}
+							{!c.requirePhone && <span class="font-normal text-zinc-500"> (optional)</span>}
+						</span>
+						<input
+							type="tel"
+							name="phone"
+							data-required={c.requirePhone ? "1" : undefined}
+							autocomplete="tel"
+							class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+						/>
+					</label>
+				)}
+				{c.showLocation && (
+					<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black sm:col-span-2">
+						<span>
+							Location / timezone{c.requireLocation && <span class="font-normal text-red-600"> *</span>}
+							{!c.requireLocation && <span class="font-normal text-zinc-500"> (optional)</span>}
+						</span>
+						<input
+							type="text"
+							name="location"
+							data-required={c.requireLocation ? "1" : undefined}
+							placeholder="e.g. UK (GMT)"
+							class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+						/>
+					</label>
+				)}
+				{c.showPortfolio && (
+					<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black sm:col-span-2">
+						<span>
+							Portfolio URL{c.requirePortfolio && <span class="font-normal text-red-600"> *</span>}
+							{!c.requirePortfolio && <span class="font-normal text-zinc-500"> (optional)</span>}
+						</span>
+						<input
+							type="url"
+							name="portfolioUrl"
+							data-required={c.requirePortfolio ? "1" : undefined}
+							placeholder="https://"
+							class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+						/>
+					</label>
+				)}
+				{c.showGithub && (
+					<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+						<span>
+							GitHub{c.requireGithub && <span class="font-normal text-red-600"> *</span>}
+							{!c.requireGithub && <span class="font-normal text-zinc-500"> (optional)</span>}
+						</span>
+						<input
+							type="url"
+							name="githubUrl"
+							data-required={c.requireGithub ? "1" : undefined}
+							placeholder="https://github.com/"
+							class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+						/>
+					</label>
+				)}
+				{c.showDiscord && (
+					<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+						<span>
+							Discord{c.requireDiscord && <span class="font-normal text-red-600"> *</span>}
+							{!c.requireDiscord && <span class="font-normal text-zinc-500"> (optional)</span>}
+						</span>
+						<input
+							type="text"
+							name="discord"
+							data-required={c.requireDiscord ? "1" : undefined}
+							class="apply-input border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+						/>
+					</label>
+				)}
+			</div>
+
+			<p id="apply-error-1" class="hidden rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert"></p>
+
+			<button
+				type="button"
+				data-step-next
+				class="font-display min-h-[44px] w-full border border-brand-black bg-brand-black px-4 py-2.5 text-[13px] uppercase tracking-[0.12em] text-white transition-colors hover:bg-zinc-800 sm:w-auto sm:min-w-[10rem]"
+			>
+				Continue →
+			</button>
+		</div>
+
+		{/* ── Step 2: Experience ── */}
+		<div data-step-panel="2" class="hidden space-y-5">
+			<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+				<span>
+					{c.coverLetterLabel}{c.coverLetterRequired && <span class="font-normal text-red-600"> *</span>}
+					{!c.coverLetterRequired && <span class="font-normal text-zinc-500"> (optional)</span>}
+				</span>
+				<textarea
+					name="coverLetter"
+					rows="7"
+					class="apply-input resize-y border border-zinc-200 bg-white px-3 py-2.5 font-normal text-brand-black"
+					placeholder={c.coverLetterPlaceholder}
+				></textarea>
+			</label>
+
+			{c.showResume && (
+				<label class="flex flex-col gap-1.5 text-sm font-semibold text-brand-black">
+					<span>
+						CV / resume (PDF or Word, max 5 MB){c.requireResume && <span class="font-normal text-red-600"> *</span>}
+						{!c.requireResume && <span class="font-normal text-zinc-500"> (optional)</span>}
+					</span>
+					<div class="relative">
+						<input
+							type="file"
+							name="resume"
+							accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+							class="w-full border border-dashed border-zinc-300 bg-white px-3 py-4 text-sm file:mr-4 file:border-0 file:bg-brand-black file:px-3 file:py-1.5 file:font-display file:text-xs file:uppercase file:tracking-wide file:text-white hover:border-zinc-400"
+						/>
+					</div>
+				</label>
+			)}
+
+			<label class="flex items-start gap-3 text-sm leading-relaxed text-zinc-600">
+				<input type="checkbox" name="consent" required class="mt-0.5 h-4 w-4 shrink-0 accent-brand-black" />
+				<span>{c.consentText}</span>
+			</label>
+
+			<p id="apply-error-2" class="hidden rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert"></p>
+
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+				<button
+					type="button"
+					data-step-back
+					class="font-display min-h-[44px] flex-1 border border-zinc-300 bg-white px-4 py-2.5 text-[13px] uppercase tracking-[0.12em] text-brand-black transition-colors hover:border-brand-black sm:max-w-[10rem]"
+				>
+					← Back
+				</button>
+				<button
+					type="submit"
+					id="apply-submit"
+					class="font-display min-h-[44px] flex-1 border border-brand-black bg-brand-black px-4 py-2.5 text-[13px] uppercase tracking-[0.12em] text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-xs"
+				>
+					{c.submitLabel}
+				</button>
+			</div>
+		</div>
+	</form>
+
+	{/* Success state */}
+	<div id="apply-success" class="mt-8 hidden" role="status">
+		<div class="border border-emerald-200 bg-emerald-50 px-8 py-10 text-center">
+			<svg class="mx-auto mb-4 h-10 w-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+			</svg>
+			<p class="m-0 font-display text-base font-medium uppercase tracking-wide text-emerald-900">{c.successTitle}</p>
+			<p class="m-0 mt-2 text-sm leading-relaxed text-emerald-800">{c.successMessage}</p>
+			<a href="/careers" class="mt-6 inline-flex items-center gap-1.5 font-display text-[11px] uppercase tracking-wide text-emerald-700 hover:text-emerald-900">
+				← Back to all roles
+			</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	function initApplyForm() {
+		const root = document.querySelector<HTMLElement>("[data-apply-config]");
+		const form = document.getElementById("job-apply-form") as HTMLFormElement | null;
+		if (!form || !root || form.dataset.bound === "1") return;
+		form.dataset.bound = "1";
+
+		const panels = form.querySelectorAll<HTMLElement>("[data-step-panel]");
+		const tabs = root.querySelectorAll<HTMLElement>("[data-step-tab]");
+		const err1 = document.getElementById("apply-error-1");
+		const err2 = document.getElementById("apply-error-2");
+		const success = document.getElementById("apply-success");
+		const submitBtn = document.getElementById("apply-submit") as HTMLButtonElement | null;
+
+		function showStep(n: number) {
+			panels.forEach((p) => p.classList.toggle("hidden", p.getAttribute("data-step-panel") !== String(n)));
+
+			tabs.forEach((tab) => {
+				const tabN = Number(tab.getAttribute("data-step-tab"));
+				const isActive = tabN === n;
+				const isDone = tabN < n;
+				const numEl = tab.querySelector("span:first-child");
+				const labelEl = tab.querySelector("span:last-child");
+
+				tab.classList.toggle("border-brand-black", isActive);
+				tab.classList.toggle("bg-brand-black", isActive);
+				tab.classList.toggle("border-emerald-500", isDone);
+				tab.classList.toggle("bg-emerald-50", isDone);
+				tab.classList.toggle("border-zinc-200", !isActive && !isDone);
+				tab.classList.toggle("bg-white", !isActive && !isDone);
+
+				if (numEl) {
+					numEl.classList.toggle("border-white/40", isActive);
+					numEl.classList.toggle("text-white", isActive);
+					numEl.classList.toggle("border-emerald-400", isDone);
+					numEl.classList.toggle("text-emerald-600", isDone);
+					numEl.classList.toggle("border-zinc-300", !isActive && !isDone);
+					numEl.classList.toggle("text-zinc-500", !isActive && !isDone);
+				}
+				if (labelEl) {
+					labelEl.classList.toggle("text-white", isActive);
+					labelEl.classList.toggle("text-emerald-700", isDone);
+					labelEl.classList.toggle("text-zinc-500", !isActive && !isDone);
+				}
+			});
+		}
+
+		function getRequiredFieldsInStep1(): HTMLInputElement[] {
+			const panel = form.querySelector<HTMLElement>('[data-step-panel="1"]');
+			if (!panel) return [];
+			// Always: name + email. Plus any field with data-required="1"
+			const fields: HTMLInputElement[] = [];
+			const nameEl = panel.querySelector<HTMLInputElement>('[name="fullName"]');
+			const emailEl = panel.querySelector<HTMLInputElement>('[name="email"]');
+			if (nameEl) fields.push(nameEl);
+			if (emailEl) fields.push(emailEl);
+			panel.querySelectorAll<HTMLInputElement>('[data-required="1"]').forEach((el) => fields.push(el));
+			return fields;
+		}
+
+		form.querySelector("[data-step-next]")?.addEventListener("click", () => {
+			const fields = getRequiredFieldsInStep1();
+			const missing = fields.filter((f) => !f.value.trim());
+			if (missing.length > 0) {
+				missing[0].focus();
+				if (err1) {
+					err1.textContent = "Please fill in all required fields before continuing.";
+					err1.classList.remove("hidden");
+				}
+				return;
+			}
+			err1?.classList.add("hidden");
+			showStep(2);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		});
+
+		form.querySelector("[data-step-back]")?.addEventListener("click", () => {
+			err2?.classList.add("hidden");
+			showStep(1);
+		});
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			err2?.classList.add("hidden");
+			if (submitBtn) {
+				submitBtn.disabled = true;
+				submitBtn.textContent = "Sending…";
+			}
+			try {
+				const res = await fetch("/api/apply", { method: "POST", body: new FormData(form) });
+				const data = await res.json();
+				if (!res.ok) {
+					if (err2) {
+						err2.textContent = data.error ?? "Something went wrong. Please try again.";
+						err2.classList.remove("hidden");
+					}
+					return;
+				}
+				// Hide form and step indicator, show success
+				form.classList.add("hidden");
+				root.querySelector("[data-step-tab]")?.closest("div.mb-8")?.classList.add("hidden");
+				const introEl = root.querySelector("p.mb-6");
+				if (introEl) introEl.classList.add("hidden");
+				success?.classList.remove("hidden");
+			} catch {
+				if (err2) {
+					err2.textContent = "Network error. Please try again.";
+					err2.classList.remove("hidden");
+				}
+			} finally {
+				if (submitBtn) {
+					submitBtn.disabled = false;
+					const cfgRaw = root.getAttribute("data-apply-config");
+					const cfg = cfgRaw ? JSON.parse(cfgRaw) : {};
+					submitBtn.textContent = cfg.submitLabel ?? "Submit application";
+				}
+			}
+		});
+	}
+
+	initApplyForm();
+	document.addEventListener("astro:page-load", initApplyForm);
+</script>
+
+<style>
+	.apply-input:focus {
+		outline: 2px solid rgb(53 90 122 / 0.35);
+		outline-offset: 0;
+		border-color: #355a7a;
+	}
+</style>

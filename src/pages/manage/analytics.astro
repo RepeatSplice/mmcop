@@ -1,0 +1,161 @@
+---
+import ManageLayout from "../../layouts/ManageLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+export const prerender = false;
+
+const now = new Date();
+const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+const [revenueResult, productRevenue, activeLicenses, affiliateUsage] = await Promise.all([
+	prisma.order.aggregate({
+		where: { status: "PAID", createdAt: { gte: thirtyDaysAgo } },
+		_sum: { totalMinorUnits: true },
+		_count: true,
+	}),
+	prisma.orderItem.groupBy({
+		by: ["variantId"],
+		where: { order: { status: "PAID", createdAt: { gte: thirtyDaysAgo } } },
+		_sum: { priceMinorUnits: true },
+		_count: true,
+		orderBy: { _sum: { priceMinorUnits: "desc" } },
+		take: 10,
+	}),
+	prisma.serverLicense.count({ where: { status: { in: ["ACTIVE", "GRACE"] } } }),
+	prisma.affiliateCode.findMany({
+		include: {
+			_count: { select: { orders: true } },
+			orders: { where: { status: "PAID" }, select: { totalMinorUnits: true } },
+		},
+		orderBy: { createdAt: "desc" },
+	}),
+]);
+
+const variantIds = productRevenue.map((r) => r.variantId);
+const variants = await prisma.productVariant.findMany({
+	where: { id: { in: variantIds } },
+	include: { product: true },
+});
+const variantMap = Object.fromEntries(variants.map((v) => [v.id, v]));
+
+const totalRevenue = revenueResult._sum.totalMinorUnits ?? 0;
+const totalOrders = revenueResult._count;
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+---
+
+<ManageLayout title="Analytics" active="analytics">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">Analytics</h1>
+			<p class="mt-1 text-sm text-zinc-500">Revenue and usage overview for the last 30 days.</p>
+		</div>
+	</div>
+
+	<!-- Summary stat cards -->
+	<div class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+			<p class="m-0 font-display text-3xl font-medium text-monarch-500">{formatPrice(totalRevenue)}</p>
+			<p class="m-0 mt-1.5 text-sm text-zinc-500">Revenue (30 days)</p>
+		</div>
+		<div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+			<p class="m-0 font-display text-3xl font-medium text-brand-black">{totalOrders}</p>
+			<p class="m-0 mt-1.5 text-sm text-zinc-500">Orders (30 days)</p>
+		</div>
+		<div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+			<p class="m-0 font-display text-3xl font-medium text-brand-black">{activeLicenses}</p>
+			<p class="m-0 mt-1.5 text-sm text-zinc-500">Active licenses</p>
+		</div>
+	</div>
+
+	<!-- Revenue by product -->
+	<div class="mt-8 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+		<div class="border-b border-zinc-100 px-5 py-4">
+			<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">
+				Revenue by Product — Top 10 (30 days)
+			</h2>
+		</div>
+		{productRevenue.length === 0 ? (
+			<div class="px-5 py-10 text-center">
+				<p class="m-0 text-sm text-zinc-400">No revenue data yet.</p>
+			</div>
+		) : (
+			<table class="w-full border-collapse text-sm">
+				<thead>
+					<tr class="border-b border-zinc-100 bg-zinc-50">
+						<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400">Product</th>
+						<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden sm:table-cell">Variant</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400">Orders</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400">Revenue</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-zinc-100">
+					{productRevenue.map((row) => {
+						const variant = variantMap[row.variantId];
+						return (
+							<tr class="transition-colors hover:bg-zinc-50">
+								<td class="px-5 py-3.5 font-semibold text-brand-black">{variant?.product.title ?? "Unknown"}</td>
+								<td class="px-5 py-3.5 text-zinc-500 hidden sm:table-cell">{variant?.name ?? row.variantId}</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500">{row._count}</td>
+								<td class="px-5 py-3.5 text-right font-semibold text-brand-black">
+									{formatPrice(row._sum.priceMinorUnits ?? 0)}
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		)}
+	</div>
+
+	<!-- Affiliate codes -->
+	<div class="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+		<div class="border-b border-zinc-100 px-5 py-4">
+			<h2 class="m-0 font-display text-xs uppercase tracking-[0.15em] text-zinc-500">
+				Affiliate Code Usage
+			</h2>
+		</div>
+		{affiliateUsage.length === 0 ? (
+			<div class="px-5 py-10 text-center">
+				<p class="m-0 text-sm text-zinc-400">
+					No affiliate codes yet.{" "}
+					<a href="/manage/affiliates" class="font-medium text-monarch-500 hover:text-brand-black">Create one</a>.
+				</p>
+			</div>
+		) : (
+			<table class="w-full border-collapse text-sm">
+				<thead>
+					<tr class="border-b border-zinc-100 bg-zinc-50">
+						<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400">Code</th>
+						<th class="px-5 py-3 text-left font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden sm:table-cell">Label</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden md:table-cell">Discount</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400 hidden md:table-cell">Commission</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400">Orders</th>
+						<th class="px-5 py-3 text-right font-display text-[10px] uppercase tracking-widest text-zinc-400">Revenue</th>
+						<th class="px-5 py-3 text-center font-display text-[10px] uppercase tracking-widest text-zinc-400">Status</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-zinc-100">
+					{affiliateUsage.map((aff) => {
+						const paidRevenue = aff.orders.reduce((s, o) => s + o.totalMinorUnits, 0);
+						return (
+							<tr class="transition-colors hover:bg-zinc-50">
+								<td class="px-5 py-3.5 font-mono font-medium text-brand-black">{aff.code}</td>
+								<td class="px-5 py-3.5 text-zinc-500 hidden sm:table-cell">{aff.label}</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500 hidden md:table-cell">{aff.discountPct}%</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500 hidden md:table-cell">{aff.commissionPct}%</td>
+								<td class="px-5 py-3.5 text-right text-zinc-500">{aff._count.orders}</td>
+								<td class="px-5 py-3.5 text-right font-semibold text-brand-black">{formatPrice(paidRevenue)}</td>
+								<td class="px-5 py-3.5 text-center">
+									<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", aff.active ? "bg-emerald-100 text-emerald-800" : "bg-zinc-100 text-zinc-500"]}>
+										{aff.active ? "Active" : "Inactive"}
+									</span>
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		)}
+	</div>
+</ManageLayout>

@@ -1,0 +1,71 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ProductEditor from "../../../components/manage/ProductEditor.astro";
+import { createProduct } from "../../../lib/products-admin";
+
+export const prerender = false;
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+
+	if (action === "create-product") {
+		const title = String(form.get("title") ?? "");
+		const slug = String(form.get("slug") ?? "");
+		const excerpt = String(form.get("excerpt") ?? "");
+		const body = String(form.get("body") ?? "");
+		const category = String(form.get("category") ?? "") as Parameters<typeof createProduct>[0]["category"];
+		const imageUrl = String(form.get("imageUrl") ?? "").trim() || undefined;
+		const status = String(form.get("status") ?? "DRAFT") as Parameters<typeof createProduct>[0]["status"];
+
+		// previewImages: one URL per line → JSON array
+		const previewRaw = String(form.get("previewImages") ?? "");
+		const previewImages = JSON.stringify(
+			previewRaw
+				.split("\n")
+				.map((u) => u.trim())
+				.filter(Boolean),
+		);
+
+		if (title && slug && excerpt && body && category) {
+			await createProduct({
+				title,
+				slug,
+				excerpt,
+				body,
+				category,
+				imageUrl,
+				status,
+				previewImages: previewImages === "[]" ? undefined : previewImages,
+			});
+			return Astro.redirect(`/manage/products/${slug}`);
+		}
+		error = "Please fill in all required fields.";
+	}
+}
+---
+
+<ManageLayout title="New Product" active="products">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">New Product</h1>
+			<p class="mt-1 text-sm text-zinc-500">Create a new shop product. Add variants, files, and changelog after saving.</p>
+		</div>
+		<a
+			href="/manage/products"
+			class="font-display rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50"
+		>
+			&larr; Back
+		</a>
+	</div>
+
+	{error && (
+		<div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+	)}
+
+	<div class="mt-6">
+		<ProductEditor action="/manage/products/new" />
+	</div>
+</ManageLayout>

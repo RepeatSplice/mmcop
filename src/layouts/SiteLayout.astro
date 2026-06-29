@@ -1,19 +1,47 @@
 ---
 import "../styles/global.css";
-import ShimanoHeader from "../components/ShimanoHeader.astro";
-import ShimanoFooter from "../components/ShimanoFooter.astro";
+import MonarchHeader from "../components/MonarchHeader.astro";
+import MonarchFooter from "../components/MonarchFooter.astro";
+import { getCustomerFromSession } from "../lib/customer-auth/session";
+import {
+	getChatwootBaseUrl,
+	getChatwootWidgetToken,
+	getElevenLabsAgentId,
+	getSiteUrl,
+} from "../lib/env";
 
 interface Props {
 	title: string;
 	description?: string;
+	ogImage?: string;
 	mainClass?: string;
 }
 
 const {
 	title,
-	description = "Reels, rods, lures and fishing inspiration — Shimano Fishing United Kingdom.",
+	description = "Monarch builds DayZ mods, community servers, software, and hosting for serious communities.",
+	ogImage = "/About_Banner.png",
 	mainClass = "mx-auto flex max-w-7xl flex-col gap-20 px-6",
 } = Astro.props;
+
+const siteUrl = getSiteUrl();
+const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
+const ogImageUrl = `${siteUrl}${ogImage}`;
+
+// Resolve optional support widget config server-side
+const chatwootBase = getChatwootBaseUrl();
+const chatwootToken = getChatwootWidgetToken();
+const elevenLabsAgent = getElevenLabsAgentId();
+
+// If customer is logged in, pass identity to Chatwoot so conversations link to their account
+let customer: Awaited<ReturnType<typeof getCustomerFromSession>> = null;
+if (chatwootToken) {
+	try {
+		customer = await getCustomerFromSession(Astro.cookies);
+	} catch {
+		customer = null;
+	}
+}
 ---
 
 <html lang="en-GB">
@@ -24,20 +52,94 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalUrl} />
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Monarch" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:image" content={ogImageUrl} />
+		<!-- Twitter / X -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Oswald:wght@400;500;600&display=swap"
 			rel="stylesheet"
 		/>
+
 	</head>
 	<body>
-		<ShimanoHeader />
+		<MonarchHeader />
 		<slot name="pre-main" />
 		<main class={mainClass}>
 			<slot />
 		</main>
-		<ShimanoFooter />
+		<MonarchFooter />
 		<slot name="scripts" />
+		<script>
+			import { initSiteChrome } from "../scripts/home.ts";
+			initSiteChrome();
+			document.addEventListener("astro:page-load", initSiteChrome);
+		</script>
+
+		{/* Chatwoot live chat widget — only injected when token is set */}
+		{chatwootToken && (
+			<script
+				is:inline
+				define:vars={{ chatwootBase, chatwootToken, customer }}
+			>
+				window.chatwootSettings = {
+					hideMessageBubble: false,
+					position: "right",
+					locale: "en",
+					type: "standard",
+					darkMode: "auto",
+				};
+
+				(function (d, t) {
+					var BASE_URL = chatwootBase;
+					var g = d.createElement(t),
+						s = d.getElementsByTagName(t)[0];
+					g.src = BASE_URL + "/packs/js/sdk.js";
+					g.defer = true;
+					g.async = true;
+					s.parentNode.insertBefore(g, s);
+					g.onload = function () {
+						window.chatwootSDK.run({
+							websiteToken: chatwootToken,
+							baseUrl: BASE_URL,
+						});
+
+						// Link the conversation to the logged-in customer's account
+						if (customer) {
+							window.addEventListener("chatwoot:ready", function () {
+								window.$chatwoot.setUser(customer.id, {
+									name: customer.displayName,
+									...(customer.email ? { email: customer.email } : {}),
+									...(customer.avatarUrl ? { avatar_url: customer.avatarUrl } : {}),
+								});
+							});
+						}
+					};
+				})(document, "script");
+			</script>
+		)}
+
+		{/* ElevenLabs Conversational AI widget — only injected when agent ID is set */}
+		{elevenLabsAgent && (
+			<>
+				<elevenlabs-convai agent-id={elevenLabsAgent}></elevenlabs-convai>
+				<script
+					src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+					async
+					type="text/javascript"
+				></script>
+			</>
+		)}
 	</body>
 </html>

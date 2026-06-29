@@ -1,35 +1,21 @@
-export function initHome(): void {
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { initNav } from "./site-nav";
+import { initSiteSearch } from "./site-search";
+import { initFooter } from "./site-footer";
+
+export function initSiteChrome(): void {
 	initNav();
-	initHero();
-	initNewsTabs();
-	initNewsArchive();
+	initSiteSearch();
+	initFooter();
 }
 
-function initNav(): void {
-	const body = document.body;
-	const toggle = document.getElementById("drawerBtn");
-	const backdrop = document.getElementById("drawerBackdrop");
-
-	function close(): void {
-		body.classList.remove("nav-open");
-		toggle?.setAttribute("aria-expanded", "false");
-	}
-
-	toggle?.addEventListener("click", () => {
-		const open = !body.classList.contains("nav-open");
-		body.classList.toggle("nav-open", open);
-		toggle.setAttribute("aria-expanded", String(open));
-	});
-
-	backdrop?.addEventListener("click", close);
-
-	window.addEventListener("keydown", (e) => {
-		if (e.key === "Escape") close();
-	});
-
-	window.addEventListener("resize", () => {
-		if (window.matchMedia("(min-width: 1024px)").matches) close();
-	});
+export function initHome(): void {
+	initSiteChrome();
+	initHero();
+	initScenarioReveals();
+	initNewsTabs();
+	initNewsArchive();
 }
 
 function initHero(): void {
@@ -47,7 +33,11 @@ function initHero(): void {
 
 	function go(i: number): void {
 		index = (i + slides.length) % slides.length;
-		slides.forEach((el, j) => el.classList.toggle("is-active", j === index));
+		slides.forEach((el, j) => {
+			const active = j === index;
+			el.classList.toggle("is-active", active);
+			el.setAttribute("aria-hidden", active ? "false" : "true");
+		});
 		dots.forEach((el, j) => {
 			el.classList.toggle("is-active", j === index);
 			el.setAttribute("aria-selected", j === index ? "true" : "false");
@@ -80,6 +70,71 @@ function initHero(): void {
 	schedule();
 }
 
+let scenarioRevealTriggers: ScrollTrigger[] = [];
+
+function revealScrollTargetsInView(targets: HTMLElement[], startRatio: number): void {
+	const line = window.innerHeight * startRatio;
+	targets.forEach((el) => {
+		if (el.getBoundingClientRect().top < line) {
+			gsap.set(el, { opacity: 1, y: 0, clearProps: "transform" });
+		}
+	});
+}
+
+function initScenarioReveals(): void {
+	const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+	const targets = [...document.querySelectorAll<HTMLElement>("[data-scroll-reveal] .st-reveal")];
+	if (!targets.length) return;
+
+	scenarioRevealTriggers.forEach((st) => st.kill());
+	scenarioRevealTriggers = [];
+	document.documentElement.classList.remove("scroll-reveal-ready");
+
+	if (reduceMotion.matches) {
+		gsap.set(targets, { opacity: 1, y: 0, clearProps: "transform" });
+		return;
+	}
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const wide = window.matchMedia("(min-width: 768px)").matches;
+	const yOff = wide ? 10 : 6;
+	const startRatio = wide ? 0.9 : 0.93;
+
+	document.documentElement.classList.add("scroll-reveal-ready");
+	gsap.set(targets, { opacity: 0, y: yOff });
+
+	scenarioRevealTriggers = ScrollTrigger.batch(targets, {
+		start: wide ? "top 90%" : "top 93%",
+		once: true,
+		onEnter: (batch) => {
+			gsap.to(batch, {
+				opacity: 1,
+				y: 0,
+				duration: wide ? 0.85 : 0.75,
+				ease: "power1.out",
+				stagger: 0.08,
+				overwrite: "auto",
+			});
+		},
+	});
+
+	const refreshReveals = (): void => {
+		ScrollTrigger.refresh();
+		revealScrollTargetsInView(targets, startRatio);
+	};
+
+	requestAnimationFrame(() => {
+		requestAnimationFrame(refreshReveals);
+	});
+
+	if (document.readyState === "complete") {
+		refreshReveals();
+	} else {
+		window.addEventListener("load", refreshReveals, { once: true });
+	}
+}
+
 function initNewsTabs(): void {
 	const tabs = document.querySelectorAll<HTMLButtonElement>("[data-news-tab]");
 	const panels = document.querySelectorAll<HTMLElement>("[data-news-panel]");
@@ -88,7 +143,11 @@ function initNewsTabs(): void {
 	tabs.forEach((tab) => {
 		tab.addEventListener("click", () => {
 			const id = tab.dataset.newsTab;
-			tabs.forEach((t) => t.classList.toggle("is-active", t === tab));
+			tabs.forEach((t) => {
+				const active = t === tab;
+				t.classList.toggle("is-active", active);
+				t.setAttribute("aria-selected", active ? "true" : "false");
+			});
 			panels.forEach((p) => {
 				p.classList.toggle("is-active", p.dataset.newsPanel === id);
 			});

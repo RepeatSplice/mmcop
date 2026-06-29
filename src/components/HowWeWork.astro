@@ -1,0 +1,131 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface WorkStep {
+	step: string;
+	title: string;
+	body: string;
+	points?: string[];
+}
+
+interface Props {
+	kicker?: string;
+	heading?: string;
+	lead?: string;
+	steps?: WorkStep[];
+	showIntro?: boolean;
+	compact?: boolean;
+	stacked?: boolean;
+	centered?: boolean;
+	showFooterLink?: boolean;
+	footerHref?: string;
+	footerLabel?: string;
+}
+
+const defaultSteps: WorkStep[] = [
+	{
+		step: "01",
+		title: "Brief & scope",
+		body: "You share your server goals, ruleset, timeline, and what success looks like after the next wipe or launch.",
+	},
+	{
+		step: "02",
+		title: "Build & ship",
+		body: "We produce mods, configs, UI, and tooling, then test on our own pipelines before anything hits your live environment.",
+	},
+	{
+		step: "03",
+		title: "Live & support",
+		body: "Deploy with us, monitor performance, and iterate through patches, events, and player feedback without starting from zero.",
+	},
+];
+
+const {
+	kicker = "Process",
+	heading = "How we work",
+	lead = "A clear path from first conversation to content on your server, whether you need a full pack or ongoing operations support.",
+	steps = defaultSteps,
+	showIntro = true,
+	compact = false,
+	stacked = false,
+	centered = false,
+	showFooterLink = !stacked && !compact,
+	footerHref = "/how-we-work",
+	footerLabel = "Full process",
+} = Astro.props;
+
+const useStacked = stacked || (!compact && steps.some((s) => (s.points?.length ?? 0) > 0));
+const centerAll = centered && useStacked;
+const isHome = !useStacked && !compact;
+---
+
+<section
+	id="how-we-work"
+	aria-labelledby="how-we-work-heading"
+	data-scroll-reveal
+	class:list={["monarch-process", isHome && "monarch-process--home"]}
+>
+	{
+		showIntro ? (
+			<header class="monarch-section-header">
+				<p class="monarch-section-kicker st-reveal">{kicker}</p>
+				<h2
+					id="how-we-work-heading"
+					class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+				>
+					{heading}
+				</h2>
+				<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+					{lead}
+				</p>
+			</header>
+		) : (
+			<h2 id="how-we-work-heading" class="sr-only">
+				{heading}
+			</h2>
+		)
+	}
+
+	<ol
+		class:list={[
+			"monarch-process__steps st-reveal list-none p-0",
+			useStacked ? "monarch-process__steps--stacked" : "monarch-process__steps--grid",
+		]}
+	>
+		{
+			steps.map((item) => (
+				<li class:list={["monarch-process-card", useStacked && "monarch-process-card--stacked"]}>
+					<div class:list={["monarch-process-card__inner", centerAll && "text-center"]}>
+						<span class="monarch-process-card__step" aria-hidden="true">
+							{item.step}
+						</span>
+						<h3 class="monarch-process-card__title">{item.title}</h3>
+						<p class="monarch-process-card__body">{item.body}</p>
+					</div>
+					{
+						item.points && item.points.length > 0 && (
+							<div class:list={["monarch-process-card__points", useStacked && "mx-auto max-w-xl"]}>
+								<ul class="monarch-process-card__list">
+									{item.points.map((point) => (
+										<li>{point}</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+				</li>
+			))
+		}
+	</ol>
+
+	{
+		showFooterLink ? (
+			<div class="monarch-process__footer st-reveal">
+				<a class="monarch-pill-btn" href={footerHref}>
+					{footerLabel}
+					<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+				</a>
+			</div>
+		) : null
+	}
+</section>

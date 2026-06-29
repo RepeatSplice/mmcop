@@ -1,0 +1,31 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+	title="Page not found | Monarch"
+	description="The page you were looking for does not exist."
+	mainClass="mx-auto flex max-w-7xl flex-col items-center justify-center gap-6 px-6 py-32 text-center"
+>
+	<p class="font-display text-[11px] uppercase tracking-[0.2em] text-monarch-500">404</p>
+	<h1 class="m-0 font-display text-[clamp(2rem,6vw,3.5rem)] font-medium uppercase leading-tight tracking-wide text-brand-black">
+		Page not found
+	</h1>
+	<p class="m-0 max-w-md text-[15px] leading-relaxed text-zinc-500">
+		The page you were looking for doesn't exist or has been moved. Head back to the homepage or try a different link.
+	</p>
+	<div class="flex flex-wrap justify-center gap-3">
+		<a
+			href="/"
+			class="font-display inline-flex min-h-[44px] items-center gap-2 border border-brand-black bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
+		>
+			Back to homepage
+		</a>
+		<a
+			href="/contact"
+			class="font-display inline-flex min-h-[44px] items-center gap-2 border border-zinc-300 px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-zinc-600 transition-colors hover:border-brand-black hover:text-brand-black"
+		>
+			Contact us
+		</a>
+	</div>
+</SiteLayout>

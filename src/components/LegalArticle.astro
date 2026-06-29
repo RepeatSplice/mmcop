@@ -1,0 +1,18 @@
+---
+interface Props {
+	lastUpdated?: string;
+}
+
+const { lastUpdated = "May 2026" } = Astro.props;
+const linkClass =
+	"font-semibold text-brand-black underline decoration-monarch-500/40 underline-offset-2 hover:text-monarch-500";
+---
+
+<article class="monarch-article w-full">
+	<p class="mb-8 text-sm text-zinc-500">Last updated: {lastUpdated}</p>
+	<slot />
+	<p class="mt-10 border-t border-zinc-200 pt-6 text-sm text-zinc-500">
+		Questions about this page? <a class={linkClass} href="/contact">Contact Monarch</a> or email{" "}
+		<a class={linkClass} href="mailto:enquiries@monarch-dayz.com">enquiries@monarch-dayz.com</a>.
+	</p>
+</article>

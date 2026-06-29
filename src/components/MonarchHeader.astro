@@ -1,0 +1,279 @@
+---
+import { Icon } from "astro-icon/components";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import SiteSearch from "./SiteSearch.astro";
+import { getCustomerFromSession } from "../lib/customer-auth/session";
+
+let customer: Awaited<ReturnType<typeof getCustomerFromSession>> = null;
+try {
+	customer = await getCustomerFromSession(Astro.cookies);
+} catch {
+	customer = null;
+}
+
+const nav = [
+	{
+		label: "Services",
+		href: "/monarch-modding",
+		children: [
+			{ label: "Monarch Modding", href: "/monarch-modding", desc: "Custom weapons, packs and configs" },
+			{ label: "Operation Monarch", href: "/operation-monarch", desc: "Community servers and live events" },
+			{ label: "Monarch Software", href: "/monarch-software", desc: "Bots, APIs and server tooling" },
+			{ label: "Monarch Hosting", href: "/monarch-hosting", desc: "Dedicated DayZ infrastructure" },
+		],
+	},
+	{
+		label: "Shop",
+		href: "/shop",
+		children: [
+			{ label: "All products", href: "/shop", desc: "Browse the full catalog" },
+			{ label: "Modding", href: "/shop?category=modding", desc: "Weapon packs and workshop content" },
+			{ label: "Software", href: "/shop?category=software", desc: "Tools, bots and scripting licenses" },
+			{ label: "Bundles", href: "/shop?category=bundle", desc: "Multi-product license bundles" },
+			{ label: "My account", href: "/account", desc: "Orders, downloads and licenses" },
+		],
+	},
+	{
+		label: "Company",
+		href: "/about-monarch",
+		children: [
+			{ label: "About Monarch", href: "/about-monarch", desc: "Who we are and how we operate" },
+			{ label: "How we work", href: "/how-we-work", desc: "From brief to live support" },
+			{ label: "Partners", href: "/partners", desc: "Studios and brands we work with" },
+			{ label: "News & updates", href: "/news", desc: "Releases and company updates" },
+			{ label: "Careers", href: "/careers", desc: "Join the Monarch team" },
+		],
+	},
+	{
+		label: "Connect",
+		href: "/contact",
+		children: [
+			{ label: "Contact", href: "/contact", desc: "General enquiries" },
+			{ label: "Work with us", href: "/work-with-us", desc: "Commissions and retainers" },
+			{ label: "Join Operation Monarch", href: "/join-operation-monarch", desc: "Play on our servers" },
+		],
+	},
+];
+---
+
+<div class="site-utility-bar">
+	<div class="site-utility-bar__inner">
+		<nav class="site-utility-bar__links" aria-label="Quick links">
+			<a class="site-utility-link" href="/shop">Shop</a>
+			<a class="site-utility-link" href="/news">News</a>
+			<a class="site-utility-link" href="/careers">Careers</a>
+			<a class="site-utility-link" href="/contact">Contact</a>
+		</nav>
+		<div class="site-utility-bar__divider" aria-hidden="true"></div>
+		<LanguageSwitcher variant="subheader" />
+	</div>
+</div>
+
+<header class="site-header sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md">
+	<div class="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-6">
+		<a class="group/logo block shrink-0" href="/" aria-label="Monarch home">
+			<img
+				src="/LogoText.svg"
+				alt="Monarch"
+				width="260"
+				height="77"
+				class="h-8 w-auto max-w-[min(72vw,280px)] opacity-95 transition-opacity group-hover/logo:opacity-100 sm:h-9 sm:max-w-[320px]"
+			/>
+		</a>
+
+		<nav class="hidden flex-1 items-center justify-center gap-5 lg:flex xl:gap-7" aria-label="Primary">
+			{
+				nav.map((item) => (
+					<div class="nav-mega" data-nav-mega>
+						<a
+							class="nav-mega__trigger font-display block px-[1.15rem] py-[0.65rem] text-sm font-medium uppercase tracking-wide text-brand-black"
+							href={item.href}
+						>
+							{item.label}
+						</a>
+						{item.children.length > 0 && (
+							<div class="nav-mega__panel" data-nav-mega-panel role="menu">
+								<div class="nav-mega__panel-inner">
+									{item.children.map((c) => (
+										<a class="nav-mega__link" href={c.href} role="menuitem" data-nav-mega-link>
+											<span class="nav-mega__link-label">{c.label}</span>
+											{"desc" in c && c.desc && (
+												<span class="nav-mega__link-desc">{c.desc}</span>
+											)}
+										</a>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+				))
+			}
+		</nav>
+
+		<div class="flex items-center gap-2">
+			<button
+				type="button"
+				data-site-search-open
+				class="site-search-trigger hidden lg:flex"
+				aria-haspopup="dialog"
+				aria-controls="siteSearchModal"
+			>
+				<Icon name="lucide:search" class="site-search-trigger__icon size-4 shrink-0" is:inline aria-hidden="true" />
+				<span class="site-search-trigger__label">Search</span>
+				<span class="site-search-trigger__kbd" aria-hidden="true">
+					<kbd>Ctrl</kbd><kbd>K</kbd>
+				</span>
+			</button>
+
+			{customer ? (
+				<div class="nav-mega nav-account-mega hidden lg:block" data-nav-mega>
+					<button
+						class="nav-account-btn nav-mega__trigger"
+						aria-label={`Account: ${customer.displayName}`}
+						type="button"
+					>
+						{customer.avatarUrl ? (
+							<img
+								src={customer.avatarUrl}
+								alt=""
+								width="28"
+								height="28"
+								class="nav-account-btn__avatar"
+							/>
+						) : (
+							<span class="nav-account-btn__initials">
+								{customer.displayName.charAt(0).toUpperCase()}
+							</span>
+						)}
+						<span class="nav-account-btn__name">{customer.displayName}</span>
+						<Icon name="lucide:chevron-down" class="size-3.5 shrink-0 text-zinc-400" is:inline aria-hidden="true" />
+					</button>
+					<div class="nav-mega__panel nav-account-panel" data-nav-mega-panel role="menu">
+						<div class="nav-account-panel__head">
+							{customer.avatarUrl && (
+								<img src={customer.avatarUrl} alt="" width="36" height="36" class="nav-account-panel__avatar" />
+							)}
+							<div>
+								<p class="nav-account-panel__name">{customer.displayName}</p>
+							</div>
+						</div>
+						<div class="nav-mega__panel-inner">
+							<a class="nav-mega__link" href="/account" role="menuitem" data-nav-mega-link>
+								<span class="nav-mega__link-label">Dashboard</span>
+								<span class="nav-mega__link-desc">Orders and downloads</span>
+							</a>
+							<a class="nav-mega__link" href="/account/licenses" role="menuitem" data-nav-mega-link>
+								<span class="nav-mega__link-label">Licenses</span>
+								<span class="nav-mega__link-desc">Manage server IPs</span>
+							</a>
+						<div class="nav-account-panel__divider"></div>
+						<form method="POST" action="/api/auth/customer-logout">
+							<button type="submit" class="nav-account-panel__signout" role="menuitem">
+								<svg viewBox="0 0 16 16" fill="none" class="nav-account-panel__signout-icon" aria-hidden="true"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v7A1.5 1.5 0 0 0 3.5 13H6M10 10l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								<span>Log out</span>
+							</button>
+						</form>
+						</div>
+					</div>
+				</div>
+			) : (
+				<a
+					href="/account/login"
+					class="nav-signin-btn hidden lg:inline-flex"
+					aria-label="Sign in to your account"
+				>
+					<Icon name="lucide:log-in" class="size-3.5 shrink-0" is:inline aria-hidden="true" />
+					Sign in
+				</a>
+			)}
+
+			<button
+				type="button"
+				class="flex h-11 w-11 flex-col items-center justify-center gap-[5px] border-0 bg-transparent p-0 lg:hidden"
+				id="drawerBtn"
+				aria-expanded="false"
+				aria-controls="mobileDrawer"
+				aria-label="Open menu"
+			>
+				<span class="block h-0.5 w-[22px] bg-brand-black transition-[transform,opacity] duration-200 ease-out"></span>
+				<span class="block h-0.5 w-[22px] bg-brand-black transition-[transform,opacity] duration-200 ease-out"></span>
+				<span class="block h-0.5 w-[22px] bg-brand-black transition-[transform,opacity] duration-200 ease-out"></span>
+			</button>
+		</div>
+	</div>
+</header>
+
+<div class="fixed inset-x-0 bottom-0 top-[108px] z-[35] bg-black/35 lg:hidden" id="drawerBackdrop"></div>
+<nav
+	class="fixed inset-x-0 bottom-0 top-[108px] z-40 overflow-y-auto bg-white px-5 pb-8 pt-4 lg:hidden"
+	id="mobileDrawer"
+	aria-label="Mobile"
+>
+	<div class="mb-4 border-b border-zinc-200 pb-4">
+		<button
+			type="button"
+			data-site-search-open
+			class="site-search-trigger site-search-trigger--mobile mb-4 w-full"
+			aria-haspopup="dialog"
+			aria-controls="siteSearchModal"
+		>
+			<Icon name="lucide:search" class="site-search-trigger__icon size-4 shrink-0" is:inline aria-hidden="true" />
+			<span class="site-search-trigger__label">Search site</span>
+			<span class="site-search-trigger__kbd" aria-hidden="true">
+				<kbd>Ctrl</kbd><kbd>K</kbd>
+			</span>
+		</button>
+		{customer ? (
+			<div class="mb-4 flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5">
+				{customer.avatarUrl ? (
+					<img src={customer.avatarUrl} alt="" width="32" height="32" class="size-8 rounded-full object-cover" />
+				) : (
+					<span class="flex size-8 items-center justify-center rounded-full bg-monarch-500/10 font-display text-sm font-medium text-monarch-500">
+						{customer.displayName.charAt(0).toUpperCase()}
+					</span>
+				)}
+				<div class="flex-1 min-w-0">
+					<p class="m-0 truncate font-display text-sm font-medium uppercase tracking-wide text-brand-black">{customer.displayName}</p>
+				</div>
+				<a href="/account" class="font-display text-[11px] uppercase tracking-wide text-monarch-500">Account</a>
+			</div>
+		) : (
+			<a
+				href="/account/login"
+				class="nav-signin-btn mb-4 flex w-full justify-center"
+			>
+				<Icon name="lucide:log-in" class="size-3.5 shrink-0" is:inline aria-hidden="true" />
+				Sign in to account
+			</a>
+		)}
+		<p class="mb-2 font-display text-[11px] uppercase tracking-wide text-zinc-500">Language / region</p>
+		<LanguageSwitcher variant="drawer" />
+	</div>
+	<div>
+		{
+			nav.map((item) => (
+				<div class="mb-2 border-b border-zinc-200 pb-2">
+					<a class="font-display block py-3 text-[15px] uppercase tracking-wide hover:text-monarch-500" href={item.href}>
+						{item.label}
+					</a>
+					{item.children.map((c) => (
+						<a class="block py-2 pl-3 font-sans text-sm tracking-normal text-zinc-600 hover:text-monarch-500" href={c.href}>
+							{c.label}
+						</a>
+					))}
+				</div>
+			))
+		}
+		{customer && (
+			<div class="mt-4 border-t border-zinc-200 pt-4">
+				<form method="POST" action="/api/auth/customer-logout">
+					<button type="submit" class="font-display block py-2 text-[13px] uppercase tracking-wide text-zinc-500 hover:text-brand-black">
+						Sign out
+					</button>
+				</form>
+			</div>
+		)}
+	</div>
+</nav>
+
+<SiteSearch />

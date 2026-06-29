@@ -1,0 +1,45 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<div
+	id="siteSearchModal"
+	class="site-search-modal invisible pointer-events-none fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[8vh] opacity-0 sm:px-6 sm:pt-[10vh]"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="siteSearchTitle"
+	aria-hidden="true"
+	inert
+>
+	<div class="site-search-modal__backdrop absolute inset-0" data-site-search-backdrop aria-hidden="true"></div>
+	<div data-site-search-panel class="site-search-modal__panel pointer-events-auto relative z-10 w-full max-w-2xl sm:max-w-3xl">
+		<div class="site-search-modal__input-row">
+			<Icon name="lucide:search" class="size-5 shrink-0 text-zinc-400" is:inline aria-hidden="true" />
+			<label class="sr-only" for="siteSearchInput" id="siteSearchTitle">Search the site</label>
+			<input
+				id="siteSearchInput"
+				type="search"
+				name="q"
+				autocomplete="off"
+				enterkeyhint="search"
+				placeholder="Search pages, news, careers…"
+				class="site-search-modal__input"
+			/>
+			<button
+				type="button"
+				class="site-search-modal__close"
+				data-site-search-close
+				aria-label="Close search"
+			>
+				<Icon name="lucide:x" class="size-5" is:inline aria-hidden="true" />
+			</button>
+		</div>
+		<div id="siteSearchStatus" class="site-search-modal__status" aria-live="polite">
+			Type at least 2 characters
+		</div>
+		<ul id="siteSearchResults" class="site-search-modal__results m-0 list-none overflow-y-auto p-0"></ul>
+		<p class="site-search-modal__hint m-0">
+			<kbd>Ctrl</kbd>+<kbd>K</kbd> to open · <kbd>Esc</kbd> to close
+		</p>
+	</div>
+</div>

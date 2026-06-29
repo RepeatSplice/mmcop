@@ -1,0 +1,130 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import ManageBtn from "../../../components/manage/ManageBtn.astro";
+import { prisma } from "../../../lib/prisma";
+import {
+	contactTopicLabel,
+	enquiryStatusBadgeClass,
+	enquiryStatusLabel,
+	type ContactEnquiryStatus,
+} from "../../../lib/contact-admin";
+
+export const prerender = false;
+
+const filter = (Astro.url.searchParams.get("status") ?? "all") as ContactEnquiryStatus | "all";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "");
+	const id = String(form.get("id") ?? "");
+	if (id && ["resolve", "progress", "spam", "reopen", "delete"].includes(action)) {
+		if (action === "delete") {
+			await prisma.contactEnquiry.delete({ where: { id } });
+		} else {
+			const statusMap = {
+				resolve: "RESOLVED",
+				progress: "IN_PROGRESS",
+				spam: "SPAM",
+				reopen: "NEW",
+			} as const;
+			await prisma.contactEnquiry.update({
+				where: { id },
+				data: { status: statusMap[action as keyof typeof statusMap] },
+			});
+		}
+		return Astro.redirect(`/manage/enquiries${filter !== "all" ? `?status=${filter}` : ""}`);
+	}
+}
+
+const where = filter === "all" ? {} : { status: filter };
+const enquiries = await prisma.contactEnquiry.findMany({
+	where,
+	orderBy: { createdAt: "desc" },
+	take: 200,
+});
+const counts = await prisma.contactEnquiry.groupBy({ by: ["status"], _count: true });
+const countMap = Object.fromEntries(counts.map((c) => [c.status, c._count]));
+const totalCount = counts.reduce((sum, c) => sum + c._count, 0);
+const tabs = [
+	{ id: "all", label: "All", count: totalCount },
+	{ id: "NEW", label: "New", count: countMap.NEW ?? 0 },
+	{ id: "IN_PROGRESS", label: "In progress", count: countMap.IN_PROGRESS ?? 0 },
+	{ id: "RESOLVED", label: "Resolved", count: countMap.RESOLVED ?? 0 },
+	{ id: "SPAM", label: "Spam", count: countMap.SPAM ?? 0 },
+] as const;
+---
+
+<ManageLayout title="Enquiries" active="enquiries">
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<h1 class="m-0 font-display text-2xl font-medium uppercase tracking-[0.12em]">Enquiries</h1>
+			<p class="mt-1 text-sm text-zinc-500">Contact form submissions from the public site</p>
+		</div>
+	</div>
+
+	<nav class="mt-6 flex flex-wrap gap-1.5" aria-label="Filter by status">
+		{tabs.map((tab) => (
+			<a
+				href={tab.id === "all" ? "/manage/enquiries" : `/manage/enquiries?status=${tab.id}`}
+				class:list={[
+					"font-display rounded-full border px-3.5 py-1.5 text-xs uppercase tracking-wide transition-colors",
+					filter === tab.id
+						? "border-brand-black bg-brand-black text-white"
+						: "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50",
+				]}
+			>
+				{tab.label}
+				<span class="ml-1 opacity-60">{tab.count}</span>
+			</a>
+		))}
+	</nav>
+
+	{enquiries.length === 0 ? (
+		<div class="mt-5 rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center shadow-sm">
+			<svg class="mx-auto mb-3 h-8 w-8 text-zinc-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<rect x="2" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.25"/>
+				<path d="M5 7l3 2.5L11 7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			<p class="m-0 text-sm text-zinc-500">No enquiries in this view.</p>
+		</div>
+	) : (
+		<ul class="mt-4 list-none overflow-hidden rounded-xl border border-zinc-200 bg-white p-0 shadow-sm">
+			{enquiries.map((row) => (
+				<li class="border-b border-zinc-100 px-5 py-4 last:border-0">
+					<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+						<div class="min-w-0 flex-1">
+							<p class="m-0 font-semibold text-brand-black">{row.fullName}</p>
+							<p class="m-0 mt-0.5 text-sm text-zinc-500">{row.email}</p>
+							<div class="mt-2 flex flex-wrap items-center gap-2">
+								<span class:list={["rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase", enquiryStatusBadgeClass(row.status)]}>
+									{enquiryStatusLabel(row.status)}
+								</span>
+								<span class="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-zinc-600">
+									{contactTopicLabel(row.topic)}
+								</span>
+								<span class="text-xs text-zinc-400">{row.createdAt.toLocaleString("en-GB")}</span>
+							</div>
+							<p class="m-0 mt-2 line-clamp-2 text-sm text-zinc-600">{row.message}</p>
+						</div>
+						<div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+							<ManageBtn href={`/manage/enquiries/${row.id}`} variant="primary">View</ManageBtn>
+							<form method="post" class="flex flex-wrap gap-1.5 border-t border-zinc-100 pt-2 sm:border-t-0 sm:border-l sm:pl-2 sm:pt-0">
+								<input type="hidden" name="id" value={row.id} />
+								{row.status === "NEW" && (
+									<ManageBtn type="submit" name="_action" value="progress" variant="muted">In progress</ManageBtn>
+								)}
+								{row.status !== "RESOLVED" && row.status !== "SPAM" && (
+									<ManageBtn type="submit" name="_action" value="resolve" variant="success">Resolve</ManageBtn>
+								)}
+								{row.status !== "SPAM" && (
+									<ManageBtn type="submit" name="_action" value="spam" variant="warning">Spam</ManageBtn>
+								)}
+								<ManageBtn type="submit" name="_action" value="delete" variant="danger" confirm="Delete this enquiry permanently?">Delete</ManageBtn>
+							</form>
+						</div>
+					</div>
+				</li>
+			))}
+		</ul>
+	)}
+</ManageLayout>

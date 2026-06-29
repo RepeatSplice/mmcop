@@ -1,0 +1,107 @@
+---
+import ManageLayout from "../../../layouts/ManageLayout.astro";
+import JobEditor from "../../../components/manage/JobEditor.astro";
+import { prisma } from "../../../lib/prisma";
+import { parseApplyFormConfigFromDb, parseJobForm, jobStatusBadgeClass, jobStatusLabel } from "../../../lib/jobs-admin";
+import type { JobStatus } from "../../../lib/jobs-admin";
+import { hasAlgolia } from "../../../lib/env";
+import { reindexRecord, removeFromIndex } from "../../../lib/algolia";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/manage/jobs");
+
+let error: string | undefined;
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const action = String(form.get("_action") ?? "save");
+
+	if (action === "delete") {
+		if (hasAlgolia()) { try { await removeFromIndex(`job-${slug}`); } catch { /* non-fatal */ } }
+		await prisma.job.delete({ where: { slug } });
+		return Astro.redirect("/manage/jobs");
+	}
+
+	const quickStatus: Record<string, JobStatus> = {
+		publish: "PUBLISHED",
+		archive: "ARCHIVED",
+		draft: "DRAFT",
+	};
+	if (action in quickStatus) {
+		const updated = await prisma.job.update({ where: { slug }, data: { status: quickStatus[action] } });
+		if (hasAlgolia()) {
+			try {
+				if (updated.status === "PUBLISHED") {
+					await reindexRecord({ objectID: `job-${slug}`, title: updated.title, excerpt: updated.excerpt ?? updated.team ?? "", href: `/careers/${slug}`, type: "job", typeLabel: "Career" });
+				} else {
+					await removeFromIndex(`job-${slug}`);
+				}
+			} catch { /* non-fatal */ }
+		}
+		return Astro.redirect(`/manage/jobs/${slug}?saved=1`);
+	}
+
+	const parsed = parseJobForm(form);
+	if ("error" in parsed) {
+		error = parsed.error;
+	} else {
+		const data = {
+			...parsed,
+			applyFormConfig: parsed.applyFormConfig,
+		};
+		if (parsed.slug !== slug) {
+			const taken = await prisma.job.findUnique({ where: { slug: parsed.slug } });
+			if (taken) {
+				error = `Slug "${parsed.slug}" is already in use.`;
+			} else {
+				const updated = await prisma.job.update({ where: { slug }, data });
+				if (hasAlgolia() && updated.status === "PUBLISHED") {
+					try { await reindexRecord({ objectID: `job-${parsed.slug}`, title: updated.title, excerpt: updated.excerpt ?? updated.team ?? "", href: `/careers/${parsed.slug}`, type: "job", typeLabel: "Career" }); } catch { /* non-fatal */ }
+					try { await removeFromIndex(`job-${slug}`); } catch { /* non-fatal */ }
+				}
+				return Astro.redirect(`/manage/jobs/${parsed.slug}?saved=1`);
+			}
+		} else {
+			const updated = await prisma.job.update({ where: { slug }, data });
+			if (hasAlgolia() && updated.status === "PUBLISHED") {
+				try { await reindexRecord({ objectID: `job-${slug}`, title: updated.title, excerpt: updated.excerpt ?? updated.team ?? "", href: `/careers/${slug}`, type: "job", typeLabel: "Career" }); } catch { /* non-fatal */ }
+			}
+			return Astro.redirect(`/manage/jobs/${slug}?saved=1`);
+		}
+	}
+}
+
+const row = await prisma.job.findUnique({ where: { slug } });
+if (!row) return Astro.redirect("/manage/jobs");
+
+const job = {
+	...row,
+	applyFormConfig: parseApplyFormConfigFromDb(row.applyFormConfig),
+};
+---
+
+<ManageLayout title="Edit job" active="jobs">
+	<a href="/manage/jobs" class="text-sm text-monarch-500 hover:text-brand-black">← Jobs</a>
+	<h1 class="mt-4 font-display text-2xl font-medium uppercase tracking-[0.12em]">Edit job</h1>
+	<p class="mt-2 text-sm text-zinc-600">
+		<span class:list={["rounded px-2 py-0.5 text-xs font-semibold uppercase", jobStatusBadgeClass(job.status)]}>
+			{jobStatusLabel(job.status)}
+		</span>
+		{
+			job.status === "PUBLISHED" && (
+				<>
+					{" · "}
+					<a href={`/careers/${job.slug}`} target="_blank" rel="noopener noreferrer" class="text-monarch-500 hover:text-brand-black">
+						/careers/{job.slug}
+					</a>
+				</>
+			)
+		}
+	</p>
+	<div class="mt-6">
+		<JobEditor mode="edit" job={job} error={error} saved={saved} />
+	</div>
+</ManageLayout>

@@ -1,0 +1,632 @@
+---
+import "../../styles/global.css";
+
+export const prerender = false;
+
+const customer = Astro.locals.customer;
+if (customer) {
+	return Astro.redirect("/account");
+}
+
+const error = Astro.url.searchParams.get("error");
+const step = Astro.url.searchParams.get("step") ?? "1";
+const returnTo = Astro.url.searchParams.get("return") ?? "/account";
+
+const errorMessages: Record<string, string> = {
+	steam: "Steam login failed. Please try again.",
+	discord: "Discord login failed. Please try again.",
+};
+
+const errorMsg = error ? (errorMessages[error] ?? "Sign in failed. Please try again.") : null;
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Sign in | Monarch</title>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Oswald:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body class="login-body font-sans text-brand-black">
+
+		<!-- Back button -->
+		<a href="/" class="login-back" aria-label="Back to site">
+			<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4" aria-hidden="true">
+				<path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			Back
+		</a>
+
+		<!-- Split layout -->
+		<div class="login-layout">
+
+			<!-- Left panel: branding -->
+			<div class="login-panel login-panel--left" aria-hidden="true">
+				<div class="login-panel__inner">
+					<a href="/" class="login-panel__logo" tabindex="-1">
+						<img src="/LogoText.svg" alt="Monarch" width="200" height="59" class="h-9 w-auto invert brightness-0 contrast-0 opacity-90" />
+					</a>
+					<div class="login-panel__copy">
+						<h2 class="login-panel__heading">Your mods.<br/>Your servers.<br/>Your account.</h2>
+						<ul class="login-panel__features">
+							<li>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-white/70" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								<span>Download purchased mods instantly</span>
+							</li>
+							<li>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-white/70" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								<span>Manage IP licenses for your DayZ servers</span>
+							</li>
+							<li>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-white/70" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								<span>Get automatic file updates on every release</span>
+							</li>
+							<li>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-white/70" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								<span>View order history and download receipts</span>
+							</li>
+						</ul>
+					</div>
+					<p class="login-panel__legal">
+						By signing in you accept the
+						<a href="/terms-and-conditions" tabindex="-1">Software License Terms</a>
+						and
+						<a href="/privacy-policy" tabindex="-1">Privacy Policy</a>.
+					</p>
+				</div>
+			</div>
+
+			<!-- Right panel: sign in -->
+			<div class="login-panel login-panel--right">
+				<div class="login-panel__form-wrap">
+
+					<!-- Step 1: Choose provider -->
+					<div class="login-step-panel" id="panelStep1">
+						<header class="login-form-header">
+							<h1 class="login-form-header__title">Sign in to Monarch</h1>
+							<p class="login-form-header__sub">Choose how you want to connect your account.</p>
+						</header>
+
+						{errorMsg && (
+							<div class="login-error" role="alert">
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.25"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+								{errorMsg}
+							</div>
+						)}
+
+						<div class="login-providers">
+							<button type="button" class="login-provider-btn" id="btnSteam" data-provider="steam">
+								<span class="login-provider-btn__icon login-provider-btn__icon--steam">
+									<svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+										<path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.695 2.188-4.894 4.868-4.894 2.68 0 4.86 2.2 4.86 4.894 0 2.696-2.18 4.894-4.86 4.894h-.114l-4.069 2.9c0 .053.004.107.004.161 0 2.027-1.638 3.675-3.654 3.675-1.793 0-3.299-1.309-3.598-3.033l-4.595-1.903C2.519 20.54 6.865 24 11.979 24 18.605 24 24 18.627 24 12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.455 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/>
+									</svg>
+								</span>
+								<span class="login-provider-btn__content">
+									<strong>Continue with Steam</strong>
+									<span>Sign in via Steam OpenID</span>
+								</span>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-zinc-400 ml-auto" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							</button>
+
+							<button type="button" class="login-provider-btn" id="btnDiscord" data-provider="discord">
+								<span class="login-provider-btn__icon login-provider-btn__icon--discord">
+									<svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+										<path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+									</svg>
+								</span>
+								<span class="login-provider-btn__content">
+									<strong>Continue with Discord</strong>
+									<span>Sign in via Discord OAuth</span>
+								</span>
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0 text-zinc-400 ml-auto" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							</button>
+						</div>
+
+						<p class="login-tos">
+							By signing in you agree to the
+							<a href="/terms-and-conditions">Software License Terms</a>
+							and
+							<a href="/privacy-policy">Privacy Policy</a>.
+						</p>
+					</div>
+
+					<!-- Step 2: Confirm redirect -->
+					<div class="login-step-panel is-hidden" id="panelStep2">
+						<button type="button" class="login-back-step" id="backToStep1">
+							<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							Back
+						</button>
+
+						<div class="login-confirm" id="loginConfirm">
+							<div class="login-confirm__icon" id="confirmIcon">
+								<!-- injected by JS -->
+							</div>
+							<h2 class="login-confirm__title" id="confirmTitle">Continue to Steam</h2>
+							<p class="login-confirm__body" id="confirmBody">
+								You will be redirected to Steam to authorise your account. No password is stored by Monarch.
+							</p>
+							<a href="#" class="login-confirm__btn" id="confirmBtn">
+								Authorise with Steam
+								<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							</a>
+							<p class="login-confirm__note">
+								You will leave monarch-dayz.com temporarily. This is normal and safe.
+							</p>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<style>
+			*, *::before, *::after { box-sizing: border-box; }
+
+			.login-body {
+				min-height: 100dvh;
+				background: rgb(250 250 250);
+				margin: 0;
+			}
+
+			/* Back arrow */
+			.login-back {
+				position: fixed;
+				top: 1.25rem;
+				left: 1.25rem;
+				z-index: 10;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.375rem;
+				padding: 0.45rem 0.875rem;
+				border: 1px solid rgb(228 228 231);
+				border-radius: 999px;
+				background: #fff;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 0.6875rem;
+				font-weight: 500;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: rgb(82 82 91);
+				text-decoration: none;
+				transition: border-color 0.2s ease, color 0.2s ease;
+			}
+
+			.login-back:hover {
+				border-color: rgb(161 161 170);
+				color: #0a0a0a;
+			}
+
+			/* Layout */
+			.login-layout {
+				display: grid;
+				grid-template-columns: 1fr;
+				min-height: 100dvh;
+			}
+
+			@media (min-width: 900px) {
+				.login-layout {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+
+			/* Left branding panel */
+			.login-panel--left {
+				display: none;
+				position: relative;
+				background: #0a0a0a;
+				overflow: hidden;
+			}
+
+			.login-panel--left::before {
+				content: "";
+				position: absolute;
+				inset: 0;
+				background: radial-gradient(ellipse at 80% 20%, rgb(53 90 122 / 0.55) 0%, transparent 65%);
+			}
+
+			@media (min-width: 900px) {
+				.login-panel--left {
+					display: flex;
+					align-items: stretch;
+				}
+			}
+
+			.login-panel__inner {
+				position: relative;
+				z-index: 1;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+				width: 100%;
+				padding: 3rem 3.5rem;
+			}
+
+			.login-panel__logo {
+				margin-top: 2.5rem;
+			}
+
+			.login-panel__logo img {
+				filter: brightness(0) invert(1);
+				opacity: 0.92;
+			}
+
+			.login-panel__copy {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				padding: 3rem 0;
+			}
+
+			.login-panel__heading {
+				margin: 0 0 2rem;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: clamp(1.75rem, 3vw, 2.5rem);
+				font-weight: 500;
+				line-height: 1.15;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: #fff;
+			}
+
+			.login-panel__features {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 0.875rem;
+			}
+
+			.login-panel__features li {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				font-size: 0.9375rem;
+				color: rgb(255 255 255 / 0.72);
+				line-height: 1.5;
+			}
+
+			.login-panel__legal {
+				margin: 0;
+				font-size: 0.75rem;
+				color: rgb(255 255 255 / 0.35);
+				line-height: 1.5;
+			}
+
+			.login-panel__legal a {
+				color: rgb(255 255 255 / 0.55);
+				text-decoration: none;
+			}
+
+			.login-panel__legal a:hover {
+				color: rgb(255 255 255 / 0.8);
+			}
+
+			/* Right form panel */
+			.login-panel--right {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 5rem 1.5rem 3rem;
+			}
+
+			.login-panel__form-wrap {
+				width: 100%;
+				max-width: 26rem;
+			}
+
+			/* Form header */
+			.login-form-header {
+				margin-bottom: 2rem;
+			}
+
+			.login-form-header__title {
+				margin: 0 0 0.5rem;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 1.5rem;
+				font-weight: 500;
+				line-height: 1.1;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: #0a0a0a;
+			}
+
+			.login-form-header__sub {
+				margin: 0;
+				font-size: 0.9375rem;
+				color: rgb(113 113 122);
+				line-height: 1.5;
+			}
+
+			/* Error */
+			.login-error {
+				display: flex;
+				align-items: center;
+				gap: 0.625rem;
+				margin-bottom: 1.25rem;
+				padding: 0.75rem 1rem;
+				border: 1px solid rgb(254 202 202);
+				border-radius: 0.75rem;
+				background: rgb(254 242 242);
+				font-size: 0.875rem;
+				color: rgb(185 28 28);
+				line-height: 1.45;
+			}
+
+			/* Provider buttons */
+			.login-providers {
+				display: flex;
+				flex-direction: column;
+				gap: 0.75rem;
+			}
+
+			.login-provider-btn {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				width: 100%;
+				padding: 1rem 1.125rem;
+				border: 1px solid rgb(228 228 231);
+				border-radius: 1rem;
+				background: #fff;
+				cursor: pointer;
+				text-align: left;
+				transition:
+					border-color 0.2s ease,
+					box-shadow 0.2s ease,
+					transform 0.15s ease;
+			}
+
+			.login-provider-btn:hover {
+				border-color: rgb(161 161 170);
+				box-shadow: 0 6px 20px rgb(0 0 0 / 0.07);
+				transform: translateY(-1px);
+			}
+
+			.login-provider-btn:active {
+				transform: translateY(0);
+			}
+
+			.login-provider-btn__icon {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 2.5rem;
+				height: 2.5rem;
+				border-radius: 0.625rem;
+				flex-shrink: 0;
+			}
+
+			.login-provider-btn__icon--steam {
+				background: #1b2838;
+				color: #fff;
+			}
+
+			.login-provider-btn__icon--discord {
+				background: #5865f2;
+				color: #fff;
+			}
+
+			.login-provider-btn__content {
+				display: flex;
+				flex-direction: column;
+				gap: 0.2rem;
+				flex: 1;
+				min-width: 0;
+			}
+
+			.login-provider-btn__content strong {
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 0.9375rem;
+				font-weight: 500;
+				letter-spacing: 0.03em;
+				text-transform: uppercase;
+				color: #0a0a0a;
+			}
+
+			.login-provider-btn__content span {
+				font-size: 0.8125rem;
+				color: rgb(113 113 122);
+			}
+
+			/* ToS */
+			.login-tos {
+				margin: 1.5rem 0 0;
+				font-size: 0.8125rem;
+				color: rgb(161 161 170);
+				text-align: center;
+				line-height: 1.5;
+			}
+
+			.login-tos a {
+				color: rgb(82 82 91);
+				font-weight: 600;
+				text-decoration: none;
+			}
+
+			.login-tos a:hover {
+				color: #0a0a0a;
+			}
+
+			/* Step panels */
+			.login-step-panel {
+				transition: opacity 0.2s ease;
+			}
+
+			.login-step-panel.is-hidden {
+				display: none;
+			}
+
+			/* Back button within step 2 */
+			.login-back-step {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.375rem;
+				margin-bottom: 2rem;
+				padding: 0;
+				border: none;
+				background: none;
+				cursor: pointer;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 0.6875rem;
+				font-weight: 500;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: rgb(113 113 122);
+				transition: color 0.2s ease;
+			}
+
+			.login-back-step:hover {
+				color: #0a0a0a;
+			}
+
+			/* Confirm panel */
+			.login-confirm {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				padding: 1.5rem 0;
+			}
+
+			.login-confirm__icon {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 4rem;
+				height: 4rem;
+				border-radius: 1.25rem;
+				margin-bottom: 1.5rem;
+				font-size: 1.75rem;
+			}
+
+			.login-confirm__title {
+				margin: 0 0 0.75rem;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 1.375rem;
+				font-weight: 500;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: #0a0a0a;
+			}
+
+			.login-confirm__body {
+				margin: 0 0 2rem;
+				font-size: 0.9375rem;
+				color: rgb(82 82 91);
+				line-height: 1.6;
+			}
+
+			.login-confirm__btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+				width: 100%;
+				padding: 0.875rem 1.5rem;
+				border-radius: 0.75rem;
+				font-family: var(--font-display, "Oswald", sans-serif);
+				font-size: 0.875rem;
+				font-weight: 500;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: #fff;
+				text-decoration: none;
+				transition: opacity 0.2s ease, transform 0.15s ease;
+			}
+
+			.login-confirm__btn:hover {
+				opacity: 0.9;
+				transform: translateY(-1px);
+			}
+
+			.login-confirm__btn--steam {
+				background: #1b2838;
+			}
+
+			.login-confirm__btn--discord {
+				background: #5865f2;
+			}
+
+			.login-confirm__note {
+				margin: 1rem 0 0;
+				font-size: 0.8125rem;
+				color: rgb(161 161 170);
+				line-height: 1.5;
+			}
+		</style>
+
+		<script>
+			const step1 = document.getElementById("panelStep1")!;
+			const step2 = document.getElementById("panelStep2")!;
+			const back = document.getElementById("backToStep1")!;
+			const confirmIcon = document.getElementById("confirmIcon")!;
+			const confirmTitle = document.getElementById("confirmTitle")!;
+			const confirmBody = document.getElementById("confirmBody")!;
+			const confirmBtn = document.getElementById("confirmBtn")! as HTMLAnchorElement;
+
+			const providers: Record<string, {
+				label: string;
+				body: string;
+				href: string;
+				icon: string;
+				btnClass: string;
+			}> = {
+				steam: {
+					label: "Continue with Steam",
+					body: "You will be redirected to Steam to authorise your account. No password is stored by Monarch.",
+					href: "/api/auth/steam/redirect",
+					btnClass: "login-confirm__btn login-confirm__btn--steam",
+					icon: `<svg viewBox="0 0 24 24" fill="currentColor" style="width:2rem;height:2rem;color:#fff;" aria-hidden="true"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.695 2.188-4.894 4.868-4.894 2.68 0 4.86 2.2 4.86 4.894 0 2.696-2.18 4.894-4.86 4.894h-.114l-4.069 2.9c0 .053.004.107.004.161 0 2.027-1.638 3.675-3.654 3.675-1.793 0-3.299-1.309-3.598-3.033l-4.595-1.903C2.519 20.54 6.865 24 11.979 24 18.605 24 24 18.627 24 12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.455 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>`,
+				},
+				discord: {
+					label: "Continue with Discord",
+					body: "You will be redirected to Discord to authorise your account. No password is stored by Monarch.",
+					href: "/api/auth/discord/redirect",
+					btnClass: "login-confirm__btn login-confirm__btn--discord",
+					icon: `<svg viewBox="0 0 24 24" fill="currentColor" style="width:2rem;height:2rem;color:#fff;" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>`,
+				},
+			};
+
+			function goToStep2(provider: string): void {
+				const p = providers[provider];
+				if (!p) return;
+
+				// Update confirm panel
+				confirmIcon.innerHTML = `<div style="width:4rem;height:4rem;border-radius:1.25rem;background:${provider === "steam" ? "#1b2838" : "#5865f2"};display:flex;align-items:center;justify-content:center;">${p.icon}</div>`;
+				confirmTitle.textContent = p.label;
+				confirmBody.textContent = p.body;
+				confirmBtn.href = p.href;
+				confirmBtn.className = p.btnClass;
+				confirmBtn.textContent = "";
+				confirmBtn.className = p.btnClass;
+				confirmBtn.innerHTML = `${p.label} <svg viewBox="0 0 16 16" fill="none" style="width:1rem;height:1rem;flex-shrink:0;" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+				// Switch panels
+				step1.classList.add("is-hidden");
+				step2.classList.remove("is-hidden");
+
+			}
+
+			function goToStep1(): void {
+				step2.classList.add("is-hidden");
+				step1.classList.remove("is-hidden");
+			}
+
+			document.querySelectorAll<HTMLButtonElement>("[data-provider]").forEach((btn) => {
+				btn.addEventListener("click", () => goToStep2(btn.dataset.provider ?? ""));
+			});
+
+			back.addEventListener("click", goToStep1);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,168 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { generateTotpSecret, getTotpQrDataUrl, encryptTotpForStorage } from "../../lib/auth/totp";
+import { prisma } from "../../lib/prisma";
+
+export const prerender = false;
+
+const customer = Astro.locals.customer!;
+if (customer.totpEnabled) return Astro.redirect("/account/security");
+
+// Generate a fresh secret for display (stored in hidden field, only saved on confirm)
+const secret = generateTotpSecret();
+const qrDataUrl = await getTotpQrDataUrl(customer.email ?? customer.displayName, secret);
+---
+
+<AccountLayout title="Set up 2FA | Monarch Account" tab="security" customer={customer}>
+
+	<div class="acct-page-header">
+		<a href="/account/security" class="acct-back">
+			<svg viewBox="0 0 16 16" fill="none" class="h-4 w-4"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			Back to Security
+		</a>
+		<h1 class="acct-page-header__title">Set up two-factor authentication</h1>
+		<p class="acct-page-header__sub">Scan the QR code with your authenticator app, then enter the code to confirm.</p>
+	</div>
+
+	<div class="acct-2fa-card">
+		<div class="acct-2fa-steps">
+			<div class="acct-2fa-step">
+				<span class="acct-2fa-step__num">1</span>
+				<div>
+					<strong>Scan QR code</strong>
+					<p>Open your authenticator app (Google Authenticator, Authy, etc.) and scan the code below.</p>
+					<div class="acct-2fa-qr">
+						<img src={qrDataUrl} alt="2FA QR code" width="180" height="180" />
+					</div>
+					<details class="acct-2fa-manual">
+						<summary>Can't scan? Enter manually</summary>
+						<code class="acct-2fa-secret">{secret}</code>
+					</details>
+				</div>
+			</div>
+
+			<div class="acct-2fa-step">
+				<span class="acct-2fa-step__num">2</span>
+				<div>
+					<strong>Confirm the code</strong>
+					<p>Enter the 6-digit code shown in your authenticator app to verify setup.</p>
+					<form id="confirm2faForm" class="acct-form">
+						<input type="hidden" name="secret" value={secret} />
+						<label class="acct-field">
+							<span>Authenticator code</span>
+							<input type="text" name="code" required inputmode="numeric" pattern="[0-9 ]{6,7}" autocomplete="one-time-code" placeholder="000 000" style="letter-spacing:0.2em;max-width:12rem;" />
+						</label>
+						<p id="twoFaError" class="acct-form__error hidden" role="alert"></p>
+						<button type="submit" class="acct-submit" id="confirm2faBtn">Activate 2FA</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</AccountLayout>
+
+<style>
+	.acct-page-header { margin-bottom: 2rem; }
+	.acct-back {
+		display: inline-flex; align-items: center; gap: 0.375rem;
+		margin-bottom: 1.25rem;
+		font-family: "Oswald", sans-serif; font-size: 0.6875rem; font-weight: 500;
+		letter-spacing: 0.1em; text-transform: uppercase; color: rgb(113 113 122); text-decoration: none;
+		transition: color 0.15s ease;
+	}
+	.acct-back:hover { color: #0a0a0a; }
+	.acct-page-header__title {
+		margin: 0 0 0.375rem;
+		font-family: "Oswald", sans-serif; font-size: 1.5rem; font-weight: 500;
+		letter-spacing: 0.03em; text-transform: uppercase; color: #0a0a0a;
+	}
+	.acct-page-header__sub { margin: 0; font-size: 0.9375rem; color: rgb(113 113 122); }
+
+	.acct-2fa-card {
+		background: #fff; border-radius: 1.125rem; border: 1px solid rgb(228 228 231);
+		padding: 2rem;
+	}
+	.acct-2fa-steps { display: flex; flex-direction: column; gap: 2.5rem; }
+	.acct-2fa-step { display: flex; gap: 1.25rem; }
+	.acct-2fa-step__num {
+		width: 2rem; height: 2rem; border-radius: 999px; border: 1.5px solid #0a0a0a;
+		display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+		font-family: "Oswald", sans-serif; font-size: 0.875rem; font-weight: 500; color: #0a0a0a;
+	}
+	.acct-2fa-step > div { flex: 1; }
+	.acct-2fa-step > div strong {
+		display: block; font-family: "Oswald", sans-serif; font-size: 1rem; font-weight: 500;
+		letter-spacing: 0.04em; text-transform: uppercase; color: #0a0a0a; margin-bottom: 0.375rem;
+	}
+	.acct-2fa-step > div p { margin: 0 0 1.25rem; font-size: 0.9375rem; color: rgb(82 82 91); line-height: 1.6; }
+	.acct-2fa-qr {
+		display: inline-block; padding: 1rem; background: #fff;
+		border: 1px solid rgb(228 228 231); border-radius: 0.75rem; margin-bottom: 1rem;
+	}
+	.acct-2fa-qr img { display: block; }
+	.acct-2fa-manual summary {
+		cursor: pointer; font-size: 0.8125rem; color: rgb(113 113 122);
+		user-select: none; margin-bottom: 0.625rem;
+	}
+	.acct-2fa-secret {
+		display: block; padding: 0.75rem 1rem; background: rgb(244 244 245);
+		border-radius: 0.5rem; font-size: 0.875rem; letter-spacing: 0.1em;
+		word-break: break-all;
+	}
+
+	.acct-form { display: flex; flex-direction: column; gap: 1rem; max-width: 20rem; }
+	.acct-field { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #0a0a0a; }
+	.acct-field input {
+		padding: 0.75rem 1rem; border: 1px solid rgb(228 228 231); border-radius: 0.75rem;
+		background: #fff; font-family: inherit; font-size: 1rem; color: #0a0a0a; outline: none;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+	.acct-field input:focus { border-color: #0a0a0a; box-shadow: 0 0 0 3px rgb(10 10 10 / 0.08); }
+	.acct-form__error {
+		padding: 0.75rem 1rem; border: 1px solid rgb(254 202 202); border-radius: 0.75rem;
+		background: rgb(254 242 242); font-size: 0.875rem; color: rgb(185 28 28);
+	}
+	.acct-form__error.hidden { display: none; }
+	.acct-submit {
+		display: inline-flex; align-items: center; justify-content: center;
+		padding: 0.75rem 1.5rem; border: none; border-radius: 0.75rem; background: #0a0a0a;
+		font-family: "Oswald", sans-serif; font-size: 0.8125rem; font-weight: 500;
+		letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
+		cursor: pointer; transition: opacity 0.2s ease; align-self: flex-start;
+	}
+	.acct-submit:hover { opacity: 0.8; }
+	.acct-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<script>
+	const form = document.getElementById("confirm2faForm") as HTMLFormElement | null;
+	const errEl = document.getElementById("twoFaError");
+	const btn = document.getElementById("confirm2faBtn") as HTMLButtonElement | null;
+
+	form?.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		if (!errEl || !btn) return;
+		errEl.classList.add("hidden");
+		btn.disabled = true;
+		btn.textContent = "Verifying...";
+
+		const fd = new FormData(form);
+		const res = await fetch("/api/account/confirm-2fa", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ secret: fd.get("secret"), code: fd.get("code") }),
+		});
+		const data = await res.json();
+
+		if (!res.ok) {
+			errEl.textContent = data.error ?? "Invalid code. Please try again.";
+			errEl.classList.remove("hidden");
+			btn.disabled = false;
+			btn.textContent = "Activate 2FA";
+			return;
+		}
+
+		window.location.href = "/account/security?2fa=enabled";
+	});
+</script>

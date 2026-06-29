@@ -1,198 +1,187 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchPageHero from "../components/MonarchPageHero.astro";
+import { Icon } from "astro-icon/components";
+import { listPublishedJobs } from "../lib/jobs";
 
-const reasons = [
-	{
-		title: "Product-led culture",
-		body: "Work alongside people who live fishing — from field testing to dealer events and digital storytelling.",
-	},
-	{
-		title: "Learning & mobility",
-		body: "Training on technical products, structured onboarding, and pathways into European and global roles where available.",
-	},
-	{
-		title: "Balance & benefits",
-		body: "Competitive packages, hybrid options for eligible roles, and a respectful approach to workload and time off.",
-	},
-];
+export const prerender = false;
 
-const vacancies = [
-	{ title: "Marketing Executive — digital content", location: "Manchester", type: "Full-time", href: "#" },
-	{ title: "Technical support specialist", location: "Telford", type: "Full-time", href: "#" },
-	{ title: "Commercial analyst", location: "Telford / hybrid", type: "Full-time", href: "#" },
-	{ title: "Customer service advisor (6-month FTC)", location: "Telford", type: "Fixed-term", href: "#" },
-];
+let openings: Awaited<ReturnType<typeof listPublishedJobs>> = [];
+try {
+	openings = await listPublishedJobs();
+} catch {
+	openings = [];
+}
 ---
 
 <SiteLayout
-	title="Careers — Shimano Fishing United Kingdom"
-	description="Careers at Shimano Fishing UK: open roles, culture, and how to apply. Demo layout — replace with live vacancies and HR policies."
+	title="Careers | Monarch"
+	description="Careers at Monarch: join our DayZ modding, software, and community server teams. Remote-first, based in New Hampshire."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-24 px-6 pb-24"
 >
-	<div slot="pre-main" class="mb-20 w-full">
-		<div class="group/banner relative min-h-[240px] overflow-hidden text-white md:min-h-[300px]">
-			<div class="absolute inset-0">
-				<img
-					src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=2000&q=80"
-					alt=""
-					width="2000"
-					height="800"
-					loading="eager"
-					class="h-full min-h-[240px] w-full object-cover md:min-h-[300px]"
-				/>
-			</div>
-			<div
-				class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.28)_55%,rgba(0,0,0,0.12)_100%)]"
-				aria-hidden="true"
+	<slot slot="pre-main">
+		<MonarchPageHero
+			eyebrow="Company"
+			title="Careers"
+			lead="We hire developers, designers, and operators who live in the DayZ ecosystem and care about shipping reliable work for communities."
+			image="/Careers_Banner.png"
+			cta={{ label: "Work with us", href: "/work-with-us" }}
+		/>
+	</slot>
+
+	<!-- ── Why Monarch ── -->
+	<section class="mx-auto max-w-3xl text-center" data-scroll-reveal>
+		<p class="st-reveal m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">Why Monarch</p>
+		<h2 class="st-reveal m-0 mt-3 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black">
+			Small team. Large output.
+		</h2>
+		<p class="st-reveal m-0 mt-4 text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			You will work on mods, tools, and live servers that real players and server owners depend on. Roles span Monarch
+			Modding, Operation Monarch, and Monarch Software. We are remote-first, based in New Hampshire — we ship deliberate
+			work, not slide decks.
+		</p>
+		<div class="st-reveal mt-8 flex flex-wrap justify-center gap-6">
+			{[
+				{ label: "2019", desc: "Active in DayZ" },
+				{ label: "Remote", desc: "Remote-first team" },
+				{ label: "NH", desc: "Based in New Hampshire" },
+			].map((s) => (
+				<div class="text-center">
+					<p class="m-0 font-display text-2xl font-medium text-monarch-500">{s.label}</p>
+					<p class="m-0 font-display text-[10px] uppercase tracking-[0.15em] text-zinc-500">{s.desc}</p>
+				</div>
+			))}
+		</div>
+	</section>
+
+	<!-- ── Open roles ── -->
+	<section aria-labelledby="open-roles-heading" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Open roles</p>
+			<h2
+				id="open-roles-heading"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
 			>
-			</div>
-			<div class="relative z-10 mx-auto flex min-h-[240px] max-w-7xl flex-col items-start justify-center gap-3 px-6 py-14 md:min-h-[300px] md:gap-4 md:py-16">
-				<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/75">Careers</p>
-				<h1 class="m-0 max-w-[18ch] font-display text-[clamp(1.85rem,5vw,3rem)] font-medium uppercase leading-tight tracking-wide">
-					Build your career with us
-				</h1>
-				<p class="m-0 max-w-3xl text-base leading-relaxed text-white/90 md:text-lg">
-					Join the UK team bringing Shimano tackle to anglers, retailers, and partners — with the same engineering mindset
-					that defines our products.
+				Join the team
+			</h2>
+			{openings.length > 0 && (
+				<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+					{openings.length} open role{openings.length === 1 ? "" : "s"} right now. All positions are remote.
 				</p>
-				<a
-					class="font-display mt-2 inline-flex items-center justify-center border-0 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
-					href="#open-roles"
-				>
-					View open roles
+			)}
+		</header>
+
+		{openings.length > 0 ? (
+			<ul class="st-reveal mt-10 list-none space-y-4 p-0" id="open-roles">
+				{openings.map((role) => (
+					<li class="group border border-zinc-200 bg-white transition-all hover:border-zinc-400 hover:shadow-sm">
+						<div class="flex flex-col gap-6 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+							<div class="min-w-0 flex-1">
+								<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">
+									{role.team} · {role.workType}
+								</p>
+								<h3 class="m-0 mt-2 font-display text-lg font-medium uppercase tracking-wide text-brand-black">
+									<a href={role.href} class="transition-colors hover:text-monarch-500">
+										{role.title}
+									</a>
+								</h3>
+								<p class="m-0 mt-2 max-w-2xl text-[15px] leading-relaxed text-zinc-600">{role.excerpt}</p>
+							</div>
+							<div class="flex shrink-0 gap-3">
+								<a href={role.href} class="monarch-pill-btn monarch-pill-btn--secondary">
+									About role
+								</a>
+								<a href={`${role.href}#apply`} class="monarch-pill-btn">
+									Apply
+									<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+								</a>
+							</div>
+						</div>
+					</li>
+				))}
+			</ul>
+		) : (
+			<div class="st-reveal mt-10 border border-dashed border-zinc-300 bg-white px-8 py-16 text-center">
+				<svg class="mx-auto mb-4 h-10 w-10 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z" />
+				</svg>
+				<p class="m-0 font-display text-sm uppercase tracking-widest text-zinc-400">No open roles right now</p>
+				<p class="m-0 mt-2 text-sm text-zinc-500">Check back soon, or reach out to express general interest.</p>
+				<a href="/contact" class="monarch-pill-btn mt-6 inline-flex">
+					Get in touch
+					<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
 				</a>
 			</div>
-		</div>
-	</div>
-
-	<section class="text-center" id="careers" aria-labelledby="careers-intro-heading">
-		<h2 id="careers-intro-heading" class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Why Shimano Fishing UK
-		</h2>
+		)}
 	</section>
 
-	<div class="w-full max-w-none text-left">
-		<p class="m-0 text-base leading-relaxed text-zinc-600">
-			We hire across commercial, marketing, technical service, operations, and customer support. This page is a layout
-			template: vacancy copy is illustrative only. Official listings, application portals, and equal-opportunity statements
-			should come from your HR team before go-live.
-		</p>
-	</div>
-
-	<section class="text-center">
-		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">What we offer</h2>
-	</section>
-
-	<div class="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-		{
-			reasons.map((r) => (
-				<div class="border border-zinc-200 bg-white p-6 text-left shadow-sm">
-					<h3 class="m-0 mb-3 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{r.title}</h3>
-					<p class="m-0 text-sm leading-relaxed text-zinc-600">{r.body}</p>
+	<!-- ── What we're looking for ── -->
+	<section aria-labelledby="looking-for" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Disciplines</p>
+			<h2
+				id="looking-for"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				What we look for
+			</h2>
+		</header>
+		<div class="st-reveal mt-10 grid gap-5 sm:grid-cols-3">
+			{[
+				{
+					icon: "lucide:code-2",
+					title: "Developers",
+					body: "Gameplay systems, automation, build pipelines, and the glue between DayZ updates and what your server runs on Monday.",
+				},
+				{
+					icon: "lucide:pen-tool",
+					title: "UI / UX designers",
+					body: "Panels, branding, and in game interfaces so Monarch services feel cohesive from Discord to deploy.",
+				},
+				{
+					icon: "lucide:globe",
+					title: "Server operators",
+					body: "Live Operation Monarch servers, events, and community moderation aligned with Monarch content releases.",
+				},
+			].map((item) => (
+				<div class="group flex gap-4 border border-zinc-200 bg-white px-6 py-6 transition-colors hover:border-zinc-300 sm:flex-col sm:gap-4">
+					<div class="flex h-10 w-10 shrink-0 items-center justify-center border border-zinc-200 bg-zinc-50">
+						<Icon name={item.icon} class="size-4.5 text-monarch-500" is:inline aria-hidden="true" />
+					</div>
+					<div>
+						<h3 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{item.title}</h3>
+						<p class="m-0 mt-2 text-[15px] leading-relaxed text-zinc-600">{item.body}</p>
+					</div>
 				</div>
-			))
-		}
-	</div>
-
-	<section class="-mx-6 w-[calc(100%+3rem)] border-y border-zinc-200 bg-zinc-100 px-6 py-14" id="open-roles" aria-labelledby="open-roles-heading">
-		<h2 id="open-roles-heading" class="m-0 text-center font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">
-			Open roles
-		</h2>
-		<p class="mx-auto mt-4 max-w-none text-center text-sm text-zinc-600">Demo vacancies — links are placeholders.</p>
-
-		<ul class="mx-auto mt-8 w-full max-w-none list-none border border-zinc-200 bg-white p-0">
-			<li class="hidden border-b border-zinc-200 bg-zinc-50 px-[1.1rem] py-3 font-display text-[11px] uppercase tracking-wide text-zinc-600 md:grid md:grid-cols-[1fr_minmax(0,12rem)_minmax(0,8rem)_auto] md:gap-4 md:text-left">
-				<span>Role</span>
-				<span>Location</span>
-				<span>Type</span>
-				<span class="md:text-right"> </span>
-			</li>
-			{
-				vacancies.map((job) => (
-					<li class="grid grid-cols-1 gap-2 border-b border-zinc-200 px-[1.1rem] py-5 last:border-b-0 md:grid-cols-[1fr_minmax(0,12rem)_minmax(0,8rem)_auto] md:items-center md:gap-4">
-						<span class="text-[15px] font-semibold leading-snug text-brand-black">{job.title}</span>
-						<span class="text-sm text-zinc-600">{job.location}</span>
-						<span class="font-display text-[11px] uppercase tracking-wide text-zinc-500">{job.type}</span>
-						<a
-							class="font-display inline-flex w-fit border border-zinc-200 bg-white px-3 py-2 text-[11px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50 md:justify-self-end"
-							href={job.href}
-						>
-							View details
-						</a>
-					</li>
-				))
-			}
-		</ul>
-	</section>
-
-	<section class="text-center">
-		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">How to apply</h2>
-	</section>
-
-	<div class="w-full max-w-none text-left">
-		<p class="m-0 text-base leading-relaxed text-zinc-600">
-			Send a CV and short cover note to <a class="text-shimano-500 underline decoration-shimano-500/30 underline-offset-2 hover:text-shimano-600" href="mailto:careers.demo@shimano.example">careers.demo@shimano.example</a> with the role title in the subject line, or use your
-			ATS link when integrated. We aim to acknowledge applications within five working days (demo copy only).
-		</p>
-	</div>
-
-	<section class="text-center">
-		<h2 class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em]">Where to next</h2>
-	</section>
-
-	<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/"
-		>
-			Back to home
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center border border-zinc-200 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-			href="/team"
-		>
-			Meet the team
-		</a>
-		<a
-			class="font-display inline-flex items-center justify-center bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-			href="/about"
-		>
-			About us
-		</a>
-	</div>
-
-	<section class="-mx-6 w-[calc(100%+3rem)] border-t border-zinc-200 bg-zinc-100" id="contact">
-		<div class="grid w-full grid-cols-1 md:grid-cols-2">
-			<div class="flex flex-col items-center border-b border-zinc-200 px-4 py-10 md:border-b-0 md:border-r md:border-zinc-200">
-				<div class="w-full max-w-[36ch] text-left">
-					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Members</h2>
-					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Shimano members</span>
-					<p class="mb-5 text-sm leading-normal text-zinc-600">Catalogue requests, event news, and email updates in one place.</p>
-					<a
-						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-						href="#"
-					>
-						Become a member
-					</a>
-				</div>
-			</div>
-			<div class="flex flex-col items-center px-4 py-10">
-				<div class="w-full max-w-[36ch] text-left">
-					<h2 class="mb-1.5 font-display font-medium uppercase tracking-wide">Dealer</h2>
-					<span class="mb-3 block font-sans text-[13px] font-normal tracking-normal text-zinc-600">Store information</span>
-					<p class="mb-5 text-sm leading-normal text-zinc-600">Find authorised retailers and service centres near you.</p>
-					<a
-						class="font-display inline-flex w-fit bg-brand-black px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-zinc-800"
-						href="#"
-					>
-						Search for dealers
-					</a>
-				</div>
-			</div>
+			))}
 		</div>
 	</section>
 
-	<script>
-		import { initHome } from "../scripts/home.ts";
-		initHome();
-	</script>
+	<!-- ── CTA ── -->
+	<section
+		class="st-reveal relative overflow-hidden border border-zinc-200 bg-brand-black px-8 py-16 text-center text-white sm:px-12 sm:py-20"
+		data-scroll-reveal
+	>
+		<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/50">Monarch Careers</p>
+		<h2 class="m-0 mt-3 font-display text-[clamp(1.5rem,4vw,2.5rem)] font-medium uppercase leading-tight tracking-wide">
+			Don't see the right role?
+		</h2>
+		<p class="mx-auto m-0 mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 sm:text-base">
+			Send us a general application or get in touch. We hire when the right person shows up, not just when a role is listed.
+		</p>
+		<div class="mt-8 flex flex-wrap justify-center gap-3">
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+				href="/contact"
+			>
+				Get in touch
+			</a>
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 border border-white/40 px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-white/10"
+				href="/about-monarch"
+			>
+				About Monarch
+			</a>
+		</div>
+	</section>
 </SiteLayout>

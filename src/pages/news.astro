@@ -1,0 +1,18 @@
+---
+import MonarchBasicPage from "../components/MonarchBasicPage.astro";
+import NewsUpdates from "../components/NewsUpdates.astro";
+
+export const prerender = false;
+---
+
+<MonarchBasicPage
+	title="News & updates | Monarch"
+	description="Latest news from Monarch Modding, Operation Monarch, Monarch Software, and the wider Monarch group."
+	eyebrow="Company"
+	heading="News & updates"
+	lead="Releases, server news, software milestones, and company updates from across the Monarch group."
+	image="/News_Banner.png"
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-12 px-6 pb-20"
+>
+	<NewsUpdates embedded />
+</MonarchBasicPage>

@@ -1,0 +1,123 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchPageHero from "../components/MonarchPageHero.astro";
+import ContactForm from "../components/ContactForm.astro";
+import { Icon } from "astro-icon/components";
+
+export const prerender = false;
+
+const beforeYouWrite = [
+	{
+		title: "Commissioning & server work",
+		body: "Scoped mods, configs, and delivery plans for your community.",
+		label: "Work with us",
+		href: "/work-with-us",
+	},
+	{
+		title: "Playing on our servers",
+		body: "Live worlds, events, and player facing Operation Monarch servers.",
+		label: "Join Operation Monarch",
+		href: "/join-operation-monarch",
+	},
+	{
+		title: "Careers",
+		body: "Open roles, applications, and hiring questions.",
+		label: "View careers",
+		href: "/careers",
+	},
+];
+
+const connectColumns = [
+	{
+		title: "Work with us",
+		subtitle: "Server owners & creators",
+		body: "Commission mods, discuss software tooling, or plan infrastructure for your DayZ community.",
+		cta: "Get in touch",
+		href: "/work-with-us",
+	},
+	{
+		title: "Play & connect",
+		subtitle: "Players & community",
+		body: "Join Operation Monarch for live servers and events, explore partner content, and stay up to date on wipes.",
+		cta: "Join Operation Monarch",
+		href: "/join-operation-monarch",
+	},
+];
+---
+
+<SiteLayout
+	title="Contact | Monarch"
+	description="Contact Monarch for DayZ modding, software, server operations, and partnership enquiries."
+	mainClass="mx-auto mt-20 max-w-7xl space-y-20 px-6 pb-24"
+>
+	<slot slot="pre-main">
+		<MonarchPageHero
+			eyebrow="Connect"
+			title="Contact"
+			lead="Send a general enquiry, ask about partnerships, or get pointed to the right Monarch team."
+			image="/News_Banner.png"
+			cta={{ label: "Send a message", href: "#contact-form" }}
+		/>
+	</slot>
+
+	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[19rem_minmax(0,1fr)]">
+		<aside class="w-full lg:sticky lg:top-24 lg:z-[2] lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto">
+			<div class="monarch-contact-sidebar overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+				<div class="border-b border-zinc-200 px-5 py-4 text-center sm:px-6">
+					<h2 class="m-0 font-display text-sm font-medium uppercase tracking-[0.12em] text-brand-black">
+						Before you write
+					</h2>
+				</div>
+				<ul class="list-none divide-y divide-zinc-200 p-0">
+					{
+						beforeYouWrite.map((item) => (
+							<li class="px-5 py-4 sm:px-6 sm:py-5">
+								<h3 class="m-0 font-display text-[13px] font-medium uppercase tracking-wide text-brand-black">
+									{item.title}
+								</h3>
+								<p class="m-0 mt-2 text-sm leading-relaxed text-zinc-600">{item.body}</p>
+								<a class="monarch-pill-btn mt-4 w-full" href={item.href}>
+									{item.label}
+									<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</aside>
+
+		<div class="min-w-0">
+			<ContactForm />
+		</div>
+	</div>
+
+	<section aria-labelledby="other-ways-heading" class="border-t border-zinc-200 pt-16">
+		<header class="monarch-section-header">
+			<h2
+				id="other-ways-heading"
+				class="m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Other ways to connect
+			</h2>
+		</header>
+
+		<div class="monarch-contact-home__grid monarch-contact-home__grid--two mt-10">
+			{
+				connectColumns.map((item) => (
+					<article class="monarch-contact-card">
+						<div class="monarch-contact-card__head">
+							<h3 class="monarch-contact-card__title">{item.title}</h3>
+							<p class="monarch-contact-card__subtitle">{item.subtitle}</p>
+						</div>
+						<p class="monarch-contact-card__body">{item.body}</p>
+						<a class="monarch-pill-btn monarch-contact-card__cta" href={item.href}>
+							{item.cta}
+							<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+						</a>
+					</article>
+				))
+			}
+		</div>
+	</section>
+</SiteLayout>

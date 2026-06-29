@@ -1,0 +1,135 @@
+---
+import { Icon } from "astro-icon/components";
+import { listPublishedNews, type NewsListItem } from "../lib/news";
+
+export type { NewsListItem };
+
+interface Props {
+	kicker?: string;
+	heading?: string;
+	lead?: string;
+	items?: NewsListItem[];
+	embedded?: boolean;
+	showExcerpt?: boolean;
+	showFooterLink?: boolean;
+}
+
+const {
+	kicker = "Updates",
+	heading = "News & updates",
+	lead = "Releases, server news, software milestones, and company updates from across the Monarch group.",
+	items: itemsProp,
+	embedded = false,
+	showExcerpt = embedded,
+	showFooterLink = !embedded,
+} = Astro.props;
+
+let items = itemsProp;
+try {
+	items ??= await listPublishedNews();
+} catch {
+	items = [];
+}
+
+const tabs = [
+	{ id: "all", label: "All" },
+	{ id: "modding", label: "Modding" },
+	{ id: "servers", label: "Servers" },
+	{ id: "software", label: "Software" },
+	{ id: "company", label: "Company" },
+] as const;
+---
+
+<section
+	id="news"
+	aria-labelledby="news-heading"
+	data-scroll-reveal={embedded ? undefined : true}
+	class:list={["monarch-news", embedded && "monarch-news--embedded"]}
+>
+	{
+		embedded ? (
+			<h2 id="news-heading" class="sr-only">
+				{heading}
+			</h2>
+		) : (
+			<header class="monarch-section-header">
+				<p class="monarch-section-kicker st-reveal">{kicker}</p>
+				<h2
+					id="news-heading"
+					class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+				>
+					{heading}
+				</h2>
+				<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+					{lead}
+				</p>
+			</header>
+		)
+	}
+
+	<div class="monarch-news__tabs st-reveal" role="tablist" aria-label="Filter news by category">
+		{
+			tabs.map((tab, i) => (
+				<button
+					type="button"
+					class:list={["monarch-news__tab", i === 0 && "is-active"]}
+					data-news-tab={tab.id}
+					role="tab"
+					aria-selected={i === 0 ? "true" : "false"}
+				>
+					{tab.label}
+				</button>
+			))
+		}
+	</div>
+
+	{
+		tabs.map((tab) => {
+			const filtered = items.filter((n) => tab.id === "all" || n.category === tab.id);
+
+			return (
+				<div class:list={["monarch-news__panel st-reveal", tab.id === "all" && "is-active"]} data-news-panel={tab.id}>
+					{filtered.length > 0 ? (
+						<ul class="monarch-news__list">
+							{filtered.map((n) => (
+								<li class="monarch-news-card">
+									<time class="monarch-news-card__date" datetime={n.date}>{n.date}</time>
+									<div class="monarch-news-card__body">
+										<h3 class="monarch-news-card__title">
+											<a href={n.href}>
+												{n.title}
+												{n.external ? (
+													<span class="monarch-news-card__external">External</span>
+												) : null}
+											</a>
+										</h3>
+										{showExcerpt ? <p class="monarch-news-card__excerpt">{n.excerpt}</p> : null}
+									</div>
+									<a class="monarch-news-card__arrow" href={n.href} aria-label={`Read ${n.title}`}>
+										<Icon name="lucide:arrow-up-right" class="size-4" is:inline aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+					) : (
+						<div class="monarch-news__empty">
+							<p>No news posts yet.</p>
+							{tab.id !== "all" ? <p class="monarch-news__empty-hint">Try another category or check back soon.</p> : null}
+						</div>
+					)}
+				</div>
+			);
+		})
+	}
+
+	{
+		showFooterLink ? (
+			<div class="monarch-news__footer st-reveal">
+				<a class="monarch-pill-btn" href="/news">
+					All news
+					<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+				</a>
+			</div>
+		) : null
+	}
+</section>

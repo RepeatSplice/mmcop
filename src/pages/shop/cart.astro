@@ -1,0 +1,171 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import MonarchPageHero from "../../components/MonarchPageHero.astro";
+import { prisma } from "../../lib/prisma";
+
+export const prerender = false;
+
+const customer = Astro.locals.customer;
+if (!customer) {
+	return Astro.redirect("/account/login");
+}
+
+const cartItems = await prisma.cartItem.findMany({
+	where: { sessionId: customer.id },
+	include: { variant: { include: { product: true } } },
+});
+
+const total = cartItems.reduce((sum, item) => sum + item.variant.priceUsd * item.qty, 0);
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+---
+
+<SiteLayout title="Cart | Monarch">
+	<slot slot="pre-main">
+		<MonarchPageHero title="Cart" lead="Review your order before checkout" image="/News_Banner.png" />
+	</slot>
+
+	<div class="mx-auto w-full max-w-3xl py-12">
+		{
+			cartItems.length === 0 ? (
+				<div class="border border-dashed border-zinc-300 bg-zinc-50 py-16 text-center">
+					<p class="m-0 text-zinc-500">Your cart is empty.</p>
+					<a
+						href="/shop"
+						class="mt-4 inline-block border border-monarch-500 bg-monarch-500 px-5 py-2.5 font-display text-xs uppercase tracking-widest text-white transition-colors hover:bg-monarch-600"
+					>
+						Browse Shop
+					</a>
+				</div>
+			) : (
+				<div>
+					<ul class="list-none divide-y divide-zinc-100 border border-zinc-200 bg-white p-0">
+						{cartItems.map((item) => (
+							<li class="flex items-center justify-between gap-4 px-5 py-4">
+								<div class="flex-1">
+									<p class="m-0 font-semibold text-brand-black">{item.variant.product.title}</p>
+									<p class="m-0 mt-0.5 text-sm text-zinc-500">{item.variant.name}</p>
+								</div>
+								<div class="flex items-center gap-4">
+									<span class="text-sm text-zinc-500">x{item.qty}</span>
+									<span class="font-display text-sm font-medium text-brand-black">
+										{formatPrice(item.variant.priceUsd * item.qty)}
+									</span>
+									<button
+										type="button"
+										class="remove-item font-display text-[11px] uppercase tracking-wide text-red-500 hover:text-red-700"
+										data-variant-id={item.variantId}
+									>
+										Remove
+									</button>
+								</div>
+							</li>
+						))}
+					</ul>
+
+					<div class="mt-4 flex justify-between border-t border-zinc-200 py-3">
+						<span class="font-display text-sm uppercase tracking-wide text-zinc-600">Total</span>
+						<span class="font-display text-base font-medium text-brand-black">
+							{formatPrice(total)}
+						</span>
+					</div>
+
+					<div class="mt-6 border border-zinc-200 bg-white p-6">
+						<h3 class="m-0 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+							Checkout
+						</h3>
+
+						<div class="mt-4">
+							<label class="mb-1 block font-display text-[11px] uppercase tracking-widest text-zinc-500">
+								Affiliate / Promo Code (optional)
+							</label>
+							<input
+								type="text"
+								id="affiliateCode"
+								placeholder="Enter code"
+								class="w-full border border-zinc-300 bg-white px-3 py-2 text-sm text-brand-black placeholder-zinc-400 focus:border-brand-black focus:outline-none sm:w-64"
+							/>
+						</div>
+
+						<div class="mt-4 flex items-start gap-3">
+							<input type="checkbox" id="tosAccept" class="mt-0.5 h-4 w-4 shrink-0" />
+							<label for="tosAccept" class="text-sm text-zinc-600">
+								I agree to the{" "}
+								<a href="/terms-and-conditions" class="font-semibold text-brand-black underline hover:text-monarch-500" target="_blank">
+									Terms and Conditions
+								</a>{" "}
+								and{" "}
+								<a href="/privacy-policy" class="font-semibold text-brand-black underline hover:text-monarch-500" target="_blank">
+									Privacy Policy
+								</a>
+								.
+							</label>
+						</div>
+
+						<div id="checkoutError" class="mt-3 hidden text-sm text-red-600" />
+
+						<button
+							type="button"
+							id="checkoutBtn"
+							class="mt-5 border border-monarch-500 bg-monarch-500 px-6 py-3 font-display text-sm uppercase tracking-widest text-white transition-colors hover:bg-monarch-600 disabled:opacity-50"
+						>
+							Proceed to Payment
+						</button>
+					</div>
+				</div>
+			)
+		}
+	</div>
+
+	<script slot="scripts">
+		// Remove items
+		document.querySelectorAll(".remove-item").forEach((btn) => {
+			btn.addEventListener("click", async () => {
+				const variantId = btn.getAttribute("data-variant-id");
+				const res = await fetch("/api/shop/cart", {
+					method: "DELETE",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ variantId }),
+				});
+				if (res.ok) window.location.reload();
+			});
+		});
+
+		// Checkout
+		const checkoutBtn = document.getElementById("checkoutBtn");
+		const tosAccept = document.getElementById("tosAccept");
+		const errorDiv = document.getElementById("checkoutError");
+		const affiliateInput = document.getElementById("affiliateCode");
+
+		checkoutBtn?.addEventListener("click", async () => {
+			if (!tosAccept?.checked) {
+				if (errorDiv) {
+					errorDiv.textContent = "You must accept the Terms and Conditions.";
+					errorDiv.classList.remove("hidden");
+				}
+				return;
+			}
+			if (errorDiv) errorDiv.classList.add("hidden");
+			if (checkoutBtn) checkoutBtn.setAttribute("disabled", "true");
+
+			const res = await fetch("/api/shop/checkout", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					tosAccepted: true,
+					affiliateCode: affiliateInput?.value?.trim() || undefined,
+				}),
+			});
+
+			const data = await res.json();
+			if (res.ok && data.url) {
+				window.location.href = data.url;
+			} else {
+				if (errorDiv) {
+					errorDiv.textContent = data.error ?? "Checkout failed. Please try again.";
+					errorDiv.classList.remove("hidden");
+				}
+				if (checkoutBtn) checkoutBtn.removeAttribute("disabled");
+			}
+		});
+	</script>
+</SiteLayout>

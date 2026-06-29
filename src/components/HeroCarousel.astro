@@ -1,10 +1,19 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Icon } from "astro-icon/components";
+
+export interface HeroSlideCta {
+	label: string;
+	href: string;
+	external?: boolean;
+}
 
 export interface Slide {
-	href: string;
 	src: string;
 	alt: string;
+	eyebrow?: string;
+	title: string;
+	lead: string;
+	ctas: HeroSlideCta[];
 }
 
 export interface Props {
@@ -15,50 +24,77 @@ export interface Props {
 const { slides, delayMs = 5000 } = Astro.props;
 ---
 
-<section class="relative bg-[#0d0d0d] text-white" aria-roledescription="carousel" aria-label="Featured" data-hero-carousel data-delay={delayMs}>
-	<div class="relative aspect-[21/7] max-h-[70vh] min-h-[220px] overflow-hidden max-md:aspect-video max-md:min-h-[200px]">
+<section
+	class="hero-carousel relative bg-brand-black text-white"
+	aria-roledescription="carousel"
+	aria-label="Featured"
+	data-hero-carousel
+	data-delay={delayMs}
+>
+	<div class="hero-carousel__stage relative aspect-[21/7] max-h-[72vh] min-h-[240px] overflow-hidden max-md:aspect-video max-md:min-h-[220px]">
 		{
 			slides.map((slide, i) => (
 				<div
-					class:list={[
-						"absolute inset-0 z-0 opacity-0 transition-opacity duration-[600ms] ease-in-out pointer-events-none [.is-active]:z-[1] [.is-active]:opacity-100 [.is-active]:pointer-events-auto",
-						{ "is-active": i === 0 },
-					]}
+					class:list={["hero-slide", { "is-active": i === 0 }]}
 					data-hero-slide
 					role="group"
 					aria-label={`Slide ${i + 1} of ${slides.length}`}
+					aria-hidden={i === 0 ? "false" : "true"}
 				>
-					<a class="block h-full" href={slide.href}>
-						<img class="h-full w-full object-cover" src={slide.src} alt={slide.alt} width="1920" height="640" loading={i === 0 ? "eager" : "lazy"} />
-					</a>
+					<div class="hero-slide__media" aria-hidden="true">
+						<img
+							src={slide.src}
+							alt={slide.alt}
+							width="1920"
+							height="640"
+							loading={i === 0 ? "eager" : "lazy"}
+							decoding="async"
+						/>
+					</div>
+					<div class="hero-slide__overlay" aria-hidden="true" />
+					<div class="hero-slide__content">
+						{slide.eyebrow ? (
+							<p class="hero-slide__eyebrow">{slide.eyebrow}</p>
+						) : null}
+						<h2 class="hero-slide__title">{slide.title}</h2>
+						<p class="hero-slide__lead">{slide.lead}</p>
+						{
+							slide.ctas.length > 0 && (
+								<div class="hero-slide__actions">
+									{slide.ctas.map((cta, ctaIndex) => (
+										<a
+											class:list={[
+												"hero-slide__btn",
+												ctaIndex === 0 ? "hero-slide__btn--primary" : "hero-slide__btn--secondary",
+											]}
+											href={cta.href}
+											{...(cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+										>
+											{cta.label}
+											{cta.external ? (
+												<Icon name="lucide:arrow-up-right" class="size-3.5 shrink-0 opacity-80" is:inline aria-hidden="true" />
+											) : null}
+										</a>
+									))}
+								</div>
+							)
+						}
+					</div>
 				</div>
 			))
 		}
-		<button
-			type="button"
-			class="absolute left-3 top-1/2 z-[5] flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/35 bg-black/35 text-white transition-colors hover:bg-black/55"
-			data-hero-prev
-			aria-label="Previous slide"
-		>
+		<button type="button" class="hero-carousel__nav hero-carousel__nav--prev" data-hero-prev aria-label="Previous slide">
 			<Icon name="lucide:chevron-left" class="size-5 shrink-0" is:inline aria-hidden="true" />
 		</button>
-		<button
-			type="button"
-			class="absolute right-3 top-1/2 z-[5] flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/35 bg-black/35 text-white transition-colors hover:bg-black/55"
-			data-hero-next
-			aria-label="Next slide"
-		>
+		<button type="button" class="hero-carousel__nav hero-carousel__nav--next" data-hero-next aria-label="Next slide">
 			<Icon name="lucide:chevron-right" class="size-5 shrink-0" is:inline aria-hidden="true" />
 		</button>
-		<div class="absolute bottom-4 left-0 right-0 z-[5] flex justify-center gap-2" role="tablist" aria-label="Slides">
+		<div class="hero-carousel__dots" role="tablist" aria-label="Slides">
 			{
 				slides.map((_, i) => (
 					<button
 						type="button"
-						class:list={[
-							"h-2 w-2 cursor-pointer border border-white/60 bg-transparent p-0 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shimano-500 [.is-active]:border-white [.is-active]:bg-white",
-							{ "is-active": i === 0 },
-						]}
+						class:list={["hero-carousel__dot", { "is-active": i === 0 }]}
 						data-hero-dot
 						role="tab"
 						aria-selected={i === 0 ? "true" : "false"}

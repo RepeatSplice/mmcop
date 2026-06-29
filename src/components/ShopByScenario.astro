@@ -1,0 +1,90 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface Scenario {
+	title: string;
+	tagline: string;
+	detail: string;
+	href: string;
+	image: string;
+	imagePosition?: string;
+	imageFit?: "cover" | "contain";
+	/** `banner` = full-bleed cover in the media strip; `logo` = padded, centred mark */
+	imageVariant?: "banner" | "logo";
+}
+
+interface Props {
+	heading?: string;
+	kicker?: string;
+	intro?: string;
+	scenarios: Scenario[];
+}
+
+const {
+	kicker = "Our brands",
+	heading = "Services",
+	intro = "Four focused brands under one roof. Choose modding, live play, software, or infrastructure without losing the same team behind delivery.",
+	scenarios,
+} = Astro.props;
+---
+
+<section class="monarch-services" id="monarch-services" aria-labelledby="monarch-services-heading" data-scroll-reveal>
+	<header class="monarch-services__header text-center">
+		<p class="monarch-services__kicker st-reveal">{kicker}</p>
+		<h2
+			id="monarch-services-heading"
+			class="monarch-services__heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+		>
+			{heading}
+		</h2>
+		<p class="monarch-services__intro st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			{intro}
+		</p>
+	</header>
+
+	<div id="monarch-services-grid" class="monarch-services__grid st-reveal" role="list">
+		{
+			scenarios.map((s) => {
+				const isBanner = (s.imageVariant ?? "logo") === "banner";
+				const fit = s.imageFit ?? (isBanner ? "cover" : "contain");
+				const external = s.href.startsWith("http");
+
+				return (
+					<article role="listitem" class="monarch-service-card group">
+						<a
+							class="monarch-service-card__link"
+							href={s.href}
+							{...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+						>
+							<div class:list={["monarch-service-card__media", !isBanner && "monarch-service-card__media--logo"]}>
+								<img
+									src={s.image}
+									alt=""
+									width={isBanner ? 600 : 320}
+									height={isBanner ? 360 : 128}
+									loading="lazy"
+									decoding="async"
+									class:list={[
+										isBanner ? "monarch-service-card__img monarch-service-card__img--banner" : "monarch-service-card__img",
+										!isBanner && (fit === "contain" ? "object-contain" : "object-cover"),
+									]}
+									style={s.imagePosition ? `object-position: ${s.imagePosition}` : undefined}
+								/>
+								<div class="monarch-service-card__media-shade" aria-hidden="true"></div>
+							</div>
+							<div class="monarch-service-card__body">
+								<h3 class="monarch-service-card__title">{s.title}</h3>
+								<p class="monarch-service-card__tagline">{s.tagline}</p>
+								<p class="monarch-service-card__detail">{s.detail}</p>
+								<span class="monarch-service-card__cta">
+									Learn more
+									<Icon name="lucide:arrow-right" class="monarch-service-card__cta-icon size-4 shrink-0" is:inline aria-hidden="true" />
+								</span>
+							</div>
+						</a>
+					</article>
+				);
+			})
+		}
+	</div>
+</section>

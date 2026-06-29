@@ -1,0 +1,423 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import MonarchPageHero from "../components/MonarchPageHero.astro";
+import ShopByScenario from "../components/ShopByScenario.astro";
+import { Icon } from "astro-icon/components";
+import { listPublishedJobs } from "../lib/jobs";
+
+export const prerender = false;
+
+let openRoleCount = 0;
+try {
+	openRoleCount = (await listPublishedJobs()).length;
+} catch {
+	openRoleCount = 0;
+}
+
+const brands = [
+	{
+		title: "Monarch Modding",
+		tagline: "Custom DayZ packs and workshop content",
+		detail: "Weapon lines, configs, and releases built for your ruleset and wipe calendar.",
+		href: "/monarch-modding",
+		image: "/MM_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
+	},
+	{
+		title: "Operation Monarch",
+		tagline: "Community servers and live events",
+		detail: "Curated worlds, seasonal play, and a player home tied to Monarch built ops.",
+		href: "/operation-monarch",
+		image: "/OPM_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
+	},
+	{
+		title: "Monarch Software",
+		tagline: "Tools for creators and operators",
+		detail: "Bots, API bridges, dedi utilities, and PBO workflows linking game to web.",
+		href: "/monarch-software",
+		image: "/SOFT_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
+	},
+	{
+		title: "Monarch Hosting",
+		tagline: "Server infrastructure",
+		detail: "Monarch Hosting arrives in 2027. Until then, VYKIX covers performance DayZ hardware.",
+		href: "/monarch-hosting",
+		image: "/HOST_Service_Banner.png",
+		imageVariant: "banner" as const,
+		imagePosition: "center",
+	},
+];
+
+const milestones = [
+	{ value: "2019", label: "Active in DayZ" },
+	{ value: "2021", label: "Monarch founded" },
+	{ value: "NH", label: "Based in New Hampshire, USA" },
+];
+
+const disciplines = [
+	{
+		title: "Developers",
+		body: "Gameplay systems, automation, build pipelines, and the glue between DayZ updates and what your server runs on Monday.",
+		icon: "lucide:code-2",
+	},
+	{
+		title: "UI / UX designers",
+		body: "Panels, branding, and in game interfaces so your community feels like one product, not a pile of mismatched mods.",
+		icon: "lucide:pen-tool",
+	},
+];
+
+const collaborators = [
+	{
+		name: "Vyse",
+		role: "GFX & visual design",
+		body: "In game and marketing art, weapon visuals, branding, and the look of Monarch releases across modding and community content.",
+		href: "https://vyse.pb.gallery",
+		logo: "/Vyse%20Logo%20%5BVectorized%5D.png",
+	},
+	{
+		name: "OVO",
+		role: "VFX & promo media",
+		body: "DayZ intros, promo videos, trailers, and motion cuts that show custom work the way players actually experience it.",
+		href: "https://guns.lol/oveo",
+		logo: "/OVO.png",
+	},
+];
+---
+
+<SiteLayout
+	title="About Monarch | Parent company for DayZ services"
+	description="Monarch is the parent company behind Monarch Modding, Operation Monarch, Monarch Software, and Monarch Hosting. Remote-first, based in New Hampshire, USA."
+	mainClass="mx-auto mt-20 flex max-w-7xl flex-col gap-24 px-6 pb-24"
+>
+	<slot slot="pre-main">
+		<MonarchPageHero
+			eyebrow="Company"
+			title="About Monarch"
+			lead="The parent company behind every service on this site. We build for DayZ communities that want custom content, stable servers, and software that links the game to the web."
+			image="/About_Banner.png"
+			cta={{ label: "How we work", href: "/how-we-work" }}
+		/>
+	</slot>
+
+	<!-- ── Intro ── -->
+	<section class="mx-auto max-w-3xl text-center" data-scroll-reveal>
+		<p class="st-reveal m-0 text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+			Stock assets and copy pasted setups get communities to launch day. They rarely survive the first wipe, the first patch,
+			or the first time an admin needs a number that actually matches what players see in game. Monarch exists for owners who
+			want the opposite: deliberate content, stable ops, and software that reports truthfully to the web.
+		</p>
+		<p class="st-reveal m-0 mt-5 font-display text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+			Remote-first · Based in New Hampshire, United States
+		</p>
+	</section>
+
+	<!-- ── Split: who we are ── -->
+	<div class="monarch-about-home__split st-reveal" data-scroll-reveal>
+		<div class="monarch-about-home__copy">
+			<p>
+				Monarch is the parent company behind every service on this site. We build for DayZ communities that want custom
+				content, stable servers, and software that links the game to the web instead of stock assets and copy pasted setups.
+			</p>
+			<p>
+				Our work is split into focused brands so you can start with modding, live gameplay, tooling, or infrastructure without
+				guessing who owns delivery. Each brand has a clear remit, but the same team and standards sit behind all of them.
+			</p>
+			<p>
+				That structure matters when a season runs long: the people who built your weapon platform are the same people who can
+				wire stats to your site, help you run an event weekend, or patch configs after a game update. You are not handed off
+				to a different vendor every time the scope shifts.
+			</p>
+			<div class="mt-6 flex flex-wrap gap-3">
+				<a class="monarch-pill-btn" href="/how-we-work">
+					How we work
+					<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+				</a>
+				<a class="monarch-pill-btn monarch-pill-btn--secondary" href="/work-with-us">
+					Work with us
+				</a>
+			</div>
+		</div>
+		<figure class="monarch-about-home__media">
+			<img
+				src="/About_1.png"
+				alt="Monarch custom DayZ base and modded environment in game"
+				width="1600"
+				height="1000"
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+	</div>
+
+	<!-- ── Four brands ── -->
+	<ShopByScenario
+		kicker="Our brands"
+		heading="Four brands, one standard"
+		intro="Pick the entry point that matches your project. Delivery stays Monarch throughout."
+		scenarios={brands}
+	/>
+
+	<!-- ── Split: our story ── -->
+	<div class="monarch-about-home__split monarch-about-home__split--reverse st-reveal" data-scroll-reveal>
+		<figure class="monarch-about-home__media lg:order-1">
+			<img
+				src="/About_2.png"
+				alt="Operation Monarch community characters in custom DayZ apparel"
+				width="1600"
+				height="1000"
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+		<div class="monarch-about-home__copy lg:order-2">
+			<p>
+				Monarch was founded in 2021. Our team has been active in the DayZ space since 2019, so what we ship is grounded in
+				live launches, player feedback after wipes, and the quiet work of fixing what did not scale the first time. We work
+				remote across time zones, with our home base in New Hampshire, United States.
+			</p>
+			<p>
+				We are a small company by headcount and a large one by output. That balance keeps decisions fast and quality high when
+				a patch lands or a server needs attention before the weekend crowd arrives.
+			</p>
+			<p>
+				We have shipped for private commissions, partner communities, and our own live environments. The lesson repeated
+				across all of them is the same: scope early, test like players will actually play, and keep one team accountable when
+				something breaks at 2 a.m. on a Saturday.
+			</p>
+		</div>
+	</div>
+
+	<!-- ── Milestones ── -->
+	<ul
+		class="st-reveal grid list-none grid-cols-3 gap-px overflow-hidden border border-zinc-200 bg-zinc-200 p-0"
+		data-scroll-reveal
+		aria-label="Monarch milestones"
+	>
+		{milestones.map((item) => (
+			<li class="flex flex-col items-center justify-center bg-white px-4 py-10 text-center sm:py-12">
+				<p class="m-0 font-display text-[clamp(2rem,5vw,3rem)] font-medium leading-none text-monarch-500">{item.value}</p>
+				<p class="m-0 mt-3 font-display text-[10px] uppercase tracking-[0.18em] text-zinc-500">{item.label}</p>
+			</li>
+		))}
+	</ul>
+
+	<!-- ── Team ── -->
+	<section aria-labelledby="about-team" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">People</p>
+			<h2
+				id="about-team"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				The team behind the work
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				Specialists who already speak DayZ, not generalists learning on your timeline.
+			</p>
+		</header>
+
+		<div class="st-reveal mt-10 grid gap-5 md:grid-cols-2">
+			{disciplines.map((item) => (
+				<div class="group flex gap-5 border border-zinc-200 bg-white px-6 py-6 transition-colors hover:border-zinc-300 sm:px-8 sm:py-8">
+					<div class="flex h-10 w-10 shrink-0 items-center justify-center border border-zinc-200 bg-zinc-50">
+						<Icon name={item.icon} class="size-4.5 text-monarch-500" is:inline aria-hidden="true" />
+					</div>
+					<div>
+						<h3 class="m-0 font-display text-sm font-medium uppercase tracking-wide text-brand-black">{item.title}</h3>
+						<p class="m-0 mt-2 text-[15px] leading-relaxed text-zinc-600">{item.body}</p>
+					</div>
+				</div>
+			))}
+		</div>
+		<p class="st-reveal mx-auto mt-8 max-w-2xl text-center text-[15px] leading-relaxed text-zinc-600">
+			Project leads keep briefs, milestones, and handoffs visible so you are never wondering what stage your build is in.
+		</p>
+	</section>
+
+	<!-- ── Collaborators ── -->
+	<section aria-labelledby="about-collaborators" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Partners</p>
+			<h2
+				id="about-collaborators"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Creative collaborators
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				Specialist partners who extend Monarch on GFX, VFX, and promo media without diluting delivery standards.
+			</p>
+		</header>
+
+		<div class="st-reveal mt-10 grid gap-5 md:grid-cols-2">
+			{collaborators.map((item) => (
+				<article class="group flex flex-col border border-zinc-200 bg-white transition-all hover:border-zinc-400 hover:shadow-sm">
+					<div class="flex flex-1 flex-col items-center px-8 py-8 text-center">
+						<div class="mb-6 flex h-20 items-center justify-center">
+							<img
+								src={item.logo}
+								alt={item.name}
+								width="200"
+								height="80"
+								loading="lazy"
+								class="h-16 w-auto object-contain opacity-90 transition-opacity group-hover:opacity-100"
+							/>
+						</div>
+						<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">{item.role}</p>
+						<p class="m-0 mt-4 max-w-sm text-[15px] leading-relaxed text-zinc-600">{item.body}</p>
+						<a
+							class="monarch-pill-btn mt-6"
+							href={item.href}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Visit {item.name}
+							<Icon name="lucide:external-link" class="size-3.5 shrink-0" is:inline aria-hidden="true" />
+						</a>
+					</div>
+				</article>
+			))}
+		</div>
+		<p class="st-reveal mx-auto mt-6 text-center text-sm text-zinc-500">
+			More brands and studios on our{" "}
+			<a class="font-semibold text-monarch-500 hover:text-brand-black underline underline-offset-2" href="/partners">partners page</a>.
+		</p>
+	</section>
+
+	<!-- ── Careers ── -->
+	<section aria-labelledby="about-careers" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Careers</p>
+			<h2
+				id="about-careers"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Join the team
+			</h2>
+			<p class="monarch-section-lead st-reveal mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+				We hire people who already live in DayZ: developers, designers, and operators who care about what ships on Monday.
+			</p>
+		</header>
+
+		<div class="st-reveal mt-10 overflow-hidden border border-zinc-200 bg-white">
+			<div class="relative h-48 overflow-hidden">
+				<img
+					src="/Careers_Banner.png"
+					alt=""
+					width="1600"
+					height="600"
+					loading="lazy"
+					class="h-full w-full object-cover object-center"
+				/>
+				<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden="true" />
+				<div class="absolute inset-0 flex items-end px-8 pb-6">
+					<h3 class="m-0 font-display text-xl font-medium uppercase tracking-wide text-white sm:text-2xl">
+						Build mods, tools, and live worlds
+					</h3>
+				</div>
+			</div>
+			<div class="flex flex-col items-center px-8 py-8 text-center">
+				<p class="m-0 max-w-xl text-[15px] leading-relaxed text-zinc-600">
+					Roles span Monarch Modding, Operation Monarch, and Monarch Software. We are remote-first with our base in New
+					Hampshire; you work with a small team that ships for real communities, not slide decks.
+				</p>
+				{openRoleCount > 0 ? (
+					<p class="m-0 mt-4 font-display text-[11px] uppercase tracking-[0.15em] text-monarch-500">
+						{openRoleCount} open role{openRoleCount === 1 ? "" : "s"} right now
+					</p>
+				) : (
+					<p class="m-0 mt-4 text-sm text-zinc-400">No open roles listed at the moment — check back or send a general enquiry.</p>
+				)}
+				<div class="mt-8 flex flex-wrap justify-center gap-3">
+					<a class="monarch-pill-btn" href="/careers">
+						View careers
+						<Icon name="lucide:arrow-right" class="size-4 shrink-0" is:inline aria-hidden="true" />
+					</a>
+					<a class="monarch-pill-btn monarch-pill-btn--secondary" href="/contact">
+						Get in touch
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ── Who we're built for ── -->
+	<section aria-labelledby="about-fit" data-scroll-reveal>
+		<header class="monarch-section-header">
+			<p class="monarch-section-kicker st-reveal">Audience</p>
+			<h2
+				id="about-fit"
+				class="monarch-section-heading st-reveal m-0 font-display text-[clamp(1.35rem,3vw,1.75rem)] font-medium uppercase tracking-[0.12em] text-brand-black"
+			>
+				Who we are built for
+			</h2>
+		</header>
+
+		<div class="st-reveal mt-10 grid gap-5 md:grid-cols-2">
+			<div class="border border-zinc-200 bg-white p-6 sm:p-8">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">Server owners & creators</p>
+				<h3 class="m-0 mt-2 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+					Built around your ruleset
+				</h3>
+				<p class="m-0 mt-3 text-[15px] leading-relaxed text-zinc-600">
+					You run a defined ruleset, economy, and wipe rhythm. You need mods, software, or ops that fit how the server
+					actually works, not a generic drop in pack.
+				</p>
+				<p class="mt-3 text-sm leading-relaxed text-zinc-500">
+					Typical starts: a weapon platform, a seasonal content drop, admin panels, or launch support before a new wipe.
+				</p>
+			</div>
+			<div class="border border-zinc-200 bg-zinc-50 p-6 sm:p-8">
+				<p class="m-0 font-display text-[11px] uppercase tracking-[0.18em] text-monarch-500">Players & communities</p>
+				<h3 class="m-0 mt-2 font-display text-base font-medium uppercase tracking-wide text-brand-black">
+					Monarch in the wild
+				</h3>
+				<p class="m-0 mt-3 text-[15px] leading-relaxed text-zinc-600">
+					If you play on Operation Monarch or partner servers, you are experiencing Monarch output in the wild: events,
+					wipes, and releases maintained by the same studio that built the assets.
+				</p>
+				<p class="mt-3 text-sm leading-relaxed text-zinc-500">
+					For playing and community news, see{" "}
+					<a class="font-semibold text-monarch-500 hover:text-brand-black" href="/join-operation-monarch">
+						Join Operation Monarch
+					</a>.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ── CTA banner ── -->
+	<section
+		class="st-reveal relative overflow-hidden border border-zinc-200 bg-brand-black px-8 py-16 text-center text-white sm:px-12 sm:py-20"
+		data-scroll-reveal
+	>
+		<p class="m-0 font-display text-[11px] uppercase tracking-[0.2em] text-white/50">Monarch</p>
+		<h2 class="m-0 mt-3 font-display text-[clamp(1.5rem,4vw,2.5rem)] font-medium uppercase leading-tight tracking-wide">
+			One roof, the right door in
+		</h2>
+		<p class="mx-auto m-0 mt-4 max-w-2xl text-[15px] leading-relaxed text-white/75 sm:text-base">
+			Whether you need a weapon line, a stable home for players, or tooling that reports live stats to your site, Monarch
+			keeps it under one roof. You can choose the right entry point without losing the depth behind it.
+		</p>
+		<div class="mt-8 flex flex-wrap justify-center gap-3">
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 bg-white px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-brand-black transition-colors hover:bg-zinc-100"
+				href="/work-with-us"
+			>
+				Work with us
+			</a>
+			<a
+				class="font-display inline-flex min-h-[44px] items-center gap-2 border border-white/40 px-[1.35rem] py-[0.65rem] text-[13px] uppercase tracking-wide text-white transition-colors hover:bg-white/10"
+				href="/#monarch-services"
+			>
+				View services
+			</a>
+		</div>
+	</section>
+</SiteLayout>
