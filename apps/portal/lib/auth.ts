@@ -63,6 +63,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       } catch (e) {
         console.warn("[auth] discordUserId link failed", e)
       }
+      // Cross-schema link: populate public.User.customerId from site.Customer
+      try {
+        await prisma.$executeRaw`
+          UPDATE "public"."User" u
+          SET    "customerId" = c.id
+          FROM   "site"."ConnectedAccount" ca
+          JOIN   "site"."Customer" c ON c.id = ca."customerId"
+          WHERE  ca.provider = 'discord'
+          AND    ca."providerId" = ${account.providerAccountId}
+          AND    u.id = ${user.id}
+          AND    u."customerId" IS NULL
+        `
+      } catch (e) {
+        console.warn("[auth] cross-schema customerId link failed", e)
+      }
     },
     async signIn({ user, account }) {
       if (account?.provider === "discord" && user.id) {

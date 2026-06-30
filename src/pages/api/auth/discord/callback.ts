@@ -44,6 +44,20 @@ export const GET: APIRoute = async ({ url, cookies }) => {
 		});
 		await createCustomerSession(customer.id, cookies);
 
+		// Cross-schema link: populate site.Customer.portalUserId from public.User
+		try {
+			await prisma.$executeRaw`
+				UPDATE "site"."Customer" c
+				SET    "portalUserId" = u.id
+				FROM   "public"."User" u
+				WHERE  u."discordUserId" = ${discordId}
+				AND    c.id = ${customer.id}
+				AND    c."portalUserId" IS NULL
+			`
+		} catch (e) {
+			console.warn("[discord-callback] cross-schema portalUserId link failed", e)
+		}
+
 		const destination = customer.onboardingComplete ? "/account" : "/account/onboard";
 		return new Response(null, {
 			status: 302,

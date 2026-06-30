@@ -1,12 +1,14 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/portal-client"
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/portal-client"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  schemas           = ["public"]
 }
 
 // ─────────────────────────────────────────
@@ -31,6 +33,7 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@schema("public")
 }
 
 model Session {
@@ -42,6 +45,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@schema("public")
 }
 
 model VerificationToken {
@@ -50,6 +54,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -61,12 +66,16 @@ enum WorkspaceRole {
   ADMIN
   MEMBER
   VIEWER
+
+  @@schema("public")
 }
 
 enum StaffRole {
   STAFF
   OPS_ADMIN
   FINANCE
+
+  @@schema("public")
 }
 
 model User {
@@ -76,6 +85,8 @@ model User {
   emailVerified DateTime?
   image         String?
   discordUserId String?  @unique
+  // Links to site.Customer for the same Discord identity
+  customerId    String?  @unique
   // Notification prefs — kept as small string enums to avoid an extra table.
   // notifyChatMode: "MENTIONS" (default) or "ALL".
   notifyChatMode String  @default("MENTIONS")
@@ -109,6 +120,8 @@ model User {
   activityEvents ActivityEvent[] @relation("ActivityActor")
   notifications Notification[]
   chatMessages WorkspaceChatMessage[]
+
+  @@schema("public")
 }
 
 model StaffProfile {
@@ -123,6 +136,7 @@ model StaffProfile {
 
   @@index([role])
   @@index([active])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -133,12 +147,16 @@ enum ApplicationServiceType {
   RETAINER
   PAYG
   UNSURE
+
+  @@schema("public")
 }
 
 enum ApplicationStatus {
   SUBMITTED
   APPROVED
   REJECTED
+
+  @@schema("public")
 }
 
 model Application {
@@ -157,6 +175,7 @@ model Application {
 
   @@index([status])
   @@index([userId])
+  @@schema("public")
 }
 
 model Workspace {
@@ -207,6 +226,7 @@ model Workspace {
   boardColumns WorkspaceBoardColumn[]
 
   @@index([active])
+  @@schema("public")
 }
 
 /// Kanban columns for the sprint board (system + workspace-custom).
@@ -226,6 +246,7 @@ model WorkspaceBoardColumn {
 
   @@unique([workspaceId, id])
   @@index([workspaceId, position])
+  @@schema("public")
 }
 
 model WorkspaceInvite {
@@ -246,6 +267,7 @@ model WorkspaceInvite {
   @@index([workspaceId, emailLower])
   @@index([workspaceId, createdAt])
   @@index([expiresAt])
+  @@schema("public")
 }
 
 model Notification {
@@ -265,6 +287,7 @@ model Notification {
   @@index([userId, readAt])
   @@index([workspaceId, createdAt])
   @@index([createdAt])
+  @@schema("public")
 }
 
 model WorkspaceMember {
@@ -282,6 +305,7 @@ model WorkspaceMember {
   @@unique([workspaceId, userId])
   @@index([userId])
   @@index([workspaceId])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -293,6 +317,8 @@ enum SprintStatus {
   ACTIVE
   COMPLETE
   CANCELLED
+
+  @@schema("public")
 }
 
 enum TaskStatus {
@@ -302,6 +328,8 @@ enum TaskStatus {
   REVIEW
   DONE
   CANCELLED
+
+  @@schema("public")
 }
 
 enum TaskDiscipline {
@@ -313,11 +341,15 @@ enum TaskDiscipline {
   VFX
   Hosting
   Other
+
+  @@schema("public")
 }
 
 enum TicketType {
   EPIC
   TICKET
+
+  @@schema("public")
 }
 
 // Superset status: supports both retainer-style board flow and PayG request/quote states.
@@ -334,6 +366,8 @@ enum TicketStatus {
   AWAITING_PAYMENT
   ACTIVE
   AWAITING_CLIENT
+
+  @@schema("public")
 }
 
 model Sprint {
@@ -354,6 +388,7 @@ model Sprint {
 
   @@index([workspaceId])
   @@index([status])
+  @@schema("public")
 }
 
 model Ticket {
@@ -413,6 +448,7 @@ model Ticket {
   @@index([subtaskOfId])
   @@index([position])
   @@index([boardColumnId])
+  @@schema("public")
 }
 
 model TicketComment {
@@ -427,6 +463,7 @@ model TicketComment {
   author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
+  @@schema("public")
 }
 
 model TicketAttachment {
@@ -444,6 +481,7 @@ model TicketAttachment {
 
   @@index([ticketId])
   @@index([uploaderId])
+  @@schema("public")
 }
 
 model Task {
@@ -484,6 +522,7 @@ model Task {
   @@index([status])
   @@index([priority])
   @@index([assigneeId])
+  @@schema("public")
 }
 
 model TaskComment {
@@ -498,6 +537,7 @@ model TaskComment {
   author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([taskId])
+  @@schema("public")
 }
 
 model TaskAttachment {
@@ -511,6 +551,7 @@ model TaskAttachment {
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -525,11 +566,15 @@ enum JobStatus {
   REVIEW
   DONE
   CANCELLED
+
+  @@schema("public")
 }
 
 enum QuoteType {
   FIXED
   HOURLY_ESTIMATE
+
+  @@schema("public")
 }
 
 model Job {
@@ -561,6 +606,7 @@ model Job {
 
   @@index([workspaceId])
   @@index([status])
+  @@schema("public")
 }
 
 model Quote {
@@ -587,6 +633,7 @@ model Quote {
 
   @@index([jobId])
   @@index([ticketId])
+  @@schema("public")
 }
 
 model JobComment {
@@ -601,6 +648,7 @@ model JobComment {
   author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([jobId])
+  @@schema("public")
 }
 
 model JobAttachment {
@@ -614,6 +662,7 @@ model JobAttachment {
   job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -625,6 +674,8 @@ enum ActivitySource {
   DISCORD
   GITHUB
   SYSTEM
+
+  @@schema("public")
 }
 
 model ActivityEvent {
@@ -649,6 +700,7 @@ model ActivityEvent {
   @@index([taskId, createdAt])
   @@index([jobId, createdAt])
   @@index([ticketId, createdAt])
+  @@schema("public")
 }
 
 model TimeEntry {
@@ -674,11 +726,14 @@ model TimeEntry {
   @@index([jobId, createdAt])
   @@index([ticketId, createdAt])
   @@index([staffUserId, createdAt])
+  @@schema("public")
 }
 
 enum IntegrationType {
   GITHUB_REPO
   DISCORD_CHANNEL
+
+  @@schema("public")
 }
 
 model IntegrationConnection {
@@ -696,6 +751,7 @@ model IntegrationConnection {
   @@unique([type, externalId], name: "type_externalId")
   @@index([workspaceId])
   @@index([jobId])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -704,11 +760,15 @@ model IntegrationConnection {
 
 enum ChatChannel {
   CHAT
+
+  @@schema("public")
 }
 
 enum ChatMessageSource {
   PORTAL
   DISCORD
+
+  @@schema("public")
 }
 
 model WorkspaceDiscord {
@@ -729,6 +789,7 @@ model WorkspaceDiscord {
 
   @@index([guildId])
   @@index([chatChannelId])
+  @@schema("public")
 }
 
 model WorkspaceChatMessage {
@@ -749,6 +810,7 @@ model WorkspaceChatMessage {
 
   @@index([workspaceId, createdAt])
   @@index([workspaceId, channel, createdAt])
+  @@schema("public")
 }
 
 model WorkspaceChatAttachment {
@@ -764,6 +826,7 @@ model WorkspaceChatAttachment {
   message WorkspaceChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
+  @@schema("public")
 }
 
 // Per-user last read timestamp for chat unread counts
@@ -778,6 +841,7 @@ model WorkspaceChatRead {
 
   @@unique([workspaceId, userId])
   @@index([userId])
+  @@schema("public")
 }
 
 enum ServerMonitorProvider {
@@ -785,6 +849,8 @@ enum ServerMonitorProvider {
   BATTLEMETRICS
   CFTOOLS
   CUSTOM_WEBHOOK
+
+  @@schema("public")
 }
 
 model WorkspaceServer {
@@ -807,6 +873,7 @@ model WorkspaceServer {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([provider])
+  @@schema("public")
 }
 
 model WorkspacePinnedUpdate {
@@ -820,6 +887,7 @@ model WorkspacePinnedUpdate {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, active, pinnedAt])
+  @@schema("public")
 }
 
 // ─────────────────────────────────────────
@@ -838,6 +906,8 @@ model DiscordGuildSettings {
   ageRoleRules   DiscordAgeRoleRule[]
   timedRoleRules DiscordTimedRoleRule[]
   connectedRules DiscordConnectedRoleRule[]
+
+  @@schema("public")
 }
 
 model DiscordJoinRole {
@@ -848,6 +918,7 @@ model DiscordJoinRole {
   guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, roleId])
+  @@schema("public")
 }
 
 model DiscordAgeRoleRule {
@@ -859,6 +930,7 @@ model DiscordAgeRoleRule {
   guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, roleId])
+  @@schema("public")
 }
 
 model DiscordTimedRoleRule {
@@ -870,11 +942,14 @@ model DiscordTimedRoleRule {
   guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, roleId])
+  @@schema("public")
 }
 
 enum DiscordConnectedRoleAction {
   ADD_ON_GAIN
   REMOVE_ON_LOSS
+
+  @@schema("public")
 }
 
 model DiscordConnectedRoleRule {
@@ -887,6 +962,7 @@ model DiscordConnectedRoleRule {
   guild DiscordGuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, triggerRoleId, targetRoleId, action])
+  @@schema("public")
 }
 
 model DiscordTimedRoleGrant {
@@ -899,6 +975,7 @@ model DiscordTimedRoleGrant {
 
   @@index([expiresAt])
   @@index([guildId, memberId])
+  @@schema("public")
 }
 
 model DiscordUiSession {
@@ -914,6 +991,7 @@ model DiscordUiSession {
 
   @@index([guildId, memberId, closedAt])
   @@index([channelId])
+  @@schema("public")
 }
 
 model DiscordCaptchaConfig {
@@ -925,12 +1003,16 @@ model DiscordCaptchaConfig {
   enabled          Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@schema("public")
 }
 
 enum DiscordTicketType {
   GENERAL_INQUIRY
   CUSTOMER_SUPPORT
   ORDER
+
+  @@schema("public")
 }
 
 model DiscordTicketPanel {
@@ -943,6 +1025,7 @@ model DiscordTicketPanel {
   updatedAt  DateTime          @updatedAt
 
   @@id([guildId, type])
+  @@schema("public")
 }
 
 model DiscordTicket {
@@ -962,5 +1045,5 @@ model DiscordTicket {
 
   @@index([guildId, memberId, closedAt])
   @@index([channelId])
+  @@schema("public")
 }
-

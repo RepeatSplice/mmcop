@@ -1,16 +1,20 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["site"]
 }
 
 enum StaffRole {
   ADMIN
   EDITOR
   SHOP_MANAGER
+
+  @@schema("site")
 }
 
 enum NewsCategory {
@@ -18,18 +22,24 @@ enum NewsCategory {
   servers
   software
   company
+
+  @@schema("site")
 }
 
 enum NewsStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+
+  @@schema("site")
 }
 
 enum JobStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+
+  @@schema("site")
 }
 
 enum ApplicationStatus {
@@ -37,6 +47,8 @@ enum ApplicationStatus {
   REVIEWED
   SHORTLISTED
   REJECTED
+
+  @@schema("site")
 }
 
 enum ContactTopic {
@@ -46,6 +58,8 @@ enum ContactTopic {
   servers
   software
   other
+
+  @@schema("site")
 }
 
 enum ContactEnquiryStatus {
@@ -53,6 +67,8 @@ enum ContactEnquiryStatus {
   IN_PROGRESS
   RESOLVED
   SPAM
+
+  @@schema("site")
 }
 
 enum EmailDeliveryStatus {
@@ -60,11 +76,15 @@ enum EmailDeliveryStatus {
   SENT
   SKIPPED
   FAILED
+
+  @@schema("site")
 }
 
 enum OAuthProvider {
   steam
   discord
+
+  @@schema("site")
 }
 
 enum ProductStatus {
@@ -72,6 +92,8 @@ enum ProductStatus {
   PUBLISHED
   ARCHIVED
   WAITLIST
+
+  @@schema("site")
 }
 
 enum ProductCategory {
@@ -80,6 +102,8 @@ enum ProductCategory {
   hosting
   bundle
   other
+
+  @@schema("site")
 }
 
 enum OrderStatus {
@@ -87,6 +111,8 @@ enum OrderStatus {
   PAID
   REFUNDED
   DISPUTED
+
+  @@schema("site")
 }
 
 enum LicenseStatus {
@@ -94,12 +120,16 @@ enum LicenseStatus {
   GRACE
   REVOKED
   SUSPENDED
+
+  @@schema("site")
 }
 
 enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+
+  @@schema("site")
 }
 
 model StaffUser {
@@ -118,6 +148,8 @@ model StaffUser {
   sessions            Session[]
   pendingTwoFactor    PendingTwoFactor?
   supportNotes        SupportNote[]
+
+  @@schema("site")
 }
 
 model Session {
@@ -127,6 +159,7 @@ model Session {
   staff     StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([staffId])
+  @@schema("site")
 }
 
 model PendingTwoFactor {
@@ -134,6 +167,8 @@ model PendingTwoFactor {
   staffId   String    @unique
   expiresAt DateTime
   staff     StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@schema("site")
 }
 
 model NewsPost {
@@ -154,6 +189,7 @@ model NewsPost {
 
   @@index([publishedAt])
   @@index([status])
+  @@schema("site")
 }
 
 model Job {
@@ -172,6 +208,7 @@ model Job {
   applications     JobApplication[]
 
   @@index([status])
+  @@schema("site")
 }
 
 model JobApplication {
@@ -195,6 +232,7 @@ model JobApplication {
   @@index([jobId])
   @@index([status])
   @@index([createdAt])
+  @@schema("site")
 }
 
 model ApplicationFile {
@@ -205,6 +243,8 @@ model ApplicationFile {
   mimeType      String
   sizeBytes     Int
   application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@schema("site")
 }
 
 model ContactEnquiry {
@@ -225,6 +265,7 @@ model ContactEnquiry {
   @@index([status])
   @@index([createdAt])
   @@index([topic])
+  @@schema("site")
 }
 
 // ─── Customer Accounts ───────────────────────────────────────────────────────
@@ -239,6 +280,8 @@ model Customer {
   totpEnabled        Boolean            @default(false)
   backupCodesHash    String?
   onboardingComplete Boolean            @default(false)
+  // Links to portal public.User for the same Discord identity
+  portalUserId       String?            @unique
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   accounts           ConnectedAccount[]
@@ -247,6 +290,8 @@ model Customer {
   licenses           ServerLicense[]
   supportNotes       SupportNote[]
   reviews            ProductReview[]
+
+  @@schema("site")
 }
 
 model ConnectedAccount {
@@ -261,6 +306,7 @@ model ConnectedAccount {
 
   @@unique([provider, providerId])
   @@index([customerId])
+  @@schema("site")
 }
 
 model CustomerSession {
@@ -270,6 +316,7 @@ model CustomerSession {
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
+  @@schema("site")
 }
 
 // ─── Products ────────────────────────────────────────────────────────────────
@@ -293,6 +340,8 @@ model Product {
   bundleOf        BundleItem[]       @relation("BundleParent")
   waitlistEntries Waitlist[]
   reviews         ProductReview[]
+
+  @@schema("site")
 }
 
 model ProductVariant {
@@ -311,6 +360,7 @@ model ProductVariant {
   cartItems     CartItem[]
 
   @@index([productId])
+  @@schema("site")
 }
 
 model ProductFile {
@@ -326,6 +376,7 @@ model ProductFile {
 
   @@index([productId])
   @@index([isLatest])
+  @@schema("site")
 }
 
 model ProductChangelog {
@@ -337,6 +388,7 @@ model ProductChangelog {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+  @@schema("site")
 }
 
 model BundleItem {
@@ -347,6 +399,7 @@ model BundleItem {
   product   Product @relation("BundleProduct", fields: [productId], references: [id])
 
   @@unique([bundleId, productId])
+  @@schema("site")
 }
 
 model Waitlist {
@@ -357,6 +410,7 @@ model Waitlist {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, email])
+  @@schema("site")
 }
 
 // ─── Cart, Orders ─────────────────────────────────────────────────────────────
@@ -369,6 +423,7 @@ model CartItem {
   variant   ProductVariant @relation(fields: [variantId], references: [id])
 
   @@index([sessionId])
+  @@schema("site")
 }
 
 model AffiliateCode {
@@ -380,6 +435,8 @@ model AffiliateCode {
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   orders        Order[]
+
+  @@schema("site")
 }
 
 model Order {
@@ -398,6 +455,8 @@ model Order {
   items                 OrderItem[]
   supportNotes          SupportNote[]
   affiliateCode         AffiliateCode? @relation(fields: [affiliateCodeId], references: [id])
+
+  @@schema("site")
 }
 
 model OrderItem {
@@ -411,6 +470,7 @@ model OrderItem {
   license         ServerLicense?
 
   @@index([orderId])
+  @@schema("site")
 }
 
 // ─── Licenses ─────────────────────────────────────────────────────────────────
@@ -429,6 +489,8 @@ model ServerLicense {
   orderItem      OrderItem          @relation(fields: [orderItemId], references: [id])
   variant        ProductVariant     @relation(fields: [variantId], references: [id])
   servers        RegisteredServer[]
+
+  @@schema("site")
 }
 
 model RegisteredServer {
@@ -443,6 +505,7 @@ model RegisteredServer {
 
   @@unique([licenseId, ipAddress])
   @@index([ipAddress])
+  @@schema("site")
 }
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────
@@ -463,6 +526,7 @@ model ProductReview {
   @@unique([productId, customerId])
   @@index([productId, status])
   @@index([status])
+  @@schema("site")
 }
 
 // ─── Support ──────────────────────────────────────────────────────────────────
@@ -477,4 +541,6 @@ model SupportNote {
   order      Order?    @relation(fields: [orderId], references: [id])
   customer   Customer  @relation(fields: [customerId], references: [id])
   staff      StaffUser @relation(fields: [staffId], references: [id])
+
+  @@schema("site")
 }
