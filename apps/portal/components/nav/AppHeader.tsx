@@ -97,6 +97,9 @@ export function AppHeader() {
     { scope: headerRef }
   )
 
+  if (pathname === "/login") return null
+  if (pathname === "/" && status === "unauthenticated") return null
+
   const logoFilter = mounted
     ? theme === "dark"
       ? "brightness(0) invert(1)"
