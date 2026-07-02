@@ -1,4 +1,5 @@
-﻿CREATE SCHEMA IF NOT EXISTS "public";
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
 CREATE TYPE "WorkspaceRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER', 'VIEWER');
@@ -1121,14 +1122,3 @@ ALTER TABLE "DiscordTimedRoleRule" ADD CONSTRAINT "DiscordTimedRoleRule_guildId_
 
 -- AddForeignKey
 ALTER TABLE "DiscordConnectedRoleRule" ADD CONSTRAINT "DiscordConnectedRoleRule_guildId_fkey" FOREIGN KEY ("guildId") REFERENCES "DiscordGuildSettings"("guildId") ON DELETE CASCADE ON UPDATE CASCADE;
-ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
-Γöé  Update available 6.19.3 -> 7.8.0                       Γöé
-Γöé                                                         Γöé
-Γöé  This is a major update - please follow the guide at    Γöé
-Γöé  https://pris.ly/d/major-version-upgrade                Γöé
-Γöé                                                         Γöé
-Γöé  Run the following to update                            Γöé
-Γöé    npm i --save-dev prisma@latest                       Γöé
-Γöé    npm i @prisma/client@latest                          Γöé
-ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
-
