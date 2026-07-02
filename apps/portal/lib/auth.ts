@@ -8,12 +8,27 @@ function configured(value: string | undefined | null) {
   return typeof value === "string" && value.trim().length > 0
 }
 
+console.log("[auth] init — AUTH_SECRET set:", configured(process.env.AUTH_SECRET),
+  "| DISCORD set:", configured(process.env.AUTH_DISCORD_ID),
+  "| NODE_ENV:", process.env.NODE_ENV)
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
   secret:
     process.env.AUTH_SECRET ??
     (process.env.NODE_ENV !== "production" ? "dev-only-secret" : undefined),
+  logger: {
+    error(code, ...message) {
+      console.error("[next-auth][error]", code, ...message)
+    },
+    warn(code, ...message) {
+      console.warn("[next-auth][warn]", code, ...message)
+    },
+    debug(code, ...message) {
+      console.log("[next-auth][debug]", code, ...message)
+    },
+  },
   providers: [
     ...(configured(process.env.AUTH_DISCORD_ID) && configured(process.env.AUTH_DISCORD_SECRET)
       ? [
@@ -81,15 +96,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === "discord" && user.id) {
-        const { prisma } = await import("@/lib/prisma")
-        const { syncDiscordForAllUserWorkspaces } = await import("@/lib/discord-sync-user-workspaces")
-        await prisma.user
-          .update({
-            where: { id: user.id },
-            data: { discordUserId: account.providerAccountId },
-          })
-          .catch(() => {})
-        void syncDiscordForAllUserWorkspaces(user.id)
+        console.log("[auth] signIn event: userId=", user.id, "provider=", account.provider)
+        try {
+          const { prisma } = await import("@/lib/prisma")
+          await prisma.user
+            .update({
+              where: { id: user.id },
+              data: { discordUserId: account.providerAccountId },
+            })
+            .catch((e: unknown) => console.warn("[auth] discordUserId signIn update failed", e))
+          const { syncDiscordForAllUserWorkspaces } = await import("@/lib/discord-sync-user-workspaces")
+          void syncDiscordForAllUserWorkspaces(user.id)
+        } catch (e) {
+          console.error("[auth] signIn event error", e)
+        }
       }
     },
   },
