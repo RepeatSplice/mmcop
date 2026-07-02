@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto"
 import { prisma } from "@/lib/prisma"
 import {
   DEFAULT_BOARD_COLUMNS,
@@ -14,9 +15,13 @@ export async function ensureWorkspaceBoardColumns(workspaceId: string): Promise<
     return existing.map(serializeBoardColumn)
   }
 
+  // Use per-workspace UUIDs so the same defaults can be seeded across many
+  // workspaces without hitting the global id primary-key constraint. Also use
+  // skipDuplicates to safely handle concurrent first-load requests.
   await prisma.workspaceBoardColumn.createMany({
+    skipDuplicates: true,
     data: DEFAULT_BOARD_COLUMNS.map((c) => ({
-      id: c.id,
+      id: randomUUID(),
       workspaceId,
       label: c.label,
       status: c.status,
