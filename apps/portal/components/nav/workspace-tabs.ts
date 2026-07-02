@@ -40,6 +40,7 @@ const OPS_TAB_LABELS = [
   "Jobs",
   "Time",
   "Integrations",
+  "Staff",
 ] as const
 
 const OPS_ICONS: Record<string, SidebarIcon> = {
@@ -49,6 +50,7 @@ const OPS_ICONS: Record<string, SidebarIcon> = {
   Jobs: "tickets",
   Time: "time",
   Integrations: "integrations",
+  Staff: "shield",
 }
 
 const OPS_PATHS: Record<string, string> = {
@@ -58,6 +60,7 @@ const OPS_PATHS: Record<string, string> = {
   Jobs: "jobs",
   Time: "time",
   Integrations: "integrations",
+  Staff: "staff",
 }
 
 export function buildOpsTabs(): WorkspaceTab[] {
