@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic"
 
 /**
  * Lightweight workspace list for the header switcher. Returns workspaces the
- * user is a member of (active workspaces only), plus role.
+ * user is a member of (active workspaces only), plus role. For active staff,
+ * returns all active workspaces with a synthetic ADMIN role.
  */
 export async function GET() {
   const session = await auth()
@@ -28,8 +29,28 @@ export async function GET() {
     prisma.staffProfile.findUnique({ where: { userId }, select: { active: true } }),
   ])
 
+  const isStaff = Boolean(staff?.active)
+
+  if (isStaff) {
+    const allWorkspaces = await prisma.workspace.findMany({
+      where: { active: true },
+      select: { id: true, slug: true, name: true },
+      orderBy: { name: "asc" },
+    })
+
+    return NextResponse.json({
+      isStaff: true,
+      workspaces: allWorkspaces.map((w) => ({
+        id: w.id,
+        slug: w.slug,
+        name: w.name,
+        role: "ADMIN" as const,
+      })),
+    })
+  }
+
   return NextResponse.json({
-    isStaff: Boolean(staff?.active),
+    isStaff: false,
     workspaces: memberships.map((m) => ({
       id: m.workspace.id,
       slug: m.workspace.slug,

@@ -99,17 +99,23 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const existingTicket = ticket
 
   if (parsed.data.assigneeId !== undefined && parsed.data.assigneeId !== null) {
-    const assigneeMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: parsed.data.workspaceId,
-          userId: parsed.data.assigneeId,
+    const [assigneeMember, assigneeStaff] = await Promise.all([
+      prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: parsed.data.workspaceId,
+            userId: parsed.data.assigneeId,
+          },
         },
-      },
-      select: { userId: true },
-    })
-    if (!assigneeMember) {
-      return NextResponse.json({ error: "Assignee must be a workspace member" }, { status: 400 })
+        select: { userId: true },
+      }),
+      prisma.staffProfile.findUnique({
+        where: { userId: parsed.data.assigneeId },
+        select: { active: true },
+      }),
+    ])
+    if (!assigneeMember && !assigneeStaff?.active) {
+      return NextResponse.json({ error: "Assignee must be a workspace member or staff" }, { status: 400 })
     }
   }
 

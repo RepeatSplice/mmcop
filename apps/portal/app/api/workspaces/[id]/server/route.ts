@@ -13,10 +13,13 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   const userId = (session.user as { id?: string }).id!
   const { id: workspaceId } = await ctx.params
 
-  const member = await prisma.workspaceMember.findUnique({
-    where: { workspaceId_userId: { workspaceId, userId } },
-  })
-  if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const [member, staff] = await Promise.all([
+    prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } },
+    }),
+    prisma.staffProfile.findUnique({ where: { userId }, select: { active: true } }),
+  ])
+  if (!member && !staff?.active) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const server = await prisma.workspaceServer.findUnique({ where: { workspaceId } })
   return NextResponse.json({ server })

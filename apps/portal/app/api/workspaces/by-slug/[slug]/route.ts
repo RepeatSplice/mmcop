@@ -12,11 +12,23 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ slug: stri
   const userId = (session.user as { id?: string }).id!
   const { slug } = await ctx.params
 
-  const member = await prisma.workspaceMember.findFirst({
-    where: { userId, workspace: { slug } },
-    select: { workspace: { select: { id: true, slug: true, name: true } } },
-  })
-  if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const [member, staff] = await Promise.all([
+    prisma.workspaceMember.findFirst({
+      where: { userId, workspace: { slug } },
+      select: { workspace: { select: { id: true, slug: true, name: true } } },
+    }),
+    prisma.staffProfile.findUnique({ where: { userId }, select: { active: true } }),
+  ])
 
-  return NextResponse.json(member.workspace)
+  if (member) return NextResponse.json(member.workspace)
+
+  if (staff?.active) {
+    const workspace = await prisma.workspace.findFirst({
+      where: { slug },
+      select: { id: true, slug: true, name: true },
+    })
+    if (workspace) return NextResponse.json(workspace)
+  }
+
+  return NextResponse.json({ error: "Not found" }, { status: 404 })
 }

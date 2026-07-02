@@ -17,13 +17,34 @@ export const getWorkspaceAccess = cache(async (slug: string): Promise<WorkspaceA
   if (!session?.user) redirect(`/login?callbackUrl=/workspace/${encodeURIComponent(slug)}/summary`)
 
   const userId = (session.user as { id?: string }).id!
+
+  // Active staff get full access to any workspace without needing a membership row.
+  const staffProfile = await prisma.staffProfile.findUnique({
+    where: { userId },
+    select: { active: true },
+  })
+
+  if (staffProfile?.active) {
+    const workspace = await prisma.workspace.findFirst({
+      where: { slug, active: true },
+      select: { id: true, slug: true, name: true },
+    })
+    if (!workspace) redirect("/")
+    return {
+      userId,
+      role: "ADMIN",
+      workspace,
+      isStaff: true,
+      onboardedAt: new Date(0),
+    }
+  }
+
   const membership = await prisma.workspaceMember.findFirst({
     where: { userId, workspace: { slug, active: true } },
     select: {
       role: true,
       onboardedAt: true,
       workspace: { select: { id: true, slug: true, name: true } },
-      user: { select: { staffProfile: { select: { active: true } } } },
     },
   })
 
@@ -33,7 +54,7 @@ export const getWorkspaceAccess = cache(async (slug: string): Promise<WorkspaceA
     userId,
     role: membership.role,
     workspace: membership.workspace,
-    isStaff: Boolean(membership.user.staffProfile?.active),
+    isStaff: false,
     onboardedAt: membership.onboardedAt,
   }
 })

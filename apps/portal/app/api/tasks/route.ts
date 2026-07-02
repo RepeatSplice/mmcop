@@ -23,11 +23,15 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-  const member = await prisma.workspaceMember.findUnique({
-    where: { workspaceId_userId: { workspaceId: parsed.data.workspaceId, userId } },
-    select: { role: true },
-  })
-  if (!member || member.role === "VIEWER") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const [member, staff] = await Promise.all([
+    prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: parsed.data.workspaceId, userId } },
+      select: { role: true },
+    }),
+    prisma.staffProfile.findUnique({ where: { userId }, select: { active: true } }),
+  ])
+  const canWrite = Boolean(staff?.active) || (member && member.role !== "VIEWER")
+  if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const task = await prisma.$transaction(async (tx) => {
     const ws = await tx.workspace.update({
